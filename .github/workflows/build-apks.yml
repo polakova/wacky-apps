@@ -43,8 +43,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install SDK packages
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+      - name: Install SDK packages + accept licenses
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null
 
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
@@ -85,7 +87,7 @@ jobs:
             rm -rf "$WWW"; mkdir -p "$WWW"
             cp "download/${slug}.html" "$WWW/index.html"
             python3 android/make_icon.py "$slug" "$emoji" "$(printf '%03d' "$id")" android/app/src/main/res
-            ( cd android && gradle -q --console=plain assembleDebug -PappId="$appid" -PappName="$title" )
+            ( cd android && gradle --no-daemon --console=plain assembleDebug -PappId="$appid" -PappName="$title" )
             cp android/app/build/outputs/apk/debug/app-debug.apk "out/${slug}.apk"
             built=$((built+1))
           done < /tmp/manifest.tsv
@@ -96,7 +98,7 @@ jobs:
             rm -rf "$WWW"; mkdir -p "$WWW"
             cp -r download/allinone/. "$WWW/"
             python3 android/make_icon.py "__all__" "🤪" "111" android/app/src/main/res
-            ( cd android && gradle -q --console=plain assembleDebug -PappId="com.wackyapps.all111" -PappName="111 Wacky Apps" )
+            ( cd android && gradle --no-daemon --console=plain assembleDebug -PappId="com.wackyapps.all111" -PappName="111 Wacky Apps" )
             cp android/app/build/outputs/apk/debug/app-debug.apk "out/all-111-wacky-apps.apk"
             built=$((built+1))
           fi
