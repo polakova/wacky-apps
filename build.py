@@ -4,7 +4,24 @@ import json, os, html
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 apps = json.load(open(os.path.join(ROOT, "apps.json")))
-apps.sort(key=lambda a: a["id"])
+
+# Curated "most interesting first" order for the hub grid. Crowd-pleasers,
+# visually impressive, instantly fun and nostalgic toys lead; the rest follow
+# in catalog (id) order. The corner badge still shows each app's permanent #id.
+FEATURED = [
+    "bubble-wrap", "cookie-clicker", "magic-8ball", "fireworks", "snake",
+    "whack-a-mole", "disco", "dvd-logo", "matrix-rain", "falling-sand",
+    "piano", "drum-machine", "geocities", "shakespeare-insult", "excuse-generator",
+    "cat-petter", "spirograph", "kaleidoscope", "confetti", "decision-wheel",
+    "mock-spongebob", "dad-joke", "typing-test", "reaction-time", "simon",
+    "memory-match", "tic-tac-toe", "useless-button", "plasma", "sparkle-cursor",
+    "breathing", "dodge", "fish-tank", "lava-lamp", "startup-idea",
+]
+_known = {a["slug"] for a in apps}
+_unknown = [s for s in FEATURED if s not in _known]
+assert not _unknown, f"FEATURED has unknown slugs: {_unknown}"
+_rank = {slug: i for i, slug in enumerate(FEATURED)}
+apps.sort(key=lambda a: _rank.get(a["slug"], 1000 + a["id"]))
 
 cats = []
 for a in apps:
@@ -27,6 +44,16 @@ for a in apps:
 cat_btns = '<button class="catbtn active" data-cat="*">All ✺</button>' + "".join(
     f'<button class="catbtn" data-cat="{html.escape(c)}">{html.escape(c)}</button>' for c in cats
 )
+
+# multicolor "WACKY APPS" wordmark (cycle the palette, same vibe as the "111")
+LOGO_COLORS = ["var(--pink)", "var(--purple)", "var(--blue)", "var(--cyan)", "var(--orange)"]
+_word, word_html, _ci = "WACKY APPS", "", 0
+for _ch in _word:
+    if _ch == " ":
+        word_html += '<span class="sp">&nbsp;</span>'
+    else:
+        word_html += f'<span style="color:{LOGO_COLORS[_ci % len(LOGO_COLORS)]}">{_ch}</span>'
+        _ci += 1
 
 PAGE = f"""<!DOCTYPE html>
 <html lang="en">
@@ -78,7 +105,7 @@ footer{{text-align:center;padding:30px 18px 60px;font-family:var(--mono);font-si
 <body>
 <div class="hero">
   <div class="logo"><span class="one">1</span><span class="two">1</span><span class="three">1</span>
-    <span class="word">WACKY APPS</span></div>
+    <span class="word">{word_html}</span></div>
   <div class="tagline">★ {len(apps)} tiny web toys · zero point · maximum fun ★</div>
 </div>
 <div class="marquee"><span>✦ welcome to the world wide weird ✦ no logins ✦ no ads ✦ no reason ✦ pop some bubbles ✦ pet a cat ✦ generate a band ✦ flip a coin ✦ best viewed with a smile ✦ made with love &amp; nonsense ✦</span></div>
@@ -105,6 +132,7 @@ const cards=[...document.querySelectorAll('.appcard')];
 const search=document.getElementById('search');
 const noresult=document.getElementById('noresult');
 let cat='*';
+function setActive(c){{document.querySelectorAll('.catbtn').forEach(x=>x.classList.toggle('active',x.dataset.cat===c));}}
 function apply(){{
   const q=search.value.trim().toLowerCase();
   let shown=0;
@@ -117,14 +145,27 @@ function apply(){{
   }});
   noresult.style.display=shown?'none':'block';
 }}
-search.addEventListener('input',apply);
+// remember category + search + scroll so the back link returns you where you were
+try{{
+  const sc=sessionStorage.getItem('wacky_cat'), sq=sessionStorage.getItem('wacky_q');
+  if(sq)search.value=sq;
+  if(sc){{cat=sc;setActive(cat);}}
+}}catch(e){{}}
+apply();
+try{{
+  const sy=sessionStorage.getItem('wacky_scroll');
+  if(sy)requestAnimationFrame(()=>window.scrollTo(0,parseInt(sy,10)||0));
+}}catch(e){{}}
+search.addEventListener('input',()=>{{try{{sessionStorage.setItem('wacky_q',search.value);}}catch(e){{}}apply();}});
 document.querySelectorAll('.catbtn').forEach(b=>b.addEventListener('click',()=>{{
-  document.querySelectorAll('.catbtn').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');cat=b.dataset.cat;apply();
+  setActive(b.dataset.cat);cat=b.dataset.cat;
+  try{{sessionStorage.setItem('wacky_cat',cat);}}catch(e){{}}
+  apply();
 }}));
+cards.forEach(c=>c.addEventListener('click',()=>{{try{{sessionStorage.setItem('wacky_scroll',String(window.scrollY));}}catch(e){{}}}}));
 document.getElementById('lucky').addEventListener('click',()=>{{
   const vis=cards.filter(c=>!c.classList.contains('hide'));
-  if(vis.length)location.href=vis[Math.floor(Math.random()*vis.length)].href;
+  if(vis.length){{try{{sessionStorage.setItem('wacky_scroll',String(window.scrollY));}}catch(e){{}}location.href=vis[Math.floor(Math.random()*vis.length)].href;}}
 }});
 // retro hit counter (purely local, purely silly)
 let n=parseInt(localStorage.getItem('wacky_hits')||'13337',10)+1;
