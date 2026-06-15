@@ -2,12 +2,16 @@ package com.wackyapps.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 /**
  * Minimal WebView host. Loads the bundled offline app from assets/www/index.html.
@@ -42,8 +46,32 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Keep local (file://) navigation inside the WebView so the all-in-one
+        // collection's offline hub works. Any http(s) link — e.g. the "← all 111"
+        // link back to the live site — opens in the phone's real browser, which
+        // does the networking (this app itself has no INTERNET permission).
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
+                return openExternally(req.getUrl().toString());
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return openExternally(url);
+            }
+        });
+
         setContentView(web);
         web.loadUrl("file:///android_asset/www/index.html");
+    }
+
+    /** http/https → open in external browser (return true = WebView won't load it). file:// → false. */
+    private boolean openExternally(String url) {
+        if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
+            return true;
+        }
+        return false;
     }
 
     @Override

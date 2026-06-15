@@ -10,7 +10,7 @@ Then bundle every standalone file + a local index into one .zip.
 import json, os, re, zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-HUB = "http://138.68.81.78:8111/"
+HUB = "https://wacky-apps.com/"
 apps = json.load(open(os.path.join(ROOT, "apps.json")))
 apps.sort(key=lambda a: a["id"])
 
