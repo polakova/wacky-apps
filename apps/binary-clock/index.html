@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Binary Clock · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕛</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#04110a;background-image:radial-gradient(rgba(0,255,140,.06) 1px,transparent 1px);color:#39ff8a}
+  h1.big{color:#7dffb0;text-shadow:0 0 10px rgba(57,255,138,.5)}
+  .crt{border:4px solid #0c3; border-radius:16px;background:#02180e;padding:24px 18px;
+    box-shadow:0 0 24px rgba(57,255,138,.25),6px 6px 0 #021008;display:inline-block}
+  .grid{display:flex;gap:18px;justify-content:center}
+  .col{display:flex;flex-direction:column-reverse;align-items:center;gap:12px}
+  .dot{width:30px;height:30px;border-radius:50%;border:2px solid #0a6e3c;background:#062414;transition:all .15s}
+  .dot.on{background:#39ff8a;border-color:#aaffcc;box-shadow:0 0 12px #39ff8a,0 0 22px rgba(57,255,138,.6)}
+  .cap{margin-top:10px;font-family:var(--mono);font-weight:900;color:#9affc4}
+  .pair{display:flex;gap:18px}
+  .group{text-align:center}
+  .decimal{font-family:var(--mono);font-size:clamp(28px,9vw,52px);font-weight:900;letter-spacing:3px;
+    text-align:center;margin-top:14px;text-shadow:0 0 10px rgba(57,255,138,.5)}
+  .legend{font-family:var(--mono);font-size:12px;color:#5fbf88;text-align:center;margin-top:8px}
+  @media(max-width:380px){.dot{width:24px;height:24px}.grid{gap:12px}.col{gap:9px}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🕛 Binary Clock</span>
+  <span class="spacer"></span>
+  <span class="num">#77</span>
+</div>
+<div class="wrap center stack">
+  <h1 class="big">🕛 Binary Clock</h1>
+  <p class="muted" style="color:#7fe0a8">Time in ones and zeros. Each column is a BCD digit (lit = 1, top→bottom = 8 4 2 1).</p>
+  <div class="center"><div class="crt">
+    <div class="group">
+      <div class="grid" id="grid"></div>
+      <div class="row" style="justify-content:center;gap:24px;margin-top:8px">
+        <span class="cap">HH</span><span class="cap">MM</span><span class="cap">SS</span>
+      </div>
+    </div>
+    <div class="decimal" id="dec"></div>
+  </div></div>
+  <div class="row" style="justify-content:center">
+    <button class="btn purple" id="toggle">🔢 Show decimal: ON</button>
+  </div>
+  <p class="legend">Read each pair of columns top-down: 8·4·2·1 → add the lit ones.</p>
+</div>
+<script>
+const grid=document.getElementById('grid'), dec=document.getElementById('dec');
+const weights=[8,4,2,1];
+let showDec=true, cols=[];
+
+// build 6 columns (H tens, H ones, M tens, M ones, S tens, S ones)
+function build(){
+  grid.innerHTML='';
+  cols=[];
+  for(let c=0;c<6;c++){
+    const col=document.createElement('div'); col.className='col';
+    const dots=[];
+    for(let r=0;r<4;r++){ // bottom→top via column-reverse; index 0=weight1
+      const d=document.createElement('div'); d.className='dot'; col.appendChild(d); dots.push(d);
+    }
+    grid.appendChild(col); cols.push(dots);
+  }
+  // visual spacers between H|M|S
+  cols[1+0]; // no-op; spacing handled by gap
+}
+build();
+
+function setDigit(colDots,val){
+  // colDots[0]=weight1 (bottom) ... [3]=weight8 (top). weights array top→bottom.
+  for(let i=0;i<4;i++){
+    const w=weights[i]; // 8,4,2,1
+    const dotIndex=3-i;  // map weight8→top
+    colDots[dotIndex].classList.toggle('on',(val & w)!==0);
+  }
+}
+
+function pad(n){return n<10?'0'+n:''+n;}
+
+function tick(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  const digits=[Math.floor(h/10),h%10,Math.floor(m/10),m%10,Math.floor(s/10),s%10];
+  digits.forEach((d,i)=>setDigit(cols[i],d));
+  dec.textContent=showDec? pad(h)+':'+pad(m)+':'+pad(s) : '';
+}
+setInterval(tick,250); tick();
+
+document.getElementById('toggle').addEventListener('click',function(){
+  showDec=!showDec;
+  this.textContent='🔢 Show decimal: '+(showDec?'ON':'OFF');
+  dec.style.display=showDec?'block':'none';
+  tick();
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

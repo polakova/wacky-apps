@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Match · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.scorebar{display:flex;justify-content:space-around;gap:10px;margin-bottom:16px}
+.scorebar .b{background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:var(--shadow-sm);padding:8px 14px;text-align:center;flex:1}
+.scorebar .l{font-family:var(--mono);font-size:11px;opacity:.7;text-transform:uppercase}
+.scorebar .v{font-size:24px;font-weight:900}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:440px;margin:0 auto;perspective:700px}
+.card{
+  aspect-ratio:3/4;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transform-style:preserve-3d;transition:transform .35s;
+}
+.card.flip,.card.done{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border:3px solid var(--ink);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm)}
+.front{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;font-size:clamp(22px,7vw,34px);font-weight:900}
+.back{background:#fff;transform:rotateY(180deg);font-size:clamp(30px,10vw,46px)}
+.card.done .back{background:var(--cyan);animation:pop .4s}
+.win{text-align:center;font-size:clamp(22px,6vw,32px);font-weight:900;margin-top:16px;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🃏 Memory Match</span>
+  <span class="spacer"></span>
+  <span class="num">#104</span>
+</div>
+<div class="wrap">
+  <p class="center muted">Find the pairs. Trust your brain. It's smarter than it looks. 🧠</p>
+  <div class="scorebar">
+    <div class="b"><div class="l">Moves</div><div class="v" id="moves">0</div></div>
+    <div class="b"><div class="l">Time</div><div class="v" id="time">0:00</div></div>
+    <div class="b"><div class="l">Best</div><div class="v" id="best">—</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="win" id="win"></div>
+  <div class="center" style="margin-top:10px"><button class="btn pink" id="restart">🔀 New Game</button></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const EMOJIS=["🐙","🦊","🐸","🦄","🐼","🦁","🐯","🐳","🦋","🐢","🦉","🐝","🦖","🐧","🦩","🐌"];
+const grid=$("grid");
+let cards=[],first=null,lock=false,moves=0,matched=0,startT=0,tm=null,started=false;
+let best=localStorage.getItem("mem_best");
+$("best").textContent=best?best+" mv":"—";
+let actx=null;
+function beep(f,d,t){if(!actx)return;const o=actx.createOscillator(),g=actx.createGain();o.type=t||"sine";o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.14,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
+function newGame(){
+  clearInterval(tm);started=false;startT=0;$("time").textContent="0:00";
+  moves=0;matched=0;first=null;lock=false;$("moves").textContent=0;$("win").textContent="";
+  const pool=shuffle(EMOJIS.slice()).slice(0,8);
+  const deck=shuffle(pool.concat(pool));
+  grid.innerHTML="";cards=[];
+  deck.forEach((emo,i)=>{
+    const c=document.createElement("div");c.className="card";c.dataset.emo=emo;
+    c.innerHTML='<div class="face front">?</div><div class="face back">'+emo+'</div>';
+    c.addEventListener("click",()=>flip(c));
+    grid.appendChild(c);cards.push(c);
+  });
+}
+function flip(c){
+  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}if(actx&&actx.state==="suspended")actx.resume();}
+  if(lock||c===first||c.classList.contains("done")||c.classList.contains("flip"))return;
+  if(!started){started=true;startT=Date.now();tm=setInterval(()=>{$("time").textContent=fmt(Math.floor((Date.now()-startT)/1000));},500);}
+  c.classList.add("flip");beep(520,.06);
+  if(!first){first=c;return;}
+  moves++;$("moves").textContent=moves;lock=true;
+  if(first.dataset.emo===c.dataset.emo){
+    setTimeout(()=>{
+      first.classList.add("done");c.classList.add("done");
+      first.classList.remove("flip");c.classList.remove("flip");
+      beep(660,.1);setTimeout(()=>beep(880,.12),90);
+      first=null;lock=false;matched++;
+      if(matched===8)winGame();
+    },420);
+  }else{
+    setTimeout(()=>{first.classList.remove("flip");c.classList.remove("flip");beep(200,.12,"sawtooth");first=null;lock=false;},760);
+  }
+}
+function winGame(){
+  clearInterval(tm);
+  const t=Math.floor((Date.now()-startT)/1000);
+  let m="🎉 Solved in "+moves+" moves & "+fmt(t)+"!";
+  if(!best||moves<+best){best=moves;localStorage.setItem("mem_best",best);$("best").textContent=best+" mv";m="🏆 NEW BEST! "+moves+" moves in "+fmt(t)+"!";}
+  $("win").textContent=m;
+  beep(523,.15);setTimeout(()=>beep(659,.15),140);setTimeout(()=>beep(784,.25),280);
+}
+$("restart").onclick=newGame;
+newGame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

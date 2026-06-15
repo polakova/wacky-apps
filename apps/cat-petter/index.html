@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pet the Cat · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐈</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .catwrap{position:relative;min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;cursor:grab;touch-action:none}
+  .cat{font-size:clamp(110px,34vw,180px);user-select:none;transition:transform .15s ease;transform-origin:bottom center}
+  .cat.happy{animation:wiggle .5s ease}
+  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg) scale(1.04)}75%{transform:rotate(6deg) scale(1.04)}}
+  .purrbar{height:26px;border:4px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+  .purrfill{height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--orange),var(--yellow));transition:width .2s ease}
+  .heart{position:absolute;pointer-events:none;font-size:26px;animation:rise 1.4s ease forwards}
+  @keyframes rise{to{transform:translateY(-160px) scale(1.3);opacity:0}}
+  .meow{position:absolute;font-family:var(--mono);font-weight:900;font-size:22px;color:var(--purple);pointer-events:none;animation:rise 1.6s ease forwards}
+  .label{font-family:var(--mono);font-weight:900}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐈 Pet the Cat</span>
+  <span class="spacer"></span>
+  <span class="num">#90</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <div class="center muted">Hover, drag, or tap the cat to pet. Fill the purr meter. Pure serotonin.</div>
+    <div class="catwrap" id="catwrap">
+      <div class="cat" id="cat">🐈</div>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <span class="label" id="mood">Mood: aloof</span>
+      <span class="label" id="petcount">Pets: 0</span>
+    </div>
+    <div class="purrbar"><div class="purrfill" id="purr"></div></div>
+    <div class="center muted" id="purrtxt">Purr meter: empty (cat is judging you)</div>
+  </div>
+</div>
+<script>
+(function(){
+  var cat=document.getElementById('cat'),wrap=document.getElementById('catwrap'),
+      purr=document.getElementById('purr'),purrtxt=document.getElementById('purrtxt'),
+      mood=document.getElementById('mood'),petcount=document.getElementById('petcount');
+  var level=0, pets=parseInt(localStorage.getItem('cat_pets')||'0',10), down=false, lastEmit=0;
+  petcount.textContent='Pets: '+pets;
+
+  var actx;
+  function purrSound(){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+    o.type='triangle';o.frequency.value=55+Math.random()*15;
+    g.gain.setValueAtTime(.0001,actx.currentTime);
+    g.gain.linearRampToValueAtTime(.12,actx.currentTime+.05);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.4);
+    o.frequency.setValueAtTime(o.frequency.value,actx.currentTime);
+    o.frequency.linearRampToValueAtTime(o.frequency.value*1.5,actx.currentTime+.4);
+    o.start();o.stop(actx.currentTime+.4);}catch(e){}}
+
+  var moods=['aloof','curious','content','happy','blissful','MAXIMUM PURR'];
+  var meows=['mrrp','meow','prrr','mrow','nya','mew','brrt'];
+  var faces=['🐈','🐈','😺','😸','😻','😻'];
+
+  function fx(x,y){
+    var h=document.createElement('span');h.className='heart';
+    h.textContent=['💛','🩷','💖','✨','💕'][Math.floor(Math.random()*5)];
+    h.style.left=x+'px';h.style.top=y+'px';wrap.appendChild(h);
+    setTimeout(function(){h.remove();},1400);
+    if(Math.random()<0.25){
+      var m=document.createElement('span');m.className='meow';
+      m.textContent=meows[Math.floor(Math.random()*meows.length)]+'~';
+      m.style.left=(x+20)+'px';m.style.top=(y-10)+'px';wrap.appendChild(m);
+      setTimeout(function(){m.remove();},1600);
+    }
+  }
+
+  function pet(x,y){
+    var now=Date.now(); if(now-lastEmit<60) return; lastEmit=now;
+    pets++; localStorage.setItem('cat_pets',String(pets));
+    petcount.textContent='Pets: '+pets;
+    level=Math.min(100,level+4);
+    purr.style.width=level+'%';
+    var li=Math.min(faces.length-1,Math.floor(level/100*faces.length));
+    cat.textContent=faces[li]; mood.textContent='Mood: '+moods[li];
+    purrtxt.textContent= level>=100 ? "Purr meter: FULL. This cat loves you. 🏆" : "Purr meter: "+level+"%";
+    cat.classList.remove('happy');void cat.offsetWidth;cat.classList.add('happy');
+    var r=wrap.getBoundingClientRect();
+    fx((x-r.left)||r.width/2,(y-r.top)||r.height/2);
+    purrSound();
+  }
+
+  // hover petting
+  wrap.addEventListener('mousemove',function(e){ if(!('ontouchstart'in window)) pet(e.clientX,e.clientY); });
+  // drag petting / mobile
+  wrap.addEventListener('pointerdown',function(e){down=true;pet(e.clientX,e.clientY);});
+  wrap.addEventListener('pointermove',function(e){if(down)pet(e.clientX,e.clientY);});
+  window.addEventListener('pointerup',function(){down=false;});
+  wrap.addEventListener('click',function(e){pet(e.clientX,e.clientY);});
+
+  // slow decay so meter is a gentle challenge
+  setInterval(function(){
+    if(level>0){level=Math.max(0,level-1);purr.style.width=level+'%';
+      var li=Math.min(faces.length-1,Math.floor(level/100*faces.length));
+      cat.textContent=faces[li];mood.textContent='Mood: '+moods[li];}
+  },700);
+})();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

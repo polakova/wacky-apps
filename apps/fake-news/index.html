@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fake Headline Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.paper{
+  background:#f7f1e1;border:4px solid var(--ink);border-radius:6px;
+  box-shadow:var(--shadow);padding:22px 22px 28px;color:#1a1623;
+  font-family:Georgia,"Times New Roman",serif;
+}
+.masthead{text-align:center;border-bottom:4px double #1a1623;padding-bottom:8px;margin-bottom:6px}
+.masthead .name{font-size:clamp(26px,7vw,40px);font-weight:900;letter-spacing:1px;font-family:"Times New Roman",Georgia,serif}
+.masthead .sub{font-size:11px;letter-spacing:3px;text-transform:uppercase}
+.dateline{display:flex;justify-content:space-between;font-size:11px;
+  border-top:1px solid #1a1623;border-bottom:1px solid #1a1623;padding:4px 0;margin-bottom:14px;letter-spacing:1px}
+.headline{font-size:clamp(24px,6.5vw,38px);font-weight:900;line-height:1.08;margin:6px 0 10px}
+.byline{font-size:13px;font-style:italic;margin-bottom:12px;color:#444}
+.body{font-size:14px;line-height:1.55;text-align:justify}
+.body p:first-letter{font-size:38px;font-weight:900;float:left;line-height:.8;margin:4px 8px 0 0}
+.satire{font-size:10px;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-top:16px;opacity:.6}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📰 Fake Headline Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#100</span>
+</div>
+<div class="wrap">
+  <p class="center muted">Tomorrow's nonsense, today. 100% satire, 0% facts.</p>
+  <div class="paper">
+    <div class="masthead">
+      <div class="name">The Daily Bewilder</div>
+      <div class="sub">★ All The News That Didn't Happen ★</div>
+    </div>
+    <div class="dateline"><span id="loc">PLACELESS</span><span id="date"></span><span>25¢</span></div>
+    <h1 class="headline" id="head"></h1>
+    <div class="byline" id="byline"></div>
+    <div class="body"><p id="body"></p></div>
+    <div class="satire">⚠ Satire. Entirely made up for giggles. ⚠</div>
+  </div>
+  <div class="row center" style="justify-content:center;margin-top:18px">
+    <button class="btn pink" id="newBtn">🗞️ New Headline</button>
+    <button class="btn" id="copyBtn">📋 Copy</button>
+  </div>
+  <p class="center muted" id="msg"></p>
+</div>
+<script>
+const WHO=["Local Cat","A Retired Pigeon","Town Librarian","Mysterious Wizard","Suburban Dad","The Mayor's Plant","A Confused Robot","Anonymous Goose","Beloved Grandma","A Sentient Toaster","The Night Shift Janitor","A Very Polite Ghost","Competitive Knitter","Lighthouse Keeper","A Three-Legged Stool","The School Hamster","Reluctant Hero","A Door-to-Door Philosopher"];
+const DID=["Declares War On","Accidentally Invents","Refuses To Acknowledge","Secretly Runs","Falls In Love With","Demands Refund For","Wins Award For","Becomes Mayor Of","Trains For Olympics In","Files Complaint About","Opens Bakery Selling","Discovers Hidden","Single-Handedly Defeats","Forms Alliance With","Cancels Plans Due To","Launches Startup For","Holds Hostage A Crate Of","Politely Annoys"];
+const WHAT=["Mondays","The Concept Of Soup","All The Town's Umbrellas","A Surprisingly Large Sock","The Local Weather","Three Hundred Rubber Ducks","An Ancient Stapler","The Idea Of Tuesdays","A Very Loud Kettle","Competitive Napping","The Neighborhood Squirrels","A Forbidden Smoothie","The Last Parking Spot","Invisible Sandwiches","A Haunted Vending Machine","The Office Printer","An Unreasonable Amount Of Cheese","Synchronized Yawning"];
+const FIRST=["Reginald","Mabel","Boris","Penelope","Chad","Agatha","Sir Bartholomew","Doris","Maximilian","Beatrix","Gus","Esmeralda","Clyde","Winnifred","Theodore","Hyacinth"];
+const LAST=["Wobblesworth","McSnooze","Fitzgiggle","Bumblecrumb","Quirkington","Snortlebottom","Periwinkle","Grumblestein","Featherby","Noodleman","Crankshaft","Puddlewick","Higglesby","Tootlebee"];
+const LOCS=["WOBBLETON","UPPER FLUMP","MUDDLEFORD","LOWER GIGGLE","PORT SNOOZE","CHEESE HOLLOW","BAFFLEWICK","DRIZZLE FALLS","GRUMBLE BAY","NETTLE-ON-SEA","BISCUIT HEIGHTS","PUDDLEMERE"];
+const QUOTES=["\"I regret nothing,\" said no one in particular.","Witnesses described the scene as \"moderately confusing.\"","Officials urged residents to remain calm and slightly amused.","Experts remain baffled, mostly because no one asked them.","The local council has scheduled an emergency snack break.","Bystanders reportedly clapped, then forgot why.","A spokesperson declined to comment, citing a nap.","The incident is expected to be resolved by next Thursday.","Authorities confirmed everyone involved is, somehow, fine.","It was, by all accounts, a Tuesday."];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const $=id=>document.getElementById(id);
+let cur="";
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function gen(){
+  const h=pick(WHO)+" "+pick(DID)+" "+pick(WHAT);
+  cur=h;
+  $("head").textContent=h;
+  $("byline").textContent="By "+pick(FIRST)+" "+pick(LAST)+", Senior Nonsense Correspondent";
+  $("loc").textContent=pick(LOCS);
+  const d=new Date(2026,Math.floor(Math.random()*12),1+Math.floor(Math.random()*28));
+  $("date").textContent=MONTHS[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();
+  $("body").textContent="In a turn of events that surprised approximately three people, the situation unfolded earlier today near the town square. "+pick(QUOTES)+" "+pick(QUOTES)+" Reporters at the scene are still trying to figure out what, exactly, happened.";
+  $("head").classList.remove("pop");void $("head").offsetWidth;$("head").classList.add("pop");
+  $("msg").textContent="";
+}
+$("newBtn").onclick=gen;
+$("copyBtn").onclick=async()=>{
+  try{await navigator.clipboard.writeText(cur);}catch(e){
+    const ta=document.createElement("textarea");ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+  }
+  $("msg").textContent="Headline copied. Print responsibly. 🗞️";
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

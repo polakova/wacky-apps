@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>More Cowbell · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔔</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .bellwrap{display:flex;justify-content:center;margin:8px 0 22px}
+  .bell{font-size:clamp(120px,40vw,210px);cursor:pointer;user-select:none;line-height:1;
+    filter:drop-shadow(4px 6px 0 var(--ink));transition:transform .05s}
+  .bell:active{transform:scale(.94)}
+  .clonk{animation:clonk .25s}
+  @keyframes clonk{0%{transform:rotate(0)}25%{transform:rotate(-14deg)}50%{transform:rotate(11deg)}75%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+  .meterbox{height:34px;border:4px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .meterfill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--yellow),var(--orange),var(--pink));transition:width .25s}
+  .quote{min-height:1.4em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔔 More Cowbell</span>
+  <span class="spacer"></span>
+  <span class="num">#70</span>
+</div>
+
+<div class="wrap center">
+  <div class="card">
+    <div class="bellwrap"><div class="bell" id="bell" role="button" tabindex="0" aria-label="Cowbell">🔔</div></div>
+    <div class="big" id="count">0</div>
+    <p class="muted">clonks delivered (tap the bell, or press Space)</p>
+
+    <p style="font-weight:800;margin-bottom:6px">I gotta have more cowbell! 🐮</p>
+    <div class="meterbox"><div class="meterfill" id="meter"></div></div>
+    <p class="output quote" id="quote">Give it a whack.</p>
+    <button class="btn" id="reset">reset the band</button>
+  </div>
+</div>
+
+<script>
+const bell=document.getElementById("bell"), countEl=document.getElementById("count");
+const meter=document.getElementById("meter"), quote=document.getElementById("quote");
+const LS="cowbell_clonks";
+let count=+(localStorage.getItem(LS)||0);
+countEl.textContent=count;
+
+const quotes=[
+  "Mmm... that's a tasty clonk.",
+  "Really exploring the space of the cowbell now.",
+  "The band can hear you. Keep going.",
+  "Now THAT is some cowbell.",
+  "Frankly, the song needs more.",
+  "Don't fear the cowbell. 🐮",
+  "Producer says: louder.",
+  "You've got a fever, and the cure is this button.",
+  "Pure, unfiltered cowbell energy.",
+  "The whole studio is grooving.",
+  "Somewhere, a drummer is jealous.",
+  "Clonk responsibly... or don't.",
+  "This is your moment. Ring it out.",
+  "Cowbell levels: rising.",
+  "Legendary. Absolutely legendary."
+];
+
+let AC;
+function ensure(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();}
+
+// 808-style cowbell: two detuned square oscs through a bandpass, fast decay
+function clonk(){
+  ensure();
+  const t=AC.currentTime;
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.6,t+0.005);
+  g.gain.exponentialRampToValueAtTime(0.3,t+0.05);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+0.45);
+  const bp=AC.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2640; bp.Q.value=1.2;
+  const base=540+Math.random()*40;
+  [base,base*1.5].forEach(f=>{
+    const o=AC.createOscillator(); o.type="square"; o.frequency.value=f;
+    o.connect(bp); o.start(t); o.stop(t+0.5);
+  });
+  bp.connect(g).connect(AC.destination);
+}
+
+function hit(){
+  clonk();
+  count++; localStorage.setItem(LS,count); countEl.textContent=count;
+  bell.classList.remove("clonk"); void bell.offsetWidth; bell.classList.add("clonk");
+  // meter fills with recent enthusiasm, then drains
+  fever=Math.min(100,fever+9);
+  quote.textContent=quotes[Math.random()*quotes.length|0];
+}
+
+let fever=0;
+setInterval(()=>{ fever=Math.max(0,fever-2); meter.style.width=fever+"%"; },120);
+
+bell.addEventListener("click",hit);
+bell.addEventListener("keydown",e=>{if(e.code==="Space"||e.key==="Enter"){e.preventDefault();hit();}});
+window.addEventListener("keydown",e=>{if(e.code==="Space"&&document.activeElement!==bell){e.preventDefault();hit();}});
+document.getElementById("reset").onclick=()=>{count=0;localStorage.setItem(LS,0);countEl.textContent=0;fever=0;quote.textContent="Fresh band, fresh cowbell.";};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yelling Meter · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📢</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .meter{height:42px;border:4px solid var(--ink);border-radius:12px;overflow:hidden;background:#eee;margin:16px 0}
+  .meter>div{height:100%;width:0;transition:width .07s linear;
+    background:linear-gradient(90deg,#16e0bd,#ffd23f 45%,#ff7a45 72%,#ff5da2 100%)}
+  .face{font-size:clamp(64px,20vw,120px);text-align:center;line-height:1;transition:transform .1s}
+  .tierbox{text-align:center;border:4px solid var(--ink);border-radius:14px;padding:14px;
+    margin:12px 0;background:var(--yellow);box-shadow:var(--shadow-sm)}
+  .tiername{font-weight:900;font-size:clamp(22px,6vw,34px)}
+  .tierdesc{font-weight:700}
+  .peak{font-family:var(--mono);font-weight:800;text-align:center}
+  .fallback{background:#fff;border:3px dashed var(--ink);border-radius:12px;padding:16px;text-align:center}
+  .db{font-family:var(--mono);font-weight:900;font-size:28px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📢 Yelling Meter</span>
+  <span class="spacer"></span>
+  <span class="num">#98</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big center">📢 Yelling Meter</h1>
+    <p class="muted center">Allow your mic, then YELL. Unlock the legendary volume tiers. (Audio never leaves your device.)</p>
+    <div class="center">
+      <button class="btn pink" id="start">🎤 Turn on the meter</button>
+    </div>
+    <div id="live" style="display:none">
+      <div class="face" id="face">😴</div>
+      <div class="db" id="db">0%</div>
+      <div class="meter"><div id="bar"></div></div>
+      <div class="tierbox"><div class="tiername" id="tname">Library Mode</div>
+        <div class="tierdesc" id="tdesc">Shhh. We can barely hear you.</div></div>
+      <div class="peak">🏆 Loudest tier reached: <span id="peak">Library Mode</span></div>
+      <div class="center" style="margin-top:12px">
+        <button class="btn" id="stop">⏹ Stop listening</button>
+      </div>
+    </div>
+    <div id="fb" class="fallback" style="display:none"></div>
+  </div>
+</div>
+<script>
+const TIERS=[
+ {min:0,f:"😴",n:"Library Mode",d:"Shhh. We can barely hear you."},
+ {min:14,f:"🙂",n:"Polite Murmur",d:"Lovely indoor voice. Very civilized."},
+ {min:30,f:"😃",n:"Spirited Chat",d:"Now we're talking! Literally."},
+ {min:46,f:"😮",n:"Hype Volume",d:"The neighbors just glanced over."},
+ {min:62,f:"😤",n:"Sports Fan",d:"REFEREE, ARE YOU SERIOUS?!"},
+ {min:76,f:"📣",n:"Town Crier",d:"HEAR YE, HEAR YE, YOU ARE LOUD."},
+ {min:88,f:"🌋",n:"Volcano Mode",d:"Windows rattling. Pets concerned."},
+ {min:96,f:"🦖",n:"Apex Roar",d:"LEGENDARY. Dinosaurs salute you."}
+];
+const bar=document.getElementById('bar'),face=document.getElementById('face'),
+  db=document.getElementById('db'),tname=document.getElementById('tname'),
+  tdesc=document.getElementById('tdesc'),peakEl=document.getElementById('peak');
+let actx,analyser,data,raf,stream,peakIdx=0,disp=0;
+function tierFor(v){let t=TIERS[0];for(const x of TIERS)if(v>=x.min)t=x;return t;}
+function loop(){
+  analyser.getByteTimeDomainData(data);
+  let sum=0;for(let i=0;i<data.length;i++){const x=(data[i]-128)/128;sum+=x*x;}
+  const rms=Math.sqrt(sum/data.length);
+  let v=Math.min(100,Math.round(rms*320)); // amplify so normal speech registers
+  disp=disp*0.6+v*0.4; // smooth
+  const sv=Math.round(disp);
+  bar.style.width=sv+'%';db.textContent=sv+'%';
+  const t=tierFor(sv);face.textContent=t.f;tname.textContent=t.n;tdesc.textContent=t.d;
+  face.style.transform='scale('+(1+sv/180)+')';
+  const idx=TIERS.indexOf(t);if(idx>peakIdx){peakIdx=idx;peakEl.textContent=t.n;}
+  raf=requestAnimationFrame(loop);
+}
+document.getElementById('start').onclick=async()=>{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showFB("This browser doesn't support microphone access. (No mic, no yelling — but you can still yell at the screen for free.)");return;}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    actx=new(window.AudioContext||window.webkitAudioContext)();
+    const src=actx.createMediaStreamSource(stream);
+    analyser=actx.createAnalyser();analyser.fftSize=512;
+    data=new Uint8Array(analyser.fftSize);src.connect(analyser);
+    document.getElementById('start').style.display='none';
+    document.getElementById('live').style.display='block';
+    loop();
+  }catch(e){
+    showFB("Mic access was denied or unavailable. 🤫 No worries — picture yourself yelling triumphantly. The meter believes in you. Reload to try again.");
+  }
+};
+function showFB(msg){document.getElementById('fb').style.display='block';
+  document.getElementById('fb').innerHTML='📢 '+msg;
+  document.getElementById('start').style.display='none';}
+document.getElementById('stop').onclick=()=>{
+  cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(actx)actx.close();
+  document.getElementById('live').style.display='none';
+  showFB("Meter stopped. Your vocal cords thank you. Reload to yell again.");
+};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

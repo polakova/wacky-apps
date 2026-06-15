@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Binary Translator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#060b10;background-image:none;color:#7fdfff}
+  .term{
+    background:#020608;border:3px solid #2aa9ff;border-radius:10px;
+    box-shadow:0 0 24px #2aa9ff44,inset 0 0 60px #001020;padding:18px;font-family:var(--mono);
+  }
+  .term::before{content:"$ echo \"$INPUT\" | 0b";display:block;color:#3a86ff;
+    border-bottom:1px solid #15405e;padding-bottom:8px;margin-bottom:12px}
+  h1{font-family:var(--mono);color:#7fdfff;text-shadow:0 0 8px #2aa9ff}
+  textarea{background:#020a10;color:#7fdfff;border-color:#2aa9ff;caret-color:#7fdfff}
+  #out{background:#020a10;border:2px dashed #2aa9ff;border-radius:8px;padding:14px;
+    font-family:var(--mono);color:#aef0ff;min-height:1.4em;font-size:clamp(15px,3.6vw,20px);
+    word-break:break-all;line-height:1.6}
+  .lbl{color:#3a86ff;font-size:13px;margin:12px 0 4px}
+  .btn{background:#0a2030;color:#7fdfff;border-color:#2aa9ff}
+  .btn:hover{background:#2aa9ff;color:#020608}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔢 Binary Translator</span>
+  <span class="spacer"></span>
+  <span class="num">#42</span>
+</div>
+<div class="wrap">
+  <div class="term">
+    <h1>01000010 01101001 01101110</h1>
+    <div class="lbl">// human text:</div>
+    <textarea id="text" rows="2" placeholder="type here">beep boop</textarea>
+    <div class="row center" style="justify-content:center;margin:12px 0">
+      <button class="btn" id="t2b">↓ to binary</button>
+      <button class="btn" id="b2t">↑ to text</button>
+    </div>
+    <div class="lbl">// binary (8 bits / char):</div>
+    <textarea id="bin" rows="2" placeholder="01001000 ..."></textarea>
+    <div class="lbl">// output:</div>
+    <div id="out"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="copy">[ copy ]</button>
+      <span class="muted" id="status" style="color:#7fdfff"></span>
+    </div>
+  </div>
+</div>
+<script>
+const textEl=document.getElementById('text'),binEl=document.getElementById('bin'),outEl=document.getElementById('out');
+function toBinary(s){
+  const bytes=[];
+  for(const ch of s){
+    let cp=ch.codePointAt(0);
+    if(cp<128){ bytes.push(cp.toString(2).padStart(8,'0')); }
+    else {
+      // utf-8 encode multi-byte chars into 8-bit groups
+      const enc=new TextEncoder().encode(ch);
+      enc.forEach(b=>bytes.push(b.toString(2).padStart(8,'0')));
+    }
+  }
+  return bytes.join(' ');
+}
+function toText(s){
+  const groups=s.replace(/[^01]/g,' ').trim().split(/\s+/).filter(Boolean);
+  if(!groups.length) return '';
+  const bytes=[];
+  for(const g of groups){
+    if(g.length!==8) return '⚠ each group must be exactly 8 bits ('+g+' has '+g.length+')';
+    bytes.push(parseInt(g,2));
+  }
+  try{ return new TextDecoder().decode(new Uint8Array(bytes)); }
+  catch(e){ return '⚠ invalid byte sequence'; }
+}
+document.getElementById('t2b').onclick=()=>{ const b=toBinary(textEl.value); binEl.value=b; outEl.textContent=b||'—'; };
+document.getElementById('b2t').onclick=()=>{ const t=toText(binEl.value); textEl.value=t.startsWith('⚠')?textEl.value:t; outEl.textContent=t||'—'; };
+document.getElementById('copy').onclick=async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='>> copied';setTimeout(()=>st.textContent='',1500);
+};
+document.getElementById('t2b').click();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

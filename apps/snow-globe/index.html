@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snow Globe · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #globe{border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+    width:100%;touch-action:none;cursor:grab;background:#0c1430}
+  #globe:active{cursor:grabbing}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">❄️ Snow Globe</span>
+  <span class="spacer"></span>
+  <span class="num">#60</span>
+</div>
+<div class="wrap stack">
+  <p class="muted center" style="margin:0">A tiny cabin under a winter sky. Give it a shake — or just tap the glass.</p>
+  <canvas id="globe" width="400" height="420"></canvas>
+  <div class="row" style="justify-content:center">
+    <button class="btn blue" id="shake">❄️ Shake</button>
+    <button class="btn" id="calm">Let it settle</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('globe'),cx=cv.getContext('2d');
+let W,H,cxC,cyC,R,flakes=[],shake=0;
+function resize(){const r=cv.getBoundingClientRect();W=cv.width=r.width;H=cv.height=Math.round(r.width*1.05);
+  cxC=W/2;cyC=H*0.46;R=Math.min(W,H*0.9)*0.46;init();}
+new ResizeObserver(resize).observe(cv);
+function init(){flakes=[];const n=160;for(let i=0;i<n;i++){const a=Math.random()*7,rr=Math.random()*R;
+  flakes.push({x:cxC+Math.cos(a)*rr,y:cyC+Math.sin(a)*rr,r:1+Math.random()*2.6,vx:0,vy:.3+Math.random(),s:.4+Math.random()});}}
+function doShake(){shake=1;flakes.forEach(f=>{f.vx=(Math.random()-.5)*9;f.vy=(Math.random()-.7)*9;});}
+document.getElementById('shake').onclick=doShake;
+document.getElementById('calm').onclick=()=>{shake=0;};
+['mousedown','touchstart'].forEach(ev=>cv.addEventListener(ev,e=>{e.preventDefault();doShake();},{passive:false}));
+function loop(){
+  cx.clearRect(0,0,W,H);
+  // sky gradient inside globe
+  cx.save();cx.beginPath();cx.arc(cxC,cyC,R,0,7);cx.clip();
+  const g=cx.createLinearGradient(0,cyC-R,0,cyC+R);g.addColorStop(0,'#14224d');g.addColorStop(1,'#3a5a9c');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  // moon
+  cx.fillStyle='#fff6cf';cx.beginPath();cx.arc(cxC+R*.45,cyC-R*.5,R*.13,0,7);cx.fill();
+  // snow ground
+  cx.fillStyle='#eef4ff';cx.beginPath();cx.moveTo(cxC-R,cyC+R*.4);
+  cx.quadraticCurveTo(cxC,cyC+R*.15,cxC+R,cyC+R*.4);cx.lineTo(cxC+R,cyC+R);cx.lineTo(cxC-R,cyC+R);cx.fill();
+  // cabin
+  const bw=R*.55,bh=R*.4,bx=cxC-bw/2,by=cyC+R*.25-bh;
+  cx.fillStyle='#7a4a2b';cx.fillRect(bx,by,bw,bh);
+  cx.fillStyle='#5a2f18';cx.beginPath();cx.moveTo(bx-bw*.12,by);cx.lineTo(cxC,by-bh*.7);cx.lineTo(bx+bw+bw*.12,by);cx.fill();
+  cx.fillStyle='#ffd23f';cx.fillRect(bx+bw*.36,by+bh*.35,bw*.28,bh*.55);
+  // pine trees
+  function tree(tx,ty,th){cx.fillStyle='#1f6b3a';for(let k=0;k<3;k++){const yy=ty-th*.33*k,ww=th*(.6-k*.16);
+    cx.beginPath();cx.moveTo(tx,yy-th*.4);cx.lineTo(tx-ww,yy);cx.lineTo(tx+ww,yy);cx.fill();}}
+  tree(cxC-R*.6,cyC+R*.45,R*.5);tree(cxC+R*.62,cyC+R*.5,R*.42);
+  // flakes physics + draw
+  for(const f of flakes){
+    if(shake){f.vx*=.96;f.vy*=.96;}else{f.vx*=.9;f.vy+=.02;}
+    f.x+=f.vx+Math.sin((f.y+performance.now()*.001)*0.6)*0.3*f.s;
+    f.y+=Math.max(f.vy,shake?f.vy:f.s*.7);
+    const dx=f.x-cxC,dy=f.y-cyC,d=Math.hypot(dx,dy);
+    if(d>R-f.r){const a=Math.atan2(dy,dx);f.x=cxC+Math.cos(a)*(R-f.r);f.y=cyC+Math.sin(a)*(R-f.r);
+      f.vx*=-.4;f.vy=Math.abs(f.vy)*-.3;}
+    cx.fillStyle='rgba(255,255,255,.9)';cx.beginPath();cx.arc(f.x,f.y,f.r,0,7);cx.fill();
+  }
+  cx.restore();
+  // glass rim + highlight
+  cx.lineWidth=6;cx.strokeStyle='rgba(255,255,255,.25)';cx.beginPath();cx.arc(cxC,cyC,R,0,7);cx.stroke();
+  cx.strokeStyle='rgba(255,255,255,.5)';cx.lineWidth=4;cx.beginPath();cx.arc(cxC,cyC,R-4,Math.PI*1.05,Math.PI*1.45);cx.stroke();
+  // base
+  cx.fillStyle='#5b3a23';cx.beginPath();cx.moveTo(cxC-R*.8,cyC+R*.78);cx.lineTo(cxC+R*.8,cyC+R*.78);
+  cx.lineTo(cxC+R*.6,cyC+R*1.02);cx.lineTo(cxC-R*.6,cyC+R*1.02);cx.fill();
+  requestAnimationFrame(loop);
+}
+resize();loop();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

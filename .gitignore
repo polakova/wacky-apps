@@ -1,0 +1,18 @@
+# generated take-home files (rebuilt by build_downloads.py / CI)
+download/
+
+# android build outputs
+out/
+android/.gradle/
+android/build/
+android/app/build/
+.gradle/
+
+# per-build assets (filled in by CI; folder kept via .gitkeep)
+android/app/src/main/assets/www/*
+!android/app/src/main/assets/www/.gitkeep
+
+# misc
+node_modules/
+*.log
+.DS_Store

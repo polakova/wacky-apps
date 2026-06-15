@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Startup Mad Libs · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .deck{background:linear-gradient(160deg,#fff,#eef4ff);border:4px solid var(--ink);border-radius:18px;
+    box-shadow:var(--shadow);padding:28px 24px;position:relative;overflow:hidden}
+  .deck::before{content:"";position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(var(--blue),transparent 70%);opacity:.15}
+  .slidekick{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--blue);font-weight:800}
+  .pitch{font-size:clamp(22px,5vw,32px);font-weight:900;line-height:1.25;margin:16px 0}
+  .pitch b{color:var(--purple)}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+  .stat{flex:1;min-width:120px;background:#fff;border:3px solid var(--ink);border-radius:12px;padding:10px 12px;text-align:center}
+  .stat .k{font-family:var(--mono);font-size:11px;opacity:.6;letter-spacing:1px}
+  .stat .v{font-weight:900;font-size:20px}
+  .tags{margin-top:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:var(--cyan);font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🚀 Startup Mad Libs</span>
+  <span class="spacer"></span>
+  <span class="num">#5</span>
+</div>
+<div class="wrap stack">
+  <div class="deck" id="deck">
+    <div class="slidekick">SERIES SEED · CONFIDENTIAL · SLIDE 1/47</div>
+    <div class="pitch" id="pitch"></div>
+    <div class="stats">
+      <div class="stat"><div class="k">VALUATION</div><div class="v" id="val">$1B</div></div>
+      <div class="stat"><div class="k">USERS</div><div class="v" id="users">0</div></div>
+      <div class="stat"><div class="k">RUNWAY</div><div class="v" id="run">∞</div></div>
+    </div>
+    <div class="tags" id="tags"></div>
+  </div>
+  <div class="row center" style="justify-content:center">
+    <button class="btn blue" id="gen">💡 Pitch me</button>
+    <button class="btn" id="copy">📋 Copy</button>
+  </div>
+  <div class="muted center">Disrupting industries that didn't ask to be disrupted.</div>
+</div>
+<div class="toast" id="toast">Copied straight to your investors!</div>
+<script>
+const apps=["Uber","Tinder","Netflix","Spotify","Airbnb","Slack","TikTok","LinkedIn","Duolingo","Roomba",
+  "a vending machine","Google Maps","a group chat","a microwave","a fitness tracker","an escape room",
+  "a dating app","a loyalty card","a smart fridge","a karaoke machine"];
+const things=["houseplants","pet rocks","grandparents","ghosts","sourdough starters","left socks","squirrels",
+  "naps","awkward silences","houseplants that judge you","introverts","weekend chores","goldfish",
+  "office plants","forgotten passwords","umbrellas","leftover pizza","tiny dogs","gym memberships","procrastinators"];
+const buzz=["blockchain","AI","quantum vibes","the metaverse","machine empathy","edge cabbage computing",
+  "synergistic mindfulness","a proprietary algorithm","decentralized hugs","big data and small talk",
+  "neural snacks","cloud-native astrology","gamified guilt","frictionless friendship","AI that mostly works",
+  "a very confident chatbot","predictive napping","sustainable chaos","real-time vibes","an API for feelings"];
+const tagPool=["#disruptive","#prelaunch","#stealth","#viral","#scalable","#unicorn","#web5","#frictionless",
+  "#thoughtleader","#growthhacked","#paradigm","#synergy"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=n=>n>=1e9?"$"+(n/1e9).toFixed(1)+"B":n>=1e6?"$"+(n/1e6).toFixed(0)+"M":"$"+n;
+const pitch=document.getElementById('pitch'),val=document.getElementById('val'),users=document.getElementById('users'),run=document.getElementById('run'),tags=document.getElementById('tags'),deck=document.getElementById('deck');
+let current="";
+function gen(){
+  const a=pick(apps),t=pick(things),b=pick(buzz);
+  current=`It's like ${a} for ${t}, powered by ${b}.`;
+  pitch.innerHTML=`It's like <b>${a}</b> for <b>${t}</b>, powered by <b>${b}</b>.`;
+  val.textContent=fmt((0.4+Math.random()*9.6)*1e9);
+  users.textContent=(Math.floor(Math.random()*12)+"")+" (all friends)";
+  run.textContent=["3 weeks","2 months","∞ (optimistic)","until Friday","6 lattes"][Math.floor(Math.random()*5)];
+  const shuffled=[...tagPool].sort(()=>Math.random()-0.5).slice(0,3);
+  tags.innerHTML=shuffled.map(x=>`<span class="pill">${x}</span>`).join("");
+  deck.classList.remove('pop');void deck.offsetWidth;deck.classList.add('pop');
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=current+" Valued at "+val.textContent+".";
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sparkle Cursor · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .play{position:relative;min-height:62vh;cursor:none;overflow:hidden;
+    background:linear-gradient(160deg,#1a0938,#3a1078 60%,#7b2ff7);
+    border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow)}
+  .play *{pointer-events:none}
+  .wand{position:absolute;font-size:34px;transform:translate(-6px,-30px) rotate(-25deg);
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));will-change:left,top}
+  .spark{position:absolute;will-change:transform,opacity;user-select:none}
+  .hint{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;color:rgba(255,255,255,.85);font-weight:800;font-size:20px;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);transition:opacity .4s}
+  @keyframes fall{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">✨ Sparkle Cursor</span>
+  <span class="spacer"></span>
+  <span class="num">#65</span>
+</div>
+
+<div class="wrap">
+  <div class="play" id="play">
+    <div class="hint" id="hint">Move your wand around ✨ (best on desktop)</div>
+    <div class="wand" id="wand">🪄</div>
+  </div>
+  <p class="center muted">Pure 2003 energy. Leave a glittery trail wherever you go.</p>
+</div>
+
+<script>
+const play=document.getElementById("play"), wand=document.getElementById("wand"), hint=document.getElementById("hint");
+const glyphs=["✨","⭐","🌟","💫","❇️","✦"];
+let lastX=0,lastY=0,firstMove=true;
+
+function spawn(x,y){
+  const s=document.createElement("div");
+  s.className="spark";
+  s.textContent=glyphs[Math.random()*glyphs.length|0];
+  const size=10+Math.random()*18;
+  s.style.fontSize=size+"px";
+  s.style.left=(x-size/2)+"px";
+  s.style.top=(y-size/2)+"px";
+  const dx=(Math.random()*60-30)+"px";
+  const dy=(40+Math.random()*90)+"px";
+  const rot=(Math.random()*540-270)+"deg";
+  const dur=600+Math.random()*700;
+  s.style.setProperty("--dx",dx);
+  s.style.setProperty("--dy",dy);
+  s.style.setProperty("--rot",rot);
+  s.style.animation="fall "+dur+"ms ease-in forwards";
+  play.appendChild(s);
+  setTimeout(()=>s.remove(),dur);
+}
+
+function move(clientX,clientY){
+  const r=play.getBoundingClientRect();
+  const x=clientX-r.left, y=clientY-r.top;
+  if(x<0||y<0||x>r.width||y>r.height) return;
+  wand.style.left=x+"px"; wand.style.top=y+"px";
+  if(firstMove){ firstMove=false; hint.style.opacity="0"; }
+  // emit more sparkles when moving faster
+  const dist=Math.hypot(x-lastX,y-lastY);
+  const n=1+Math.min(4,dist/14|0);
+  for(let i=0;i<n;i++) spawn(x+(Math.random()*10-5), y+(Math.random()*10-5));
+  lastX=x; lastY=y;
+}
+
+play.addEventListener("mousemove",e=>move(e.clientX,e.clientY));
+play.addEventListener("touchmove",e=>{const t=e.touches[0];move(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+play.addEventListener("touchstart",e=>{const t=e.touches[0];move(t.clientX,t.clientY);},{passive:true});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

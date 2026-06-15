@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Awkward Silence Timer · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😬</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .clock{font-family:var(--mono);font-weight:900;font-size:clamp(48px,16vw,90px);line-height:1;text-align:center}
+  .face{font-size:clamp(60px,18vw,110px);text-align:center;line-height:1}
+  .comment{font-weight:800;font-size:clamp(18px,4.5vw,24px);text-align:center;min-height:2.4em;
+    background:var(--yellow);border:3px solid var(--ink);border-radius:12px;padding:12px;margin:14px 0}
+  .sweatbar{height:30px;border:4px solid var(--ink);border-radius:10px;overflow:hidden;background:#dff}
+  .sweatbar>div{height:100%;width:0;transition:width .4s;
+    background:linear-gradient(90deg,#16e0bd,#ffd23f,#ff7a45,#ff5da2);display:flex;align-items:center;
+    justify-content:flex-end;padding-right:8px;font-weight:900}
+  .tier{font-family:var(--mono);font-weight:800;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">😬 Awkward Silence Timer</span>
+  <span class="spacer"></span>
+  <span class="num">#97</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big center">😬 Awkward Silence Timer</h1>
+    <p class="muted center">Press start when nobody says anything. Watch the tension build.</p>
+    <div class="face" id="face">🙂</div>
+    <div class="clock" id="clock">0:00</div>
+    <div class="comment" id="comment">Everything's fine. Totally normal. Press start.</div>
+    <div class="sweatbar"><div id="sweat">0%</div></div>
+    <div class="tier" id="tier">Sweat level: bone dry</div>
+    <div class="row center" style="justify-content:center;margin-top:16px">
+      <button class="btn pink" id="toggle">▶ Start the silence</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+</div>
+<script>
+const clock=document.getElementById('clock'),face=document.getElementById('face'),
+  comment=document.getElementById('comment'),sweat=document.getElementById('sweat'),
+  tierEl=document.getElementById('tier'),toggle=document.getElementById('toggle');
+let t=0,iv=null,running=false,lastIdx=-1;
+// {minSeconds, face, tier, comments[]}
+const STAGES=[
+ {s:0,f:"🙂",tier:"bone dry",c:["Cool, cool. Just two people enjoying the quiet.",
+   "This is fine. Comfortable, even.","Ah, a peaceful pause."]},
+ {s:5,f:"😐",tier:"slightly clammy",c:["…so anyway.","Someone should say something soon, right?",
+   "Hmm. Yep. Mm-hmm.","Is it my turn to talk?"]},
+ {s:11,f:"😅",tier:"forehead glistening",c:["Okay this is getting a little long.",
+   "Quick, think of a topic. ANY topic.","Should I mention the weather? I'll mention the weather.",
+   "Wow, look at that… ceiling."]},
+ {s:18,f:"😬",tier:"visibly perspiring",c:["NOBODY blink. Or do. I don't know the rules anymore.",
+   "I can hear my own heartbeat now.","Why did I make eye contact. WHY.",
+   "Counting the seconds is NOT helping."]},
+ {s:26,f:"🥵",tier:"actively dripping",c:["I would pay good money for a fire alarm right now.",
+   "My soul has left my body and is hiding under the table.",
+   "Pretend to get a phone call. PRETEND TO GET A PHONE CALL.",
+   "This silence has its own gravitational pull."]},
+ {s:36,f:"😰",tier:"swimming in it",c:["We are now legally a monastery.",
+   "Tumbleweed just rolled past. Indoors.","I've started planning my entire escape route.",
+   "Even the crickets left. They couldn't take it."]},
+ {s:50,f:"💀",tier:"fully evaporated",c:["Congratulations, you've achieved Legendary Awkwardness.",
+   "Historians will study this silence.","We did it. We broke time itself.",
+   "Just say literally anything. A sound. A noise. Anything!"]}
+];
+function fmt(x){return Math.floor(x/60)+':'+String(x%60).padStart(2,'0');}
+function stageFor(sec){let st=STAGES[0];for(const s of STAGES)if(sec>=s.s)st=s;return st;}
+function tick(){
+  t++;clock.textContent=fmt(t);
+  const pct=Math.min(100,Math.round(t/55*100));
+  sweat.style.width=pct+'%';sweat.textContent=pct+'%';
+  const st=stageFor(t);face.textContent=st.f;tierEl.textContent='Sweat level: '+st.tier;
+  if(t%3===0||face.dataset.stage!==st.tier){
+    face.dataset.stage=st.tier;
+    comment.textContent=st.c[Math.floor(Math.random()*st.c.length)];
+    comment.classList.remove('pop');void comment.offsetWidth;comment.classList.add('pop');
+  }
+}
+toggle.onclick=()=>{
+  running=!running;
+  if(running){iv=setInterval(tick,1000);toggle.textContent='⏸ Someone spoke!';toggle.className='btn purple';}
+  else{clearInterval(iv);toggle.textContent='▶ Resume silence';toggle.className='btn pink';
+    comment.textContent='Phew. Sweet relief. Conversation resumes.';face.textContent='😮‍💨';}
+};
+document.getElementById('reset').onclick=()=>{clearInterval(iv);running=false;t=0;
+  clock.textContent='0:00';sweat.style.width='0';sweat.textContent='0%';face.textContent='🙂';
+  face.dataset.stage='';tierEl.textContent='Sweat level: bone dry';
+  comment.textContent="Everything's fine. Totally normal. Press start.";
+  toggle.textContent='▶ Start the silence';toggle.className='btn pink';};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

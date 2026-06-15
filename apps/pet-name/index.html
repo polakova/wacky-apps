@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pet Name Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.paws{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.paws span{position:absolute;font-size:26px;opacity:.12;transform:rotate(var(--r))}
+.wrap{position:relative;z-index:1}
+.petcard{position:relative;overflow:hidden}
+.species-emoji{font-size:90px;line-height:1;margin:6px 0;display:inline-block;transition:transform .3s}
+.species-emoji.bounce{animation:pop .4s}
+.namebox{font-size:clamp(26px,7vw,46px);font-weight:900;color:var(--purple);margin:8px 0;min-height:1.2em;word-break:break-word}
+.tag{font-family:var(--mono);font-size:13px;color:#fff;background:var(--pink);display:inline-block;padding:3px 12px;border-radius:999px;margin-top:4px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--pink);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none;z-index:2}
+.toast.show{opacity:1}
+label{font-family:var(--mono);font-weight:800;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐾 Pet Name Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#18</span>
+</div>
+
+<div class="paws" id="paws"></div>
+
+<div class="wrap center">
+  <div class="card petcard">
+    <div class="big">Name that critter 🐾</div>
+    <p class="muted">Pick a species. We'll find a name that fits its tiny soul.</p>
+
+    <div class="row" style="justify-content:center;margin:14px 0">
+      <label for="species">Species:</label>
+      <select id="species">
+        <option value="dog">🐕 Dog</option>
+        <option value="cat">🐈 Cat</option>
+        <option value="bird">🦜 Bird</option>
+        <option value="fish">🐠 Fish</option>
+        <option value="hamster">🐹 Hamster</option>
+        <option value="rabbit">🐇 Rabbit</option>
+        <option value="snake">🐍 Snake</option>
+        <option value="lizard">🦎 Lizard</option>
+      </select>
+    </div>
+
+    <div class="species-emoji" id="emoji">🐕</div>
+    <div class="namebox" id="name">…</div>
+    <div class="tag" id="tag"></div>
+
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button class="btn pink" id="gen">🎲 Generate</button>
+      <button class="btn purple" id="copy">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EMOJI={dog:"🐕",cat:"🐈",bird:"🦜",fish:"🐠",hamster:"🐹",rabbit:"🐇",snake:"🐍",lizard:"🦎"};
+// fun titles to glue in for extra silliness
+const TITLES=["Sir","Lady","Captain","Lord","Professor","Baron","Señor","Princess","Admiral","Duke","Mademoiselle","His Majesty","Doctor","General","Saint"];
+const D={
+ dog:["Bork Twain","Sir Waggington","Biscuit McFluff","Chairman Mao Mao","Doot the Destroyer","Noodle Paws","Bartholomew Boop","Sausage Roll","Captain Snackers","Gerald the Brave","Tippy Toes","Wigglesworth","Chonk Norris","Mister Floofers","Beans Galore","Howl Pacino","Bork Obama","Drooly Andrews"],
+ cat:["Sir Pounce-a-Lot","Whiskerton III","Princess Hairball","Mittens the Menace","Lord Scratchington","Toe Beans","Meowrice","Salem the Smug","Cleocatra","Purrlock Holmes","Fuzz Aldrin","Captain Naptime","Biscuit Witch","Lady Knockstuffover","Sir Loaf","Hiss Majesty","Tuna Turner","Catrick Swayze"],
+ bird:["Sir Tweets-a-Lot","Beaky Blinders","Captain Squawk","Featherbottom","Lord Chirpington","Pip the Loud","Sir Flaps","Birdo Baggins","Sky Lasagna","Maximilian Peck","Tweetle Dee","Wing Crosby","Cluck Norris","Polly Esther","Beakface","Sir Chirpsalot","Egg Sheeran","Tweety McFly"],
+ fish:["Sir Bubbles","Finn Diesel","Gill Gates","Swim Shady","Captain Blub","Sushi Roll","Fishy McFishface","Aquaman Jr","Splash Gordon","Lord Glubglub","Moby Tiny","Bubble O'Seven","Finnegan","Wanda Maximum","Cod Almighty","Glub Marley","Salmon Belly","Nemo's Cousin"],
+ hamster:["Sir Cheeks","Hamtaro Supreme","Nibbles McGee","Captain Stuffington","Sunflower Steve","Sir Wheelsworth","Tiny Tornado","Mister Pockets","Cheek Magnet","Nugget","Speedy Gonzaburger","Hammy Davis Jr","Lord Crunch","Pip Squeak","Bran Muffin","Wheelie Nelson","Sir Hoards-a-Lot","Doctor Nibbington"],
+ rabbit:["Sir Hops-a-Lot","Cottonbutt","Carrot Top","General Thumper","Bun Bun Supreme","Floppy McEars","Lord Lettuce","Marshmallow","Sir Nibblefluff","Hoppy Hopkins","Bugs Brunny","Twitchy Whiskers","Cinnabun","Velveteen Vlad","Captain Cabbage","Hops Aldrin","Flopsworth","Munch Monroe"],
+ snake:["Sir Hiss","Noodle the Long","Danger Spaghetti","Sssalvatore","Lord Slithers","Mr Bitey","Sir Squeezealot","Hissterio","Pretzel","Slinky Malinki","Sssusan","Count Sssula","Boop the Snoot","Long Boi","Ssseñor Squeeze","Viper Goldberg","Limbless Larry","Sssamantha"],
+ lizard:["Sir Basks-a-Lot","Lizzo McScales","Captain Sunbeam","Spike the Mellow","Lord Geckington","Tail Swift","Mister Scales","Rango the Bold","Sticky Toes","Beardo DiCaprio","Lounge Lizard","Sir Blinks","Salamander Hamilton","Heat Rock Harry","Iguanahontas","Scaley McCool","Drago the Chill","Gex the Great"]};
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+let cur="";
+function gen(){
+  const sp=document.getElementById('species').value;
+  document.getElementById('emoji').textContent=EMOJI[sp];
+  const e=document.getElementById('emoji');e.classList.remove('bounce');void e.offsetWidth;e.classList.add('bounce');
+  // ~30% prepend a grand title for variety
+  let nm=pick(D[sp]);
+  if(Math.random()<.3 && !/^(Sir|Lady|Captain|Lord|Professor|Princess|Admiral|Duke|Doctor|General|Saint|Baron|Señor)\b/.test(nm)){nm=pick(TITLES)+" "+nm;}
+  cur=nm;
+  document.getElementById('name').textContent=nm;
+  document.getElementById('tag').textContent='A very good '+sp;
+}
+document.getElementById('species').onchange=gen;
+document.getElementById('gen').onclick=gen;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+document.getElementById('copy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(cur);}
+  catch(e){const ta=document.createElement('textarea');ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Copied: '+cur+' 🐾');
+};
+// scatter paw prints
+(function(){const p=document.getElementById('paws');const glyphs=['🐾','🐾','🐾'];for(let i=0;i<14;i++){const s=document.createElement('span');s.textContent=glyphs[0];s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.setProperty('--r',(Math.random()*120-60)+'deg');s.style.fontSize=(18+Math.random()*22)+'px';p.appendChild(s);}})();
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

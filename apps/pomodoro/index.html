@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tomato Timer · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.tomato{position:relative;width:240px;height:240px;margin:8px auto}
+.glass{
+  position:absolute;inset:0;border-radius:50%;
+  border:5px solid var(--ink);overflow:hidden;background:#fff5f3;
+  box-shadow:var(--shadow);
+}
+.fill{
+  position:absolute;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#ff7a45,#e63a2e);
+  transition:height .4s linear;
+}
+.leaf{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:46px;z-index:2;filter:drop-shadow(0 2px 0 #1a1623)}
+.clock{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:1;
+  font-family:var(--mono);font-weight:900;color:var(--ink);
+}
+.clock .t{font-size:48px;text-shadow:0 1px 0 #fff}
+.mode{font-size:14px;letter-spacing:2px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🍅 Tomato Timer</span>
+  <span class="spacer"></span>
+  <span class="num">#80</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">Focus 25, rest 5. Watch the tomato drain. Chime when it's done.</div>
+    <div class="tomato">
+      <span class="leaf">🍃</span>
+      <div class="glass"><div class="fill" id="fill" style="height:100%"></div></div>
+      <div class="clock">
+        <div class="mode" id="mode">FOCUS</div>
+        <div class="t" id="time">25:00</div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="start">▶ Start</button>
+      <button class="btn" id="reset">↺ Reset</button>
+    </div>
+    <div class="muted" id="done" style="margin-top:10px">🍅 0 done today</div>
+  </div>
+</div>
+<script>
+const FOCUS=25*60, BREAK=5*60;
+let mode='FOCUS', total=FOCUS, left=FOCUS, running=false, timer=null, ac=null;
+let done=parseInt(localStorage.getItem('pomo_done')||'0',10);
+const fill=document.getElementById('fill'), timeEl=document.getElementById('time');
+const modeEl=document.getElementById('mode'), startB=document.getElementById('start');
+const doneEl=document.getElementById('done');
+doneEl.textContent='🍅 '+done+' done today';
+
+function fmt(s){const m=Math.floor(s/60);return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function render(){
+  timeEl.textContent=fmt(left);
+  fill.style.height=(left/total*100)+'%';
+  modeEl.textContent=mode;
+  fill.style.background = mode==='FOCUS'
+    ? 'linear-gradient(180deg,#ff7a45,#e63a2e)'
+    : 'linear-gradient(180deg,#16e0bd,#3a86ff)';
+}
+function chime(){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const now=ac.currentTime;
+    [880,1320,1760].forEach((f,i)=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=f;
+      o.connect(g); g.connect(ac.destination);
+      const t=now+i*0.18;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.25,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+      o.start(t); o.stop(t+0.5);
+    });
+  }catch(e){}
+}
+function tick(){
+  left--;
+  if(left<=0){
+    chime();
+    if(mode==='FOCUS'){ done++; localStorage.setItem('pomo_done',done); doneEl.textContent='🍅 '+done+' done today';
+      mode='BREAK'; total=BREAK; }
+    else { mode='FOCUS'; total=FOCUS; }
+    left=total;
+  }
+  render();
+}
+function start(){
+  if(!ac){ try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} }
+  if(running){ running=false; clearInterval(timer); startB.textContent='▶ Resume'; return; }
+  running=true; startB.textContent='⏸ Pause';
+  timer=setInterval(tick,1000);
+}
+function reset(){
+  running=false; clearInterval(timer);
+  mode='FOCUS'; total=FOCUS; left=FOCUS; startB.textContent='▶ Start'; render();
+}
+startB.onclick=start; document.getElementById('reset').onclick=reset;
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

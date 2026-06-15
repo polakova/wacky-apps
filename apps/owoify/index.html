@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UwU-ifier · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#fff0f7;background-image:radial-gradient(#ffb6e6 1px,transparent 1px);background-size:22px 22px}
+  .cute{
+    background:#fff;border:4px solid #ff8fd0;border-radius:24px;
+    box-shadow:6px 6px 0 #ff8fd0;padding:24px;
+  }
+  h1{color:#ff5db1}
+  textarea{border-color:#ff8fd0;background:#fff7fc}
+  #out{
+    font-size:clamp(18px,4.5vw,26px);font-weight:800;line-height:1.4;
+    background:#ffeaf6;border:3px dashed #ff8fd0;border-radius:16px;padding:16px;
+    min-height:1.4em;color:#c4287a;word-break:break-word;
+  }
+  .btn{background:#ffd6ee;color:#c4287a;border-color:#ff5db1}
+  .btn:hover{background:#ff5db1;color:#fff}
+  .sub{color:#ff8fd0;font-weight:700}
+  .floaty{display:inline-block;animation:bob 2s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐱 UwU-ifier</span>
+  <span class="spacer"></span>
+  <span class="num">#40</span>
+</div>
+<div class="wrap">
+  <div class="cute">
+    <h1 class="big">UwU-ifiew <span class="floaty">🌸</span></h1>
+    <p class="sub">tuwn youw bowing sentences into adowable nonsense >w<</p>
+    <textarea id="in" rows="3" placeholder="Hello, really lovely weather today.">Hello friend, the world is really very wonderful and bright today.</textarea>
+    <div class="row" style="margin:10px 0">
+      <label style="font-weight:700;color:#c4287a">cuteness:
+        <select id="level">
+          <option value="1">mild (just the w sounds)</option>
+          <option value="2" selected>medium (stutters + faces)</option>
+          <option value="3">maximum chaos (so many uwus)</option>
+        </select>
+      </label>
+    </div>
+    <div id="out"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="copy">📋 copy da cuteness</button>
+      <span class="muted" id="status" style="color:#c4287a"></span>
+    </div>
+  </div>
+</div>
+<script>
+const inEl=document.getElementById('in'),outEl=document.getElementById('out'),level=document.getElementById('level');
+const faces=['(◕ω◕)','>w<','^w^','UwU','OwO',':3','(˘ω˘)','(*≧ω≦)','nyaa~','(=^･ω･^=)','>////<','(っ◕‿◕)っ'];
+const interj=['uwu','owo','nyaa~','rawr','hehe~','>w<',':3','*nuzzles*','*paws at u*'];
+// simple seeded-ish randomness based on word so output is stable per keystroke set
+function rng(seed){ let x=seed; return ()=>{ x=(x*1103515245+12345)&0x7fffffff; return x/0x7fffffff; }; }
+function owo(text,lvl){
+  let s=text;
+  // core replacements
+  s=s.replace(/(?:r|l)/g,'w').replace(/(?:R|L)/g,'W');
+  s=s.replace(/n([aeiou])/g,'ny$1').replace(/N([aeiou])/g,'Ny$1').replace(/N([AEIOU])/g,'NY$1');
+  s=s.replace(/ove/g,'uv');
+  s=s.replace(/th/g,'d').replace(/Th/g,'D');
+  if(lvl<2) return s;
+  // word-level stutters + interjections (deterministic by char position)
+  const r=rng(text.length+1);
+  const words=s.split(/(\s+)/); // keep spaces
+  let out=[];
+  for(let w of words){
+    if(/\s+/.test(w)){ out.push(w); continue; }
+    if(w.length>2 && /^[a-zA-Z]/.test(w) && r()<0.25){
+      w=w[0]+'-'+w; // stutter
+    }
+    out.push(w);
+    if(lvl>=2 && r()< (lvl===3?0.4:0.16)){
+      out.push(' '+faces[Math.floor(r()*faces.length)]);
+    }
+  }
+  s=out.join('');
+  // sentence-level interjections
+  if(lvl>=3){
+    s=s.replace(/([.!?]+)/g, (m)=> ' '+interj[Math.floor(r()*interj.length)]+m+' ');
+  } else {
+    s=s.replace(/([.!?]+)/, (m)=> m+' '+faces[Math.floor(r()*faces.length)]);
+  }
+  if(lvl>=3) s=interj[Math.floor(r()*interj.length)]+'~ '+s+' '+faces[Math.floor(r()*faces.length)];
+  return s.replace(/\s+/g,' ').trim();
+}
+function render(){ outEl.textContent=owo(inEl.value,parseInt(level.value,10))||'>w<'; }
+inEl.addEventListener('input',render);
+level.addEventListener('change',render);
+document.getElementById('copy').addEventListener('click',async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='✓ copied uwu';setTimeout(()=>st.textContent='',1500);
+});
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

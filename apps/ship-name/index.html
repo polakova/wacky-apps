@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ship Name Combiner · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.hearts span{position:absolute;bottom:-30px;font-size:22px;opacity:.5;animation:rise linear forwards}
+@keyframes rise{to{transform:translateY(-115vh) rotate(40deg);opacity:0}}
+.wrap{position:relative;z-index:1}
+.shipcard{background:linear-gradient(135deg,#fff,#ffeef5);border-color:#ff5da2}
+.plus{font-size:34px;text-align:center}
+.shipname{font-size:clamp(30px,9vw,60px);font-weight:900;background:linear-gradient(90deg,#ff5da2,#7b2ff7);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0;min-height:1.2em;word-break:break-word}
+.heartline{font-size:24px;letter-spacing:6px}
+.compat{font-family:var(--mono);font-weight:800;color:var(--pink);margin-top:6px;min-height:1.2em}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--pink);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none;z-index:3}
+.toast.show{opacity:1}
+input{text-align:center;width:100%}
+.label{font-family:var(--mono);font-weight:800;font-size:13px;color:var(--purple);margin-bottom:4px;display:block}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">💕 Ship Name Combiner</span>
+  <span class="spacer"></span>
+  <span class="num">#19</span>
+</div>
+
+<div class="hearts" id="hearts"></div>
+
+<div class="wrap center">
+  <div class="card shipcard">
+    <div class="big">Make it official 💕</div>
+    <p class="muted">Two names go in. One adorable couple-name comes out.</p>
+
+    <div class="stack" style="margin:16px 0">
+      <div><span class="label">First name</span><input id="a" placeholder="e.g. Brad" maxlength="20" autocomplete="off"></div>
+      <div class="plus">➕</div>
+      <div><span class="label">Second name</span><input id="b" placeholder="e.g. Angelina" maxlength="20" autocomplete="off"></div>
+    </div>
+
+    <button class="btn pink" id="gen">💘 Combine!</button>
+
+    <div class="heartline" id="hl" style="margin-top:18px"></div>
+    <div class="shipname" id="ship"></div>
+    <div class="compat" id="compat"></div>
+
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button class="btn purple" id="copy" hidden>📋 Copy</button>
+    </div>
+  </div>
+  <p class="muted center">Tip: try your own name + your celebrity crush. We won't tell.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const VOW='aeiouy';
+function clean(s){return s.trim().replace(/[^a-zA-Z'\- ]/g,'').replace(/\s+/g,' ');}
+function cap(s){return s? s[0].toUpperCase()+s.slice(1).toLowerCase():s;}
+function firstVowel(s){for(let i=1;i<s.length;i++)if(VOW.includes(s[i].toLowerCase()))return i;return Math.ceil(s.length/2);}
+function lastVowel(s){for(let i=s.length-1;i>0;i--)if(VOW.includes(s[i].toLowerCase()))return i;return Math.floor(s.length/2);}
+function blend(a,b){
+  a=cap(a);b=cap(b);
+  if(a.length<2||b.length<2)return cap((a+b).toLowerCase());
+  // a few overlap strategies, pick whichever reads nicely
+  const candidates=[];
+  // head of A + tail of B from B's first vowel
+  candidates.push(a.slice(0,Math.max(2,lastVowel(a)))+b.slice(firstVowel(b)).toLowerCase());
+  // head of A up to its last vowel + tail of B
+  candidates.push(a.slice(0,lastVowel(a)+1)+b.slice(Math.ceil(b.length/2)).toLowerCase());
+  // half + half
+  candidates.push(a.slice(0,Math.ceil(a.length/2))+b.slice(Math.floor(b.length/2)).toLowerCase());
+  // B-first variant
+  candidates.push(b.slice(0,Math.max(2,lastVowel(b)))+a.slice(firstVowel(a)).toLowerCase());
+  // dedupe & filter sane lengths
+  const seen=new Set();const ok=[];
+  for(let c of candidates){c=cap(c.replace(/\s/g,''));if(c.length>=3&&c.length<=18&&!seen.has(c)){seen.add(c);ok.push(c);}}
+  const pool=ok.length?ok:[cap(a.slice(0,Math.ceil(a.length/2))+b.slice(Math.floor(b.length/2)).toLowerCase())];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+const COMP=["a match written in the stars ✨","100% adorable, scientifically","destined for matching mugs ☕","power couple energy detected ⚡","the group chat already ships it 📱","soulmate-tier, frankly 💫","cuteness levels: dangerously high","approved by all the rom-coms 🎬","two halves of one snack 🥨","the universe nods approvingly 🌌"];
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+let cur="";
+function go(){
+  const a=clean(document.getElementById('a').value), b=clean(document.getElementById('b').value);
+  if(!a||!b){toast('Enter two names first! 💕');return;}
+  // randomize order slightly so repeats feel fresh
+  let name = Math.random()<.5? blend(a,b) : blend(b,a);
+  if(!name||name.length<3) name=cap((a.slice(0,Math.ceil(a.length/2))+b.slice(Math.floor(b.length/2))).toLowerCase());
+  cur=name;
+  document.getElementById('hl').textContent='💗 💞 💗';
+  const sh=document.getElementById('ship');sh.textContent=name;sh.classList.remove('pop');void sh.offsetWidth;sh.classList.add('pop');
+  document.getElementById('compat').textContent='It\'s '+pick(COMP);
+  document.getElementById('copy').hidden=false;
+  burst();
+}
+function burst(){const h=document.getElementById('hearts');for(let i=0;i<10;i++){const s=document.createElement('span');s.textContent=pick(['💕','💖','💗','💘','💝']);s.style.left=Math.random()*100+'%';s.style.fontSize=(16+Math.random()*22)+'px';s.style.animationDuration=(2.5+Math.random()*2)+'s';h.appendChild(s);setTimeout(()=>s.remove(),4600);}}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+document.getElementById('gen').onclick=go;
+document.getElementById('b').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+document.getElementById('a').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+document.getElementById('copy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(cur);}
+  catch(e){const ta=document.createElement('textarea');ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Copied: '+cur+' 💕');
+};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

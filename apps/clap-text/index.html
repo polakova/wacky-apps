@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clap Text · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👏</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #out{
+    font-size:clamp(20px,5vw,30px);font-weight:800;line-height:1.5;word-break:break-word;
+    background:#fff;border:3px dashed var(--purple);border-radius:14px;padding:18px;min-height:1.4em;
+  }
+  .emoji-pick{font-size:24px;line-height:1;cursor:pointer;border:3px solid var(--ink);
+    border-radius:12px;background:#fff;padding:8px 10px;box-shadow:var(--shadow-sm)}
+  .emoji-pick.sel{background:var(--yellow);transform:translate(2px,2px);box-shadow:none}
+  .emoji-pick:hover{background:var(--cyan)}
+  h1 .clap{display:inline-block;animation:clp .7s ease-in-out infinite}
+  @keyframes clp{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg) scale(1.1)}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">👏 Clap Text</span>
+  <span class="spacer"></span>
+  <span class="num">#41</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big"><span class="clap">👏</span> CLAP <span class="clap">👏</span> BACK</h1>
+    <p class="muted">Put 👏 emphasis 👏 between 👏 every 👏 word. Pick your separator below.</p>
+    <textarea id="in" rows="2" placeholder="say it with your whole chest">drink more water today</textarea>
+    <div style="margin:14px 0 6px;font-weight:800">Separator emoji:</div>
+    <div class="row" id="picks"></div>
+    <div style="margin:14px 0 6px;font-weight:800">Result:</div>
+    <div id="out"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn purple" id="copy">📋 Copy</button>
+      <label class="muted"><input type="checkbox" id="caps"> SHOUT IT</label>
+      <span class="muted" id="status"></span>
+    </div>
+  </div>
+</div>
+<script>
+const EMOJIS=['👏','✨','💅','🔥','💯','🙌','❤️','⭐','🎉','😤','🫶','🧠','🌈','☕','🐢'];
+let sep='👏';
+const inEl=document.getElementById('in'),outEl=document.getElementById('out'),caps=document.getElementById('caps');
+const picks=document.getElementById('picks');
+EMOJIS.forEach(e=>{
+  const b=document.createElement('button');
+  b.className='emoji-pick'+(e===sep?' sel':'');b.textContent=e;b.title='use '+e;
+  b.onclick=()=>{ sep=e; [...picks.children].forEach(c=>c.classList.toggle('sel',c.textContent===e)); render(); };
+  picks.appendChild(b);
+});
+function render(){
+  let words=inEl.value.split(/\s+/).filter(Boolean);
+  if(caps.checked) words=words.map(w=>w.toUpperCase());
+  outEl.textContent=words.length? words.join(' '+sep+' ') : sep;
+}
+inEl.addEventListener('input',render);
+caps.addEventListener('change',render);
+document.getElementById('copy').addEventListener('click',async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='✓ copied 👏';setTimeout(()=>st.textContent='',1500);
+});
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

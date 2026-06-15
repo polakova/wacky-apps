@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matrix Rain · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#000}
+  .wrap{max-width:920px}
+  .screen{background:#000;border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  canvas{background:#000}
+  .panel{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:4px solid var(--ink);
+    border-radius:18px;box-shadow:var(--shadow);padding:14px 18px;margin-top:16px}
+  .panel label{font-family:var(--mono);font-weight:800;color:#0a7d2c}
+  input[type=range]{accent-color:#19ff5a}
+  .lbl{color:#19ff5a;font-family:var(--mono)}
+  .sub{color:#19ff5a;font-family:var(--mono);text-align:center;margin:0 0 14px;text-shadow:0 0 8px #19ff5a}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">💚 Matrix Rain</span>
+  <span class="spacer"></span>
+  <span class="num">#50</span>
+</div>
+<div class="wrap">
+  <p class="sub">wake up… the codestream is falling</p>
+  <div class="screen"><canvas id="c"></canvas></div>
+  <div class="panel">
+    <label>speed</label>
+    <input id="speed" type="range" min="1" max="20" value="8" style="flex:1;min-width:140px">
+    <span class="lbl" id="spd">8</span>
+    <button class="btn" id="rain">🌧️ glitch burst</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const chars="アカサタナハマヤラワガザダバパイキシチニヒミリヰギジヂビピウクスツヌフムユルグズヅブプ0123456789ΦΨΩ".split("");
+let W,H,cols,drops,fontSize=18;
+function size(){
+  const wpx=Math.min(900, document.querySelector('.wrap').clientWidth);
+  W=cv.width=Math.floor(wpx);
+  H=cv.height=Math.floor(Math.min(560, window.innerHeight*0.62));
+  cols=Math.floor(W/fontSize);
+  drops=new Array(cols).fill(0).map(()=>Math.random()*-40);
+}
+window.addEventListener('resize',size);size();
+const spd=document.getElementById('spd'),sp=document.getElementById('speed');
+sp.addEventListener('input',()=>spd.textContent=sp.value);
+let acc=0;
+function frame(){
+  acc += +sp.value;
+  // run more update steps the faster the slider
+  while(acc>=8){ step(); acc-=8; }
+  requestAnimationFrame(frame);
+}
+function step(){
+  ctx.fillStyle="rgba(0,0,0,0.08)";
+  ctx.fillRect(0,0,W,H);
+  ctx.font=fontSize+"px var(--mono),monospace";
+  for(let i=0;i<cols;i++){
+    const ch=chars[Math.floor(Math.random()*chars.length)];
+    const x=i*fontSize, y=drops[i]*fontSize;
+    ctx.fillStyle="#cfffe0";              // bright leading char
+    ctx.fillText(ch,x,y);
+    ctx.fillStyle="#19ff5a";
+    ctx.fillText(chars[Math.floor(Math.random()*chars.length)],x,y-fontSize);
+    if(y>H && Math.random()>0.975) drops[i]=Math.random()*-20;
+    drops[i]++;
+  }
+}
+document.getElementById('rain').addEventListener('click',()=>{
+  for(let i=0;i<cols;i++) drops[i]=Math.random()*-30;
+});
+frame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

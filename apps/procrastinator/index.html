@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Procrastinator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .task{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid var(--ink);
+    border-radius:12px;padding:12px 14px;box-shadow:var(--shadow-sm);font-weight:700}
+  .task .txt{flex:1;word-break:break-word}
+  .task.gone{animation:poof .5s forwards}
+  @keyframes poof{to{opacity:0;transform:scale(.4) rotate(8deg);filter:blur(4px)}}
+  .excuse{background:var(--yellow);border:3px dashed var(--ink);border-radius:12px;
+    padding:10px 14px;font-weight:800;margin-top:8px}
+  .stat{font-family:var(--mono);font-weight:800}
+  #list{margin-top:16px}
+  .empty{opacity:.6;font-style:italic;text-align:center;padding:18px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📝 The Procrastinator</span>
+  <span class="spacer"></span>
+  <span class="num">#92</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big">📝 The Procrastinator</h1>
+    <p class="muted">Add your to-dos. We'll <i>handle</i> them. Productivity not included.</p>
+    <div class="row">
+      <input id="inp" placeholder="e.g. file taxes, water the cactus…" style="flex:1;min-width:160px">
+      <button class="btn pink" id="add">Add task</button>
+    </div>
+    <div id="excuse" class="excuse" style="display:none"></div>
+    <div id="list"><div class="empty">No tasks yet. Bliss.</div></div>
+    <p class="muted" style="margin-top:18px">Tasks handled: <span class="stat" id="count">0</span> · Effort spent: <span class="stat">0 kJ</span></p>
+  </div>
+</div>
+<script>
+const inp=document.getElementById('inp'),list=document.getElementById('list'),
+  exc=document.getElementById('excuse'),countEl=document.getElementById('count');
+let handled=Number(localStorage.getItem('proc_handled')||0);countEl.textContent=handled;
+const EXCUSES=[
+ "Mercury is in retrograde, so this is legally void now.",
+ "I delegated it to Future You. They've got this.",
+ "The vibes were off. Deleted for your safety.",
+ "This task and I had a long talk. It chose freedom.",
+ "Studies show resting is technically working. Done!",
+ "I 'accidentally' dropped it behind the couch of life.",
+ "It expired. Tasks are perishable, you know.",
+ "Replaced it with a nap. You're welcome.",
+ "The committee voted 1–0 to ignore it forever.",
+ "I marked it 'someday' and someday was cancelled.",
+ "It clashed with my horoscope. Big no.",
+ "Outsourced to a very busy pigeon. Untraceable now.",
+ "Too ambitious for a Tuesday. Or any day really.",
+ "I gave it to the void. The void said thanks.",
+ "Filed under 'maybe in another timeline.'",
+ "It looked tired, so I let it sleep in. Permanently.",
+ "Productivity gremlins ate it. Tiny but hungry.",
+ "I converted it into pure potential energy. Science!",
+ "Reorganized your priorities. This was not one.",
+ "It became a hobby, then quit. Very relatable."
+];
+const TYPES=["heroically","mysteriously","instantly","reluctantly","artfully","suspiciously"];
+function rng(a){return a[Math.floor(Math.random()*a.length)]}
+function addTask(){
+  const v=inp.value.trim();if(!v)return;
+  const empty=list.querySelector('.empty');if(empty)empty.remove();
+  const el=document.createElement('div');el.className='task pop';
+  el.innerHTML=`<span>🗒️</span><span class="txt"></span><button class="btn" style="padding:8px 14px">Handle it</button>`;
+  el.querySelector('.txt').textContent=v;
+  el.querySelector('button').onclick=()=>handle(el,v);
+  list.prepend(el);inp.value='';inp.focus();
+}
+function handle(el,name){
+  el.classList.remove('pop');el.classList.add('gone');
+  exc.style.display='block';
+  exc.textContent=`✅ "${name}" ${rng(TYPES)} handled — ${rng(EXCUSES)}`;
+  setTimeout(()=>{el.remove();if(!list.children.length)
+    list.innerHTML='<div class="empty">No tasks yet. Bliss.</div>';},480);
+  handled++;localStorage.setItem('proc_handled',handled);countEl.textContent=handled;
+}
+document.getElementById('add').onclick=addTask;
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

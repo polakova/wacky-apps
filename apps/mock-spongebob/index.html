@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MoCkInG TeXt · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧽</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .mascot{font-size:54px;text-align:center;line-height:1;animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+  .out{font-family:var(--mono);font-weight:800;font-size:clamp(18px,4.5vw,26px);
+    background:var(--yellow);border:3px dashed var(--ink);border-radius:14px;
+    padding:16px;min-height:60px;word-break:break-word;line-height:1.4}
+  .modes{justify-content:center}
+  .modes .btn{font-size:14px;padding:8px 14px}
+  .modes .btn.on{background:var(--purple);color:#fff}
+  textarea{min-height:90px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🧽 MoCkInG TeXt</span>
+  <span class="spacer"></span>
+  <span class="num">#31</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <div class="mascot">🧽😏</div>
+    <p class="muted center" style="margin:0">tYpE sOmEtHiNg AnD wAtCh It GeT iNsUfFeRaBlE.</p>
+    <textarea id="in" placeholder="i am being very serious right now">i can absolutely be trusted with a houseplant</textarea>
+    <div class="row modes">
+      <button class="btn on" data-mode="alt">aLtErNaTe</button>
+      <button class="btn" data-mode="rand">rANDoM</button>
+      <button class="btn" data-mode="words">EVERY other WORD</button>
+    </div>
+    <div class="out" id="out"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="copy">📋 Copy the chaos</button>
+    </div>
+    <p class="muted center" id="stat" style="margin:0"></p>
+  </div>
+</div>
+<script>
+const inp=document.getElementById('in'), out=document.getElementById('out'), stat=document.getElementById('stat');
+let mode='alt';
+function mock(s){
+  if(mode==='alt'){
+    let up=false; return [...s].map(c=>{ if(/[a-z]/i.test(c)){ up=!up; return up?c.toUpperCase():c.toLowerCase(); } return c; }).join('');
+  }
+  if(mode==='rand'){
+    return [...s].map(c=> /[a-z]/i.test(c) ? (Math.random()<.5?c.toUpperCase():c.toLowerCase()) : c).join('');
+  }
+  // words: capitalize every other word fully
+  let i=0;
+  return s.split(/(\s+)/).map(tok=>{
+    if(/^\s+$/.test(tok)||tok==='') return tok;
+    const r = (i%2===0)? tok.toLowerCase() : tok.toUpperCase();
+    i++; return r;
+  }).join('');
+}
+function render(){
+  const v=inp.value;
+  out.textContent = v.trim()? mock(v) : '🧽 yOuR mAsTeRpIeCe ApPeArS hErE';
+  const flips = v.replace(/[^a-z]/gi,'').length;
+  stat.textContent = flips? flips+' letters thoroughly mocked. 😏' : '';
+}
+inp.addEventListener('input', render);
+document.querySelectorAll('.modes .btn').forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll('.modes .btn').forEach(x=>x.classList.remove('on')); b.classList.add('on'); mode=b.dataset.mode; render(); };
+});
+document.getElementById('copy').onclick=async ()=>{
+  const t=out.textContent;
+  try{ await navigator.clipboard.writeText(t); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const btn=document.getElementById('copy'); const old=btn.textContent;
+  btn.textContent='✅ cOpIeD!'; btn.classList.add('pop'); setTimeout(()=>{btn.textContent=old;btn.classList.remove('pop');},1200);
+};
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

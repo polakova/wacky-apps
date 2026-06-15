@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funny WiFi Names · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📶</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.wifi-list{background:#f3f4f7;border:4px solid var(--ink);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin:18px 0}
+.wifi-head{background:var(--ink);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+.wifi-head .toggle{background:var(--cyan);color:var(--ink);border-radius:6px;padding:2px 8px;font-size:12px}
+.wifi-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:2px solid #d8dae0;background:#fff}
+.wifi-row.lit{background:#fffbe6;animation:pop .35s}
+.wifi-row .glyph{font-size:22px}
+.wifi-row .nm{font-family:var(--mono);font-weight:800;flex:1;word-break:break-word}
+.wifi-row .meta{font-family:var(--mono);font-size:12px;opacity:.65;display:flex;gap:6px;align-items:center}
+.wifi-row.fake{opacity:.45}
+.lock{font-size:14px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--purple);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📶 Funny WiFi Names</span>
+  <span class="spacer"></span>
+  <span class="num">#15</span>
+</div>
+
+<div class="wrap">
+  <div class="card center">
+    <div class="big">Name your network 📡</div>
+    <p class="muted">Bless the neighborhood with peak router comedy.</p>
+
+    <div class="wifi-list" id="list">
+      <div class="wifi-head">Available Networks <span class="toggle">Wi-Fi: On</span></div>
+      <div class="wifi-row fake"><span class="glyph">📶</span><span class="nm">Tell My WiFi Love Her</span><span class="meta"><span class="lock">🔒</span>▂▄▆</span></div>
+      <div class="wifi-row lit" id="mine"><span class="glyph">📡</span><span class="nm" id="netname">Loading…</span><span class="meta"><span class="lock">🔒</span>▂▄▆█</span></div>
+      <div class="wifi-row fake"><span class="glyph">📶</span><span class="nm">Definitely Not A Camera</span><span class="meta"><span class="lock">🔒</span>▂▄</span></div>
+      <div class="wifi-row fake"><span class="glyph">📶</span><span class="nm">FBI Surveillance Van</span><span class="meta"><span class="lock">🔒</span>▂</span></div>
+    </div>
+
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="gen">🎲 New Name</button>
+      <button class="btn blue" id="copy">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const A=["Pretty Fly for a","The LAN Before","Drop It Like It's","Bandwidth of","No More Mr Nice","It Hurts When","Silence of the","The Promised","House of","Winter Is","Abraham","Wu-Tang","Hide Yo","Loading","Get Off My"];
+const B=["WiFi","Hotspot","Router","LANdlord","Network","Connection","Signal","Internet","Broadband","Modem","Ping","Packet","Ethernet","Wireless","Gateway"];
+const PUNS=[
+ "Pretty Fly for a WiFi","The LAN Before Time","Drop It Like It's Hotspot","Bandwidth of Brothers","No More Mr WiFi Guy",
+ "It Hurts When IP","Silence of the LANs","The Promised LAN","House of Pings","Winter Is Streaming",
+ "Abraham Linksys","Wu-Tang LAN","Hide Yo Kids Hide Yo WiFi","Loading… Please Wait","Get Off My LAN",
+ "The Internet Is Down The Hall","Router? I Hardly Know Her","404 Network Unavailable","Two Girls One Router","LAN Solo",
+ "Bill Wi The Science Fi","Vladimir Routin","Benjamin FrankLAN","Martin Router King","Lord of the Pings",
+ "Nacho WiFi","Click Here For Viruses","Mom Use This One","The Password Is Tacos","Connectivity Issues Inc",
+ "Definitely The Police","Free Public WiFi (lol)","Skynet Global Defense","Area 51 Test Site","Panic At The Cisco"];
+let cur="";
+const out=document.getElementById('netname'), mine=document.getElementById('mine');
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function gen(){
+  // 55% curated pun, 45% mix-and-match for endless combos
+  if(Math.random()<.55){cur=pick(PUNS);}
+  else{cur=pick(A)+" "+pick(B);}
+  out.textContent=cur;
+  mine.classList.remove('lit');void mine.offsetWidth;mine.classList.add('lit');
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+async function copy(){
+  try{await navigator.clipboard.writeText(cur);}
+  catch(e){const ta=document.createElement('textarea');ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Copied! 📶 '+cur);
+}
+document.getElementById('gen').onclick=gen;
+document.getElementById('copy').onclick=copy;
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

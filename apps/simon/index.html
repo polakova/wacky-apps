@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simon Says · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟢</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .board{width:min(86vw,360px);aspect-ratio:1;margin:18px auto;
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .pad{border:4px solid var(--ink);border-radius:20px;cursor:pointer;
+    box-shadow:var(--shadow-sm);transition:filter .08s,transform .05s;
+    opacity:.55;}
+  .pad:active{transform:translate(2px,2px)}
+  .pad.lit{opacity:1;filter:brightness(1.4) saturate(1.4);}
+  .g{background:#16e0bd}.r{background:#ff5da2}.y{background:#ffd23f}.b{background:#3a86ff}
+  .stat{display:flex;gap:10px;justify-content:center;font-family:var(--mono);font-weight:800}
+  .stat .pill{font-size:14px}
+  .msg{min-height:1.4em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🟢 Simon Says</span>
+  <span class="spacer"></span>
+  <span class="num">#106</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="big">Simon Says</div>
+    <p class="muted">Watch the dance, then repeat it. One step longer each round!</p>
+    <div class="stat">
+      <span class="pill">Level <b id="level">0</b></span>
+      <span class="pill" style="background:var(--orange)">Best <b id="best">0</b></span>
+    </div>
+    <div class="board" id="board">
+      <div class="pad g" data-i="0"></div>
+      <div class="pad r" data-i="1"></div>
+      <div class="pad y" data-i="2"></div>
+      <div class="pad b" data-i="3"></div>
+    </div>
+    <div class="output msg" id="msg">Press start to begin 🎵</div>
+    <button class="btn pink" id="start">Start</button>
+  </div>
+</div>
+<script>
+const pads=[...document.querySelectorAll('.pad')];
+const levelEl=document.getElementById('level');
+const bestEl=document.getElementById('best');
+const msg=document.getElementById('msg');
+const startBtn=document.getElementById('start');
+const freqs=[329.6,440,523.3,659.3];
+let ac, seq=[], pos=0, accepting=false, best=+(localStorage.getItem('simon_best')||0);
+bestEl.textContent=best;
+
+function tone(i,dur=380){
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type='sine';o.frequency.value=freqs[i];
+  o.connect(g);g.connect(ac.destination);
+  const t=ac.currentTime;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur/1000);
+  o.start(t);o.stop(t+dur/1000);
+}
+function flash(i,dur=380){
+  pads[i].classList.add('lit');tone(i,dur);
+  setTimeout(()=>pads[i].classList.remove('lit'),dur-40);
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function playSeq(){
+  accepting=false;msg.textContent='Watch… 👀';
+  await wait(600);
+  for(const i of seq){flash(i);await wait(520);}
+  accepting=true;pos=0;msg.textContent='Your turn! 🎮';
+}
+function nextRound(){
+  seq.push(Math.floor(Math.random()*4));
+  levelEl.textContent=seq.length;
+  playSeq();
+}
+function gameOver(){
+  accepting=false;
+  if(seq.length-1>best){best=seq.length-1;localStorage.setItem('simon_best',best);bestEl.textContent=best;}
+  // sad descending blip
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+  o.frequency.setValueAtTime(330,ac.currentTime);o.frequency.linearRampToValueAtTime(110,ac.currentTime+.5);
+  g.gain.setValueAtTime(.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.6);
+  o.start();o.stop(ac.currentTime+.6);
+  msg.innerHTML='💥 Oops! You reached level <b>'+(seq.length-1)+'</b>';
+  document.querySelector('.card').classList.add('shake');
+  setTimeout(()=>document.querySelector('.card').classList.remove('shake'),400);
+  startBtn.textContent='Play again';
+}
+function start(){
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  seq=[];pos=0;levelEl.textContent=0;startBtn.textContent='Restart';
+  nextRound();
+}
+startBtn.addEventListener('click',start);
+pads.forEach(p=>p.addEventListener('click',()=>{
+  if(!accepting)return;
+  const i=+p.dataset.i;flash(i,260);
+  if(i===seq[pos]){
+    pos++;
+    if(pos===seq.length){accepting=false;msg.textContent='Nice! ⭐';setTimeout(nextRound,650);}
+  }else{gameOver();}
+}));
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

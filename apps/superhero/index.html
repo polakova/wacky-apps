@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Superhero Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦸</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .panel{position:relative;background:#3a86ff;
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 14px,transparent 14px 28px);
+    border:5px solid var(--ink);border-radius:10px;box-shadow:var(--shadow);
+    padding:26px;text-align:center;overflow:hidden}
+  .panel::before,.panel::after{content:"";position:absolute;width:200%;height:24px;
+    background:repeating-linear-gradient(90deg,#ffd23f 0 30px,#ff7a45 30px 60px)}
+  .panel::before{top:-2px;left:-10%;transform:skewY(-2deg)}
+  .panel::after{bottom:-2px;left:-10%;transform:skewY(2deg)}
+  .burst{display:inline-block;background:#ffd23f;border:4px solid var(--ink);
+    border-radius:50%;width:88px;height:88px;line-height:80px;font-size:44px;
+    box-shadow:var(--shadow-sm)}
+  .hname{font-family:var(--sans);font-weight:900;font-size:clamp(28px,7vw,48px);
+    color:#fff;text-shadow:3px 3px 0 var(--ink),-1px -1px 0 var(--ink);
+    margin:14px 0 6px;line-height:1.05}
+  .stat{background:#fff;border:3px solid var(--ink);border-radius:12px;
+    padding:12px 14px;margin:10px 0;text-align:left;font-weight:700;box-shadow:var(--shadow-sm)}
+  .stat b{display:block;font-family:var(--mono);font-size:12px;letter-spacing:1px;color:var(--purple)}
+  .pow b{color:#0a8f00}.weak b{color:#c0301c}
+  .pow{font-size:clamp(16px,4vw,21px)}.weak{font-size:clamp(15px,3.6vw,19px)}
+  .pow-on{animation:pop .35s}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🦸 Superhero Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#11</span>
+</div>
+<div class="wrap">
+  <div class="panel">
+    <span class="burst" id="burst">🦸</span>
+    <div class="hname" id="hname">The Unactivated</div>
+    <div class="stat pow"><b>⚡ SUPERPOWER</b><span id="power">Press the button to receive your origin story.</span></div>
+    <div class="stat weak"><b>💀 TRAGIC WEAKNESS</b><span id="weak">…also a weakness, probably.</span></div>
+    <div class="row center" style="justify-content:center;margin-top:8px">
+      <button class="btn pink" id="gen">💥 Activate powers</button>
+      <button class="btn blue" id="copy">📋 Copy</button>
+    </div>
+  </div>
+</div>
+<script>
+const adj=["Crimson","Mighty","Captain","Quantum","Atomic","Velvet","Turbo","Midnight","Cosmic","Iron","Stupendous","Invincible","Electric","Galactic","Sergeant","Doctor","Major","Astro","Thunder","Vortex"];
+const noun=["Wombat","Falcon","Spatula","Pigeon","Avocado","Phantom","Banana","Mongoose","Llama","Comet","Toaster","Otter","Cyclone","Marmot","Pretzel","Hedgehog","Meteor","Walrus","Ninja","Raccoon"];
+const powers=[
+ "can high-five at the speed of sound",
+ "summons unlimited free Wi-Fi anywhere",
+ "turns awkward silences into standing ovations",
+ "speaks fluent dog, cat, and disappointed parent",
+ "parallel-parks any vehicle on the first try",
+ "makes traffic lights turn green by winking",
+ "can fold a fitted sheet perfectly",
+ "always remembers everyone's birthday",
+ "controls the room temperature with their mood",
+ "instantly finds the end of the tape roll",
+ "transforms leftovers into a five-star meal",
+ "can untangle any pair of earbuds telekinetically",
+ "always picks the fastest checkout line",
+ "regenerates phone battery by holding it",
+ "wins every argument by being suspiciously reasonable",
+ "can carry all the grocery bags in one trip",
+ "telepathically knows when the toast is done",
+ "makes any houseplant thrive instantly"
+];
+const weaks=[
+ "but is utterly defeated by a single bee",
+ "but cannot resist a 'wet paint' sign",
+ "but sneezes whenever justice is near",
+ "but forgets why they walked into the room",
+ "but is powerless against a buffering video",
+ "but cries at every dog commercial",
+ "but loses all strength near a malfunctioning printer",
+ "but must read every sign out loud",
+ "but is rendered helpless by tiny stickers on fruit",
+ "but cannot whisper, only loud-whisper",
+ "but is allergic to its own cape",
+ "but always trips on the last stair",
+ "but freezes when a waiter says 'enjoy your meal'",
+ "but is no match for a low phone battery at 19%",
+ "but compulsively narrates their own actions",
+ "but is defeated by a slightly-too-warm soda",
+ "but cannot open a bag of chips quietly",
+ "but is haunted by unsent text drafts"
+];
+const burstEm=["🦸","🦸‍♀️","🦸‍♂️","🛡️","⚡","🌟","🦹","💪"];
+const hname=document.getElementById('hname'),power=document.getElementById('power'),
+  weak=document.getElementById('weak'),gen=document.getElementById('gen'),
+  copy=document.getElementById('copy'),burst=document.getElementById('burst');
+let cur={n:"The Unactivated",p:"",w:""};
+let ac;
+function whoosh(){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='square';const t=ac.currentTime;
+    o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(900,t+0.15);
+    g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+    o.start(t);o.stop(t+0.26);
+  }catch(e){}
+}
+function gn(){
+  const nm="The "+adj[Math.floor(Math.random()*adj.length)]+" "+noun[Math.floor(Math.random()*noun.length)];
+  cur={n:nm,p:powers[Math.floor(Math.random()*powers.length)],w:weaks[Math.floor(Math.random()*weaks.length)]};
+  hname.textContent=nm;power.textContent=cur.p;weak.textContent=cur.w;
+  burst.textContent=burstEm[Math.floor(Math.random()*burstEm.length)];
+  [hname,power.parentElement,weak.parentElement,burst].forEach(el=>{
+    el.classList.remove('pop','pow-on');void el.offsetWidth;el.classList.add('pop');});
+  whoosh();
+}
+gen.addEventListener('click',gn);
+copy.addEventListener('click',()=>{
+  const txt=cur.n+" — "+cur.p+", "+cur.w+".";
+  const done=()=>{const o=copy.textContent;copy.textContent="✅ Copied!";setTimeout(()=>copy.textContent=o,1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{});}
+  else{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy')}catch(e){}t.remove();done();}
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

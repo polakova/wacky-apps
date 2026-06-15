@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tone Tester · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .hz{font-family:var(--mono);font-size:clamp(34px,9vw,64px);font-weight:900;text-align:center}
+  .hz small{font-size:.4em;opacity:.6}
+  input[type=range]{width:100%;accent-color:var(--purple);height:30px}
+  .hint{padding:10px 14px;border:3px solid var(--ink);border-radius:12px;background:#fff;
+    font-family:var(--mono);font-size:14px;box-shadow:var(--shadow-sm);margin-top:14px}
+  .scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;opacity:.6;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔊 Tone Tester</span>
+  <span class="spacer"></span>
+  <span class="num">#73</span>
+</div>
+<div class="wrap">
+  <div class="card stack center">
+    <h1 class="big">🔊 Tone Tester</h1>
+    <p class="muted">Slide to a pitch and play. How high can your ears go? 👂</p>
+    <div class="hz"><span id="hzNum">440</span> <small>Hz</small></div>
+    <input type="range" id="freq" min="20" max="20000" value="440" step="1">
+    <div class="scale"><span>20Hz</span><span>200</span><span>2kHz</span><span>20kHz</span></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="toggle">▶ Play</button>
+      <select id="wave" title="waveform">
+        <option value="sine">∿ sine</option>
+        <option value="triangle">△ triangle</option>
+        <option value="square">⊓ square</option>
+        <option value="sawtooth">⋀ saw</option>
+      </select>
+    </div>
+    <div class="hint" id="hint"></div>
+    <p class="muted">⚠️ Keep the volume gentle, especially with earbuds.</p>
+  </div>
+</div>
+<script>
+let ac,osc,gain,playing=false;
+const slider=document.getElementById('freq'), num=document.getElementById('hzNum');
+const hint=document.getElementById('hint'), wave=document.getElementById('wave');
+
+// log-ish mapping so slider feels musical: store linear but display value is direct Hz
+function fmt(f){return f>=1000?(f/1000).toFixed(f%1000?2:0)+'k':f;}
+
+function hintFor(f){
+  if(f<60) return '🐘 Sub-bass — you may feel it more than hear it.';
+  if(f<250) return '🎸 Bass range — warm and low.';
+  if(f<2000) return '🗣️ Most speech &amp; melody lives here.';
+  if(f<6000) return '✨ Presence — crisp consonants, cymbals.';
+  if(f<12000) return '🔔 Brilliance — air and sparkle.';
+  if(f<16000) return '🦗 Very high — many adults can\'t hear past ~15kHz.';
+  return '🦇 Ultra-high — if you hear this, those are young ears!';
+}
+
+function update(){
+  const f=+slider.value;
+  num.textContent=fmt(f);
+  hint.innerHTML=hintFor(f);
+  if(playing&&osc) osc.frequency.setTargetAtTime(f,ac.currentTime,.02);
+}
+slider.addEventListener('input',update);
+
+function start(){
+  osc=ac.createOscillator(); gain=ac.createGain();
+  osc.type=wave.value; osc.frequency.value=+slider.value;
+  gain.gain.value=0.0001;
+  osc.connect(gain); gain.connect(ac.destination);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.18,ac.currentTime+0.04);
+}
+function stop(){
+  if(!gain) return;
+  gain.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.05);
+  osc.stop(ac.currentTime+0.1); osc=null;
+}
+document.getElementById('toggle').addEventListener('click',async function(){
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==='suspended') await ac.resume();
+  playing=!playing;
+  this.textContent=playing?'⏸ Stop':'▶ Play';
+  this.classList.toggle('purple',playing);
+  if(playing) start(); else stop();
+});
+wave.addEventListener('change',()=>{if(playing&&osc) osc.type=wave.value;});
+update();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

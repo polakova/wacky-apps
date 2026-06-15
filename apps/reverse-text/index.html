@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mirror Text · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪞</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  textarea{min-height:90px}
+  .reversed{
+    font-family:var(--mono);font-size:clamp(18px,4vw,26px);font-weight:800;
+    background:var(--paper);border:3px dashed var(--ink);border-radius:12px;
+    padding:14px;min-height:48px;word-break:break-word;white-space:pre-wrap;
+  }
+  .mirror{
+    font-family:var(--mono);font-size:clamp(18px,4vw,26px);font-weight:800;
+    transform:scaleX(-1);display:block;background:linear-gradient(180deg,#eaf6ff,#cfeaff);
+    border:3px solid var(--blue);border-radius:12px;padding:14px;min-height:48px;
+    word-break:break-word;white-space:pre-wrap;
+    box-shadow:inset 0 0 24px rgba(58,134,255,.25);
+  }
+  .lbl{font-family:var(--mono);font-weight:800}
+  .mirror-wrap{position:relative}
+  .mirror-wrap::after{content:"🪞";position:absolute;top:-12px;right:8px;font-size:24px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🪞 Mirror Text</span>
+  <span class="spacer"></span>
+  <span class="num">#44</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <div class="muted center">Type anything. We'll flip it backwards <em>and</em> show it in a real mirror. ?lufrednow t'nsI</div>
+    <label class="lbl">YOUR TEXT</label>
+    <textarea id="input" placeholder="Type something to reflect...">Hello, wonderful world!</textarea>
+
+    <label class="lbl">REVERSED (read it backwards)</label>
+    <div class="reversed" id="reversed"></div>
+
+    <label class="lbl">MIRROR PREVIEW (hold it up to a mirror!)</label>
+    <div class="mirror-wrap"><span class="mirror" id="mirror"></span></div>
+
+    <div class="row">
+      <button class="btn pink" id="copy">📋 Copy reversed</button>
+      <button class="btn" id="clear">🧹 Clear</button>
+      <span class="muted" id="note"></span>
+    </div>
+  </div>
+</div>
+<script>
+const input = document.getElementById('input');
+const reversed = document.getElementById('reversed');
+const mirror = document.getElementById('mirror');
+const note = document.getElementById('note');
+
+// Array.from handles emoji / surrogate pairs better than split('')
+function reverseStr(s){ return Array.from(s).reverse().join(''); }
+
+function render(){
+  const r = reverseStr(input.value);
+  reversed.textContent = r || ' ';
+  mirror.textContent = input.value || ' ';
+}
+input.addEventListener('input', render);
+
+document.getElementById('copy').onclick = async ()=>{
+  const txt = reverseStr(input.value);
+  try{ await navigator.clipboard.writeText(txt); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  note.textContent = '!deipoc'; setTimeout(()=>note.textContent='',1500);
+};
+document.getElementById('clear').onclick = ()=>{ input.value=''; render(); input.focus(); };
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

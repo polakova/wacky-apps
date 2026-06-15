@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Truth or Dare · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😳</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .stage{position:relative;min-height:200px;display:flex;align-items:center;justify-content:center}
+  .verdict{font-size:clamp(20px,5vw,32px);font-weight:900;line-height:1.25;transition:opacity .2s}
+  .tag{display:inline-block;font-family:var(--mono);font-weight:900;padding:4px 14px;border-radius:999px;border:3px solid var(--ink);margin-bottom:14px}
+  .tag.truth{background:var(--cyan)}
+  .tag.dare{background:var(--orange)}
+  .spinner{font-size:64px;animation:spin .5s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .meter{font-family:var(--mono);font-size:13px;opacity:.7;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">😳 Truth or Dare</span>
+  <span class="spacer"></span>
+  <span class="num">#29</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <p class="muted">Party-safe edition. No tears, no broken furniture, mostly.</p>
+    <div class="stage" id="stage">
+      <div class="verdict" id="verdict">Pick your poison, brave soul. 👇</div>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button class="btn blue" id="truthBtn">🫢 Truth</button>
+      <button class="btn pink" id="dareBtn">🔥 Dare</button>
+    </div>
+    <div class="meter" id="meter">Rounds played: 0</div>
+  </div>
+</div>
+<script>
+const TRUTHS = [
+  "What's the most embarrassing song on your playlist that you secretly love?",
+  "If your fridge could talk, what would it judge you for the most?",
+  "What childhood food combo do you still eat that horrifies everyone?",
+  "What's a tiny lie you've told to get out of plans?",
+  "Which fictional character did you have an unexpected crush on?",
+  "What's the weirdest thing you've Googled this month?",
+  "If you had to delete one app forever, which would you cry about losing?",
+  "What's a skill you pretend to have but absolutely do not?",
+  "What's the silliest thing that has ever made you cry?",
+  "Whose texts do you reread to feel better?",
+  "What's your most irrational fear that you know is ridiculous?",
+  "What's the longest you've gone without washing a specific item of clothing?",
+  "What nickname do you secretly wish people called you?",
+  "What's a 'fancy' word you use to sound smarter than you are?",
+  "If your pet wrote your biography, what would the title be?",
+  "What's the pettiest reason you've unfollowed someone?",
+  "What snack would you marry if it were legal?",
+  "What's a compliment you gave that you didn't mean at all?",
+  "Which emoji do you overuse to the point of concern?",
+  "What's the most ridiculous thing you believed as a kid?",
+  "What's your go-to excuse for being late, and is it ever true?",
+  "What's a trend you pretended to understand to fit in?"
+];
+const DARES = [
+  "Talk in a robot voice until it's your turn again. Beep boop.",
+  "Do your best catwalk strut across the room with full confidence.",
+  "Let the person to your left pick your new ringtone right now.",
+  "Speak only in questions for the next two minutes. Can you?",
+  "Give a passionate 30-second TED talk about your left sock.",
+  "Do 10 dramatic jumping jacks and narrate them like a sportscaster.",
+  "Text a friend 'I just remembered something' and don't explain it.",
+  "Compliment every single person here with terrifying sincerity.",
+  "Balance a spoon on your nose for 15 seconds, no hands.",
+  "Do an impression of someone in this room until they guess who.",
+  "Sing your next sentence like it's a Broadway finale.",
+  "Pretend to be a tour guide and describe this room to 'tourists'.",
+  "Switch seats with someone using only interpretive dance to ask.",
+  "Invent a brand-new handshake and teach it to the group.",
+  "Act out your morning routine in fast-forward and total silence.",
+  "Let someone draw a tiny doodle on your hand with a pen.",
+  "Hold an ice cube... or just an awkward pose... for 20 seconds.",
+  "Narrate everyone's actions like a nature documentary for 1 minute.",
+  "Do your worst dramatic fake cry, Oscar-worthy commitment required.",
+  "Give yourself a superhero name and announce your one power loudly.",
+  "Whisper everything you say until the next round. Spooky.",
+  "Do a slow-motion replay of the last thing you did. Action!"
+];
+const stage = document.getElementById('stage');
+const verdict = document.getElementById('verdict');
+const meter = document.getElementById('meter');
+let rounds = +(localStorage.getItem('tod_rounds')||0);
+meter.textContent = 'Rounds played: ' + rounds;
+let ac;
+function beep(freq, dur){
+  try{ ac = ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain();
+    o.frequency.value=freq; o.type='triangle'; o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(.15, ac.currentTime); g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+dur);
+    o.start(); o.stop(ac.currentTime+dur);
+  }catch(e){}
+}
+const pick = a => a[Math.floor(Math.random()*a.length)];
+let busy=false;
+function go(type){
+  if(busy) return; busy=true;
+  const list = type==='truth'?TRUTHS:DARES;
+  const cls = type==='truth'?'truth':'dare';
+  const label = type==='truth'?'TRUTH':'DARE';
+  const emoji = type==='truth'?'🫢':'🔥';
+  stage.innerHTML = '<div class="spinner">🎲</div>';
+  let t=0;
+  const iv = setInterval(()=>{ beep(300+Math.random()*400, .04); t++; }, 90);
+  setTimeout(()=>{
+    clearInterval(iv);
+    beep(660,.12); setTimeout(()=>beep(880,.18),120);
+    stage.innerHTML = '<div><span class="tag '+cls+'">'+emoji+' '+label+'</span><div class="verdict pop">'+pick(list)+'</div></div>';
+    rounds++; localStorage.setItem('tod_rounds', rounds);
+    meter.textContent = 'Rounds played: ' + rounds;
+    busy=false;
+  }, 950);
+}
+document.getElementById('truthBtn').onclick = ()=>go('truth');
+document.getElementById('dareBtn').onclick = ()=>go('dare');
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

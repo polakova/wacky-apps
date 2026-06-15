@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pixel Paint · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .grid{
+    display:grid;grid-template-columns:repeat(16,1fr);width:100%;max-width:384px;
+    aspect-ratio:1/1;margin:8px auto;border:4px solid var(--ink);border-radius:10px;
+    box-shadow:var(--shadow);overflow:hidden;touch-action:none;background:#fff;
+  }
+  .px{border:.5px solid #eee}
+  .px:hover{outline:2px solid rgba(0,0,0,.3);outline-offset:-2px}
+  .palette{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:384px;margin:0 auto}
+  .sw{width:34px;height:34px;border:3px solid var(--ink);border-radius:8px;cursor:pointer;box-shadow:var(--shadow-sm)}
+  .sw.on{outline:3px solid var(--ink);outline-offset:2px;transform:translateY(-2px)}
+  .tool.on{background:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎨 Pixel Paint</span>
+  <span class="spacer"></span>
+  <span class="num">#48</span>
+</div>
+<div class="wrap center">
+  <div class="muted">A tiny 16×16 art studio. Pick a color, drag to paint. Make a masterpiece!</div>
+  <div class="grid" id="grid"></div>
+  <div class="palette" id="palette"></div>
+  <div class="row" style="justify-content:center;margin-top:12px">
+    <button class="btn tool" id="erase">🩹 Eraser</button>
+    <button class="btn pink" id="clear">🧹 Clear</button>
+    <button class="btn purple" id="fill">🪣 Fill all</button>
+  </div>
+</div>
+<script>
+const N = 16;
+const grid = document.getElementById('grid');
+const palette = document.getElementById('palette');
+const colors = ['#1a1623','#ff5da2','#7b2ff7','#16e0bd','#ffd23f','#ff7a45','#3a86ff','#ffffff',
+                '#e23b2e','#2ecc71','#9b59b6','#f1c40f','#34495e','#ff9ff3','#00cec9','#636e72'];
+let current = colors[0];
+let erasing = false;
+let painting = false;
+
+colors.forEach((c,i)=>{
+  const sw = document.createElement('div');
+  sw.className='sw'+(i===0?' on':'');
+  sw.style.background=c;
+  sw.onclick=()=>{
+    current=c; erasing=false;
+    document.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));
+    sw.classList.add('on');
+    document.getElementById('erase').classList.remove('on');
+  };
+  palette.appendChild(sw);
+});
+
+const cells = [];
+for(let i=0;i<N*N;i++){
+  const px = document.createElement('div');
+  px.className='px';
+  px.style.background='#ffffff';
+  cells.push(px);
+  grid.appendChild(px);
+}
+
+function paint(px){
+  if(!px || !px.classList.contains('px')) return;
+  px.style.background = erasing ? '#ffffff' : current;
+}
+
+grid.addEventListener('pointerdown', e=>{
+  painting=true; grid.setPointerCapture(e.pointerId);
+  paint(e.target);
+  e.preventDefault();
+});
+grid.addEventListener('pointermove', e=>{
+  if(!painting) return;
+  // use elementFromPoint so dragging works even with pointer capture
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  paint(el);
+});
+window.addEventListener('pointerup', ()=> painting=false);
+
+document.getElementById('erase').onclick = (e)=>{
+  erasing = !erasing;
+  e.target.classList.toggle('on', erasing);
+  if(erasing) document.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));
+};
+document.getElementById('clear').onclick = ()=> cells.forEach(c=>c.style.background='#ffffff');
+document.getElementById('fill').onclick = ()=> cells.forEach(c=>c.style.background = erasing?'#ffffff':current);
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

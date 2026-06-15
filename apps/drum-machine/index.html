@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Step Sequencer · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .seq{display:flex;flex-direction:column;gap:8px}
+  .lane{display:flex;align-items:center;gap:6px}
+  .name{width:64px;font-family:var(--mono);font-weight:800;font-size:13px;flex:none}
+  .steps{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;flex:1}
+  .cell{aspect-ratio:1;border:2px solid var(--ink);border-radius:6px;background:#fff;cursor:pointer;min-width:0}
+  .cell.beat{background:#f3ecd2}
+  .cell.on{box-shadow:inset 0 0 0 2px #fff}
+  .cell.now{outline:3px solid var(--blue);outline-offset:1px}
+  .l0 .cell.on{background:var(--pink)} .l1 .cell.on{background:var(--purple)}
+  .l2 .cell.on{background:var(--orange)} .l3 .cell.on{background:var(--cyan)}
+  .controls{justify-content:center;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🥁 Step Sequencer</span>
+  <span class="spacer"></span>
+  <span class="num">#69</span>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row controls">
+      <button class="btn pink" id="play">▶ Play</button>
+      <button class="btn" id="clear">Clear</button>
+      <button class="btn blue" id="rand">Surprise me 🎲</button>
+      <label class="muted">Tempo <b id="bpmv">110</b></label>
+      <input type="range" id="bpm" min="60" max="180" value="110" style="width:130px">
+    </div>
+    <div class="seq" id="seq"></div>
+    <p class="center muted" style="margin-bottom:0">Tap the squares to build a beat. 16 steps, 4 sounds.</p>
+  </div>
+</div>
+
+<script>
+const STEPS=16, LANES=[
+  {name:"Kick",type:"kick"},{name:"Snare",type:"snare"},
+  {name:"Hat",type:"hat"},{name:"Clap",type:"clap"}
+];
+const grid=LANES.map(()=>new Array(STEPS).fill(false));
+const seq=document.getElementById("seq"), cells=[];
+
+LANES.forEach((l,li)=>{
+  const lane=document.createElement("div"); lane.className="lane l"+li;
+  const name=document.createElement("div"); name.className="name"; name.textContent=l.name;
+  const steps=document.createElement("div"); steps.className="steps";
+  cells[li]=[];
+  for(let s=0;s<STEPS;s++){
+    const c=document.createElement("div");
+    c.className="cell"+(s%4===0?" beat":"");
+    c.onclick=()=>{grid[li][s]=!grid[li][s];c.classList.toggle("on",grid[li][s]);};
+    steps.appendChild(c); cells[li][s]=c;
+  }
+  lane.appendChild(name); lane.appendChild(steps); seq.appendChild(lane);
+});
+
+let AC;
+function ensure(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();}
+function noiseBuf(){
+  const len=AC.sampleRate*0.4, b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1; return b;
+}
+let NB;
+function hit(type,t){
+  if(!NB)NB=noiseBuf();
+  const g=AC.createGain(); g.connect(AC.destination);
+  if(type==="kick"){
+    const o=AC.createOscillator(); o.frequency.setValueAtTime(150,t);
+    o.frequency.exponentialRampToValueAtTime(45,t+0.16);
+    g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    o.connect(g); o.start(t); o.stop(t+0.32);
+  }else{
+    const src=AC.createBufferSource(); src.buffer=NB;
+    const f=AC.createBiquadFilter();
+    if(type==="hat"){f.type="highpass";f.frequency.value=8000;g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);}
+    else if(type==="snare"){f.type="highpass";f.frequency.value=1500;g.gain.setValueAtTime(0.6,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.18);}
+    else{f.type="bandpass";f.frequency.value=1100;f.Q.value=2;g.gain.setValueAtTime(0.7,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.13);}
+    src.connect(f).connect(g); src.start(t); src.stop(t+0.4);
+  }
+}
+
+let playing=false, cur=0, nextTime=0, timer=null;
+const bpm=document.getElementById("bpm"), bpmv=document.getElementById("bpmv"), playBtn=document.getElementById("play");
+bpm.oninput=()=>bpmv.textContent=bpm.value;
+function stepDur(){return (60/+bpm.value)/4;}
+
+function scheduler(){
+  while(nextTime < AC.currentTime+0.1){
+    const step=cur;
+    LANES.forEach((l,li)=>{ if(grid[li][step]) hit(l.type,nextTime); });
+    const at=nextTime;
+    setTimeout(()=>highlight(step), Math.max(0,(at-AC.currentTime)*1000));
+    nextTime+=stepDur(); cur=(cur+1)%STEPS;
+  }
+  timer=setTimeout(scheduler,25);
+}
+function highlight(step){
+  document.querySelectorAll(".cell.now").forEach(c=>c.classList.remove("now"));
+  if(!playing)return;
+  for(let li=0;li<LANES.length;li++) cells[li][step].classList.add("now");
+}
+
+playBtn.onclick=()=>{
+  ensure();
+  if(playing){playing=false;clearTimeout(timer);playBtn.textContent="▶ Play";playBtn.classList.add("pink");highlight();}
+  else{playing=true;cur=0;nextTime=AC.currentTime+0.05;scheduler();playBtn.textContent="⏸ Stop";playBtn.classList.remove("pink");}
+};
+document.getElementById("clear").onclick=()=>{
+  grid.forEach((r,li)=>r.forEach((_,s)=>{r[s]=false;cells[li][s].classList.remove("on");}));
+};
+document.getElementById("rand").onclick=()=>{
+  const odds=[0.45,0.3,0.55,0.2];
+  grid.forEach((r,li)=>r.forEach((_,s)=>{
+    const v=Math.random()<odds[li]; r[s]=v; cells[li][s].classList.toggle("on",v);
+  }));
+};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snake · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  canvas{margin:14px auto;border:4px solid var(--ink);border-radius:14px;background:#0e2a25;
+    box-shadow:var(--shadow-sm);touch-action:none;width:min(86vw,360px);height:min(86vw,360px)}
+  .stat{display:flex;gap:10px;justify-content:center;font-family:var(--mono);font-weight:800}
+  .pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);
+    gap:8px;justify-content:center;margin:10px auto}
+  .pad .btn{padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
+  .pad .sp{visibility:hidden}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐍 Snake</span>
+  <span class="spacer"></span>
+  <span class="num">#107</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="stat">
+      <span class="pill">Score <b id="score">0</b></span>
+      <span class="pill" style="background:var(--orange)">Best <b id="best">0</b></span>
+    </div>
+    <canvas id="cv" width="300" height="300"></canvas>
+    <div class="output" id="msg" style="margin:6px">Arrows / WASD / swipe to slither 🐍</div>
+    <button class="btn purple" id="go">Start</button>
+    <div class="pad">
+      <span class="sp"></span><button class="btn" data-d="U">↑</button><span class="sp"></span>
+      <button class="btn" data-d="L">←</button><span class="sp"></span><button class="btn" data-d="R">→</button>
+      <span class="sp"></span><button class="btn" data-d="D">↓</button><span class="sp"></span>
+    </div>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const N=20,S=cv.width/N;
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
+const msg=document.getElementById('msg'),goBtn=document.getElementById('go');
+let best=+(localStorage.getItem('snake_best')||0);bestEl.textContent=best;
+let snake,dir,nextDir,food,score,running=false,acc=0,last=0,speed=120;
+
+function reset(){
+  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+  dir={x:1,y:0};nextDir=dir;score=0;speed=120;
+  scoreEl.textContent=0;placeFood();
+}
+function placeFood(){
+  do{food={x:(Math.random()*N|0),y:(Math.random()*N|0)};}
+  while(snake.some(s=>s.x===food.x&&s.y===food.y));
+}
+function setDir(d){
+  const m={U:{x:0,y:-1},D:{x:0,y:1},L:{x:-1,y:0},R:{x:1,y:0}}[d];
+  if(!m)return;
+  if(m.x===-dir.x&&m.y===-dir.y)return; // no reverse
+  nextDir=m;
+}
+function step(){
+  dir=nextDir;
+  const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+  if(h.x<0||h.y<0||h.x>=N||h.y>=N||snake.some(s=>s.x===h.x&&s.y===h.y)){return gameOver();}
+  snake.unshift(h);
+  if(h.x===food.x&&h.y===food.y){
+    score++;scoreEl.textContent=score;placeFood();
+    if(speed>60)speed-=3;
+  }else snake.pop();
+}
+function draw(){
+  ctx.fillStyle='#0e2a25';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.font=S+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🍎',food.x*S+S/2,food.y*S+S/2+1);
+  snake.forEach((s,i)=>{
+    ctx.fillStyle=i===0?'#16e0bd':'#3a86ff';
+    ctx.fillRect(s.x*S+1,s.y*S+1,S-2,S-2);
+  });
+  if(snake[0]){ctx.fillStyle='#fff';
+    ctx.fillRect(snake[0].x*S+S*.55,snake[0].y*S+S*.2,2,2);
+    ctx.fillRect(snake[0].x*S+S*.55,snake[0].y*S+S*.6,2,2);}
+}
+function gameOver(){
+  running=false;
+  if(score>best){best=score;localStorage.setItem('snake_best',best);bestEl.textContent=best;}
+  msg.innerHTML='💀 Game over — score '+score;
+  goBtn.textContent='Play again';
+}
+function loop(t){
+  if(!running)return;
+  if(t-last>speed){last=t;step();draw();}
+  requestAnimationFrame(loop);
+}
+function start(){reset();running=true;last=0;msg.textContent='Go go go! 🟢';goBtn.textContent='Restart';requestAnimationFrame(loop);}
+goBtn.addEventListener('click',start);
+document.querySelectorAll('.pad .btn').forEach(b=>b.addEventListener('click',()=>setDir(b.dataset.d)));
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  const map={arrowup:'U',w:'U',arrowdown:'D',s:'D',arrowleft:'L',a:'L',arrowright:'R',d:'R'};
+  if(map[k]){e.preventDefault();setDir(map[k]);}
+});
+let tx,ty;
+cv.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;},{passive:true});
+cv.addEventListener('touchend',e=>{
+  const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?'R':'L');else setDir(dy>0?'D':'U');
+});
+reset();draw();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

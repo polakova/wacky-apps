@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confetti Button · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+  .wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:78vh}
+  #boom{font-size:clamp(40px,11vw,84px);font-weight:900;font-family:var(--mono);
+    background:var(--pink);color:#fff;border:6px solid var(--ink);border-radius:28px;
+    padding:40px 50px;box-shadow:var(--shadow);cursor:pointer;line-height:1;
+    transition:transform .06s ease;user-select:none}
+  #boom:active{transform:translate(5px,5px) scale(.97);box-shadow:none}
+  #count{font-family:var(--mono);font-weight:900}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎉 Confetti Button</span>
+  <span class="spacer"></span>
+  <span class="num">#59</span>
+</div>
+<canvas id="fx"></canvas>
+<div class="wrap">
+  <button id="boom">🎉 BOOM 🎉</button>
+  <p class="muted center" style="margin-top:22px">Pop it as many times as your heart desires.<br>Bursts fired: <span id="count">0</span></p>
+</div>
+<script>
+const cv=document.getElementById('fx'),cx=cv.getContext('2d');
+let W,H,parts=[],fired=+localStorage.confettiFired||0;
+document.getElementById('count').textContent=fired;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}resize();addEventListener('resize',resize);
+const COLORS=['#ff5da2','#7b2ff7','#16e0bd','#ffd23f','#ff7a45','#3a86ff'];
+let actx;
+function pop(freq){try{actx=actx||new(AudioContext||webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+  o.type='triangle';o.frequency.value=freq;g.gain.value=.18;o.connect(g);g.connect(actx.destination);
+  o.frequency.exponentialRampToValueAtTime(freq*2,actx.currentTime+.12);
+  g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.2);o.start();o.stop(actx.currentTime+.2);}catch(e){}}
+function burst(x,y){
+  const n=90;
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=Math.random()*11+3;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,
+      g:.28+Math.random()*.1,rot:Math.random()*7,vr:(Math.random()-.5)*.4,
+      w:6+Math.random()*7,h:8+Math.random()*8,c:COLORS[i%COLORS.length],life:1});}
+  fired++;localStorage.confettiFired=fired;document.getElementById('count').textContent=fired;
+  pop(400+Math.random()*300);
+}
+const btn=document.getElementById('boom');
+btn.addEventListener('click',e=>{const r=btn.getBoundingClientRect();
+  burst(e.clientX||r.left+r.width/2,e.clientY||r.top+r.height/2);
+  btn.style.transform='';void btn.offsetWidth;});
+function loop(){
+  cx.clearRect(0,0,W,H);
+  for(const p of parts){p.vy+=p.g;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+    if(p.y>H*0.62)p.life-=.012;
+    cx.save();cx.globalAlpha=Math.max(0,p.life);cx.translate(p.x,p.y);cx.rotate(p.rot);
+    cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();}
+  parts=parts.filter(p=>p.life>0&&p.y<H+40);
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

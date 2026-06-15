@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cookie Clicker · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍪</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .count{font-family:var(--mono);font-weight:900;font-size:clamp(30px,9vw,52px)}
+  .cookiewrap{position:relative;display:flex;justify-content:center;min-height:200px;align-items:center;overflow:hidden}
+  .cookie{font-size:clamp(120px,38vw,190px);cursor:pointer;user-select:none;transition:transform .07s ease;line-height:1}
+  .cookie:active{transform:scale(.9)}
+  .crumb{position:absolute;pointer-events:none;font-size:22px;animation:crumb .9s ease forwards}
+  @keyframes crumb{to{transform:translateY(-110px) rotate(50deg);opacity:0}}
+  .shop{border:4px dashed var(--ink);border-radius:14px;padding:16px}
+  .gma{display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap}
+  .gma .face{font-size:40px}
+  .rate{font-family:var(--mono);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🍪 Cookie Clicker</span>
+  <span class="spacer"></span>
+  <span class="num">#91</span>
+</div>
+<div class="wrap">
+  <div class="card stack center">
+    <div class="count" id="count">0 cookies</div>
+    <div class="rate" id="rate">0 / sec</div>
+    <div class="cookiewrap" id="cwrap">
+      <div class="cookie" id="cookie">🍪</div>
+    </div>
+    <div class="muted">Click the cookie. That's the whole job. You're great at it.</div>
+
+    <div class="shop stack">
+      <div class="gma">
+        <span class="face" id="gface">👵</span>
+        <div style="text-align:left;flex:1;min-width:140px">
+          <div class="rate">Grandma <span class="pill" id="gowned">×0</span></div>
+          <div class="muted">Bakes 1 cookie/sec with pure love.</div>
+        </div>
+        <button class="btn pink" id="buy">Hire — <span id="cost">15</span>🍪</button>
+      </div>
+    </div>
+    <button class="btn blue" id="reset" style="font-size:13px;padding:8px 14px">Crumble it all (reset)</button>
+  </div>
+</div>
+<script>
+(function(){
+  var S=JSON.parse(localStorage.getItem('cc_save')||'{}');
+  var cookies = S.cookies||0, grandmas = S.grandmas||0;
+  var perClick=1, baseCost=15, costMul=1.55;
+
+  var countEl=document.getElementById('count'),rateEl=document.getElementById('rate'),
+      cookie=document.getElementById('cookie'),cwrap=document.getElementById('cwrap'),
+      buy=document.getElementById('buy'),costEl=document.getElementById('cost'),
+      gowned=document.getElementById('gowned'),gface=document.getElementById('gface');
+
+  function cost(){ return Math.floor(baseCost*Math.pow(costMul,grandmas)); }
+  function fmt(n){ n=Math.floor(n);
+    if(n<1e4) return n.toLocaleString();
+    var u=['','k','M','B','T'],i=0; while(n>=1000&&i<u.length-1){n/=1000;i++;}
+    return n.toFixed(2)+u[i];
+  }
+  function rate(){ return grandmas; }
+
+  function render(){
+    countEl.textContent=fmt(cookies)+' cookies';
+    rateEl.textContent=fmt(rate())+' / sec';
+    costEl.textContent=fmt(cost());
+    gowned.textContent='×'+grandmas;
+    buy.disabled = cookies<cost();
+    buy.style.opacity = buy.disabled?0.5:1;
+  }
+  function save(){ localStorage.setItem('cc_save',JSON.stringify({cookies:cookies,grandmas:grandmas})); }
+
+  var actx;
+  function crunch(){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+    o.type='triangle';o.frequency.value=400+Math.random()*200;
+    g.gain.setValueAtTime(.12,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.08);o.start();o.stop(actx.currentTime+.08);}catch(e){}}
+
+  function crumb(x,y){
+    var c=document.createElement('span');c.className='crumb';
+    c.textContent=['🍪','🥠','✨','🟤'][Math.floor(Math.random()*4)];
+    var r=cwrap.getBoundingClientRect();
+    c.style.left=((x-r.left)||r.width/2)+'px';c.style.top=((y-r.top)||r.height/2)+'px';
+    cwrap.appendChild(c);setTimeout(function(){c.remove();},900);
+  }
+
+  cookie.addEventListener('click',function(e){
+    cookies+=perClick; crunch(); crumb(e.clientX,e.clientY);
+    cookie.style.transform='scale(1.12)';setTimeout(function(){cookie.style.transform='';},70);
+    render(); save();
+  });
+
+  buy.addEventListener('click',function(){
+    var c=cost(); if(cookies<c) return;
+    cookies-=c; grandmas++;
+    gface.textContent='👵'; gface.classList.remove('pop');void gface.offsetWidth;gface.classList.add('pop');
+    render(); save();
+  });
+
+  document.getElementById('reset').addEventListener('click',function(){
+    if(!confirm('Crumble your whole empire? This cannot be undone.')) return;
+    cookies=0;grandmas=0;render();save();
+  });
+
+  // auto production
+  setInterval(function(){
+    if(grandmas>0){ cookies+=grandmas/10; render(); }
+  },100);
+  setInterval(save,3000);
+
+  render();
+})();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

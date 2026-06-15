@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L33t Sp34k · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#03120a;background-image:none;color:#33ff66}
+  .term{
+    background:#040d08;border:3px solid #33ff66;border-radius:10px;
+    box-shadow:0 0 24px #33ff6655, inset 0 0 60px #001a0c;
+    padding:18px;font-family:var(--mono);
+  }
+  .term::before{
+    content:"root@l33t:~$ ./h4x0r.sh";display:block;color:#22cc44;
+    border-bottom:1px solid #1a5a2e;padding-bottom:8px;margin-bottom:12px;
+  }
+  h1{font-family:var(--mono);color:#33ff66;text-shadow:0 0 8px #33ff66;margin:.2em 0}
+  textarea{background:#020a05;color:#5fff88;border-color:#33ff66;caret-color:#33ff66}
+  #out{
+    background:#020a05;border:2px dashed #33ff66;border-radius:8px;padding:14px;
+    font-family:var(--mono);color:#7dffa0;min-height:1.4em;
+    font-size:clamp(16px,4vw,22px);word-break:break-word;text-shadow:0 0 6px #33ff6688;
+  }
+  .lbl{color:#22cc44;font-family:var(--mono);font-size:13px;margin:10px 0 4px}
+  .scan{height:1.2em}
+  .cursor{display:inline-block;width:.6ch;background:#33ff66}
+  .btn{background:#0a2614;color:#33ff66;border-color:#33ff66}
+  .btn:hover{background:#33ff66;color:#03120a}
+  label.opt{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;color:#5fff88}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">💻 L33t Sp34k</span>
+  <span class="spacer"></span>
+  <span class="num">#37</span>
+</div>
+<div class="wrap">
+  <div class="term">
+    <h1>&gt; L33T TR4NSL4T0R</h1>
+    <div class="lbl">// 1nput pl41n hum4n t3xt:</div>
+    <textarea id="in" rows="3" placeholder="type like a normal person...">elite hacker skills</textarea>
+    <div class="row" style="margin:10px 0">
+      <label class="opt"><input type="checkbox" id="hardcore"> h4rdc0r3 m0d3 (m0r3 symb0ls)</label>
+    </div>
+    <div class="lbl">// 0utput:</div>
+    <div id="out"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="copy">[ c0py ]</button>
+      <span class="muted" id="status" style="color:#33ff66"></span>
+    </div>
+  </div>
+</div>
+<script>
+const inEl=document.getElementById('in'),outEl=document.getElementById('out'),hc=document.getElementById('hardcore');
+const basic={a:'4',e:'3',i:'1',o:'0',s:'5',t:'7',l:'1',g:'9',b:'8',z:'2'};
+const hard={a:'@',e:'3',i:'!',o:'0',s:'$',t:'7',l:'|',g:'6',b:'8',z:'2',c:'(',d:'|)',h:'#',k:'|<',m:'|\\/|',n:'|\\|',u:'|_|',v:'\\/',w:'\\/\\/',x:'><',y:'`/',r:'2',f:'ph',p:'9',q:'0_'};
+function leet(s){
+  const map=hc.checked?hard:basic;
+  let r='';
+  for(const ch of s){
+    const low=ch.toLowerCase();
+    if(map[low]!==undefined) r+=map[low];
+    else r+=ch;
+  }
+  return r;
+}
+function render(){ outEl.textContent=leet(inEl.value)||'_'; }
+inEl.addEventListener('input',render);
+hc.addEventListener('change',render);
+document.getElementById('copy').addEventListener('click',async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='>> c0p13d t0 cl1pb04rd';setTimeout(()=>st.textContent='',1600);
+});
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

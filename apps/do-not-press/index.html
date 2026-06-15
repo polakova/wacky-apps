@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Do Not Press · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛔</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body.alarm{animation:flash .25s steps(2,start) infinite}
+  @keyframes flash{to{background-color:#ff5da2}}
+  .dnp{font-family:var(--mono);font-weight:900;font-size:22px;color:#fff;cursor:pointer;
+    background:repeating-linear-gradient(45deg,#1a1623 0 14px,#ffd23f 14px 28px);
+    color:#fff;-webkit-text-stroke:1px #000;text-shadow:0 2px 0 #000;
+    border:5px solid #1a1623;border-radius:16px;padding:26px 30px;
+    box-shadow:var(--shadow);transition:transform .08s ease}
+  .dnp:active{transform:translate(3px,3px) scale(.97)}
+  .warn{font-weight:900;min-height:1.6em;transition:font-size .2s ease, color .2s ease}
+  .siren{font-size:40px;letter-spacing:6px;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⛔ Do Not Press</span>
+  <span class="spacer"></span>
+  <span class="num">#88</span>
+</div>
+<div class="wrap center">
+  <div class="card stack" id="card">
+    <div class="siren" id="siren"></div>
+    <div class="warn" id="warn" style="font-size:20px">⚠️ Under NO circumstances should you press this button. Seriously.</div>
+    <div class="row" style="justify-content:center">
+      <button class="dnp" id="btn">DO NOT PRESS</button>
+    </div>
+    <div class="row" style="justify-content:center">
+      <span class="pill" id="count">Times you ignored us: 0</span>
+      <button class="btn blue" id="calm" style="display:none">Okay okay, I'll stop</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('btn'),warn=document.getElementById('warn'),
+      countEl=document.getElementById('count'),siren=document.getElementById('siren'),
+      card=document.getElementById('card'),calm=document.getElementById('calm');
+  var n=parseInt(localStorage.getItem('dnp_count')||'0',10);
+  countEl.textContent='Times you ignored us: '+n;
+  if(n>0) calm.style.display='inline-block';
+
+  var stages=[
+    {t:"You pressed it. We can't believe you pressed it.",c:'#7b2ff7',s:18},
+    {t:"STOP. The label was very clear. ⛔",c:'#ff7a45',s:20},
+    {t:"Okay now you're just being rude to the button.",c:'#d12c2c',s:22},
+    {t:"🚨 ALARMS! (they are fake, but loud in spirit) 🚨",c:'#d12c2c',s:24},
+    {t:"The button is filing a complaint with HR.",c:'#7b2ff7',s:26},
+    {t:"Evacuation recommended. By whom? Unclear. RUN.",c:'#d12c2c',s:28},
+    {t:"You have unlocked Forbidden Mode. There is no Forbidden Mode.",c:'#ff5da2',s:30},
+    {t:"The button now respects your audacity. Begrudgingly.",c:'#16e0bd',s:32},
+    {t:"LEGENDARY DISOBEDIENCE. A pigeon salutes you. 🕊️",c:'#ffd23f',s:34}
+  ];
+  var actx;
+  function tone(f,t){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+    o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(.18,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+(t||.3));o.start();o.stop(actx.currentTime+(t||.3));}catch(e){}}
+  function siren2(){tone(740,.15);setTimeout(function(){tone(540,.15);},160);}
+
+  function press(){
+    n++; localStorage.setItem('dnp_count',String(n));
+    countEl.textContent='Times you ignored us: '+n;
+    calm.style.display='inline-block';
+    var st=stages[Math.min(n-1,stages.length-1)];
+    warn.textContent=st.t; warn.style.color=st.c; warn.style.fontSize=st.s+'px';
+    warn.classList.remove('pop');void warn.offsetWidth;warn.classList.add('pop');
+
+    // escalating chaos
+    card.classList.add('shake');setTimeout(function(){card.classList.remove('shake');},400);
+    if(n>=3){ siren.textContent='🚨'.repeat(Math.min(6,n-1)); siren2(); }
+    else { tone(330); }
+    if(n>=4){ document.body.classList.add('alarm');
+      clearTimeout(window._a); window._a=setTimeout(function(){document.body.classList.remove('alarm');},900); }
+    // button keeps daring you bigger
+    var grow=Math.min(1+n*0.04,1.6);
+    btn.style.transform='scale('+grow+')';
+  }
+  btn.addEventListener('click',press);
+  calm.addEventListener('click',function(){
+    document.body.classList.remove('alarm'); siren.textContent='😌';
+    warn.textContent="Thank you. The button forgives you. Mostly.";
+    warn.style.color='var(--ink)'; warn.style.fontSize='20px';
+    btn.style.transform='scale(1)';
+  });
+})();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

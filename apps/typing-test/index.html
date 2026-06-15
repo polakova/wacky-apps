@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing Speed Test · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .sample{font-family:var(--mono);font-size:clamp(18px,4.6vw,24px);line-height:1.5;
+    background:#fff;border:3px solid var(--ink);border-radius:12px;padding:16px;text-align:left}
+  .sample span.ok{color:var(--cyan);background:rgba(22,224,189,.18)}
+  .sample span.bad{color:#fff;background:var(--pink);border-radius:3px}
+  .sample span.cur{border-left:3px solid var(--purple);animation:blink 1s steps(2) infinite}
+  textarea{height:100px;font-size:18px}
+  .stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .stat b{font-size:26px;display:block;font-family:var(--mono)}
+  .stat{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:10px 16px;min-width:90px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⌨️ Typing Speed Test</span>
+  <span class="spacer"></span>
+  <span class="num">#109</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <p class="muted">Type the sentence below. Timer starts on your first keystroke!</p>
+    <div class="sample" id="sample"></div>
+    <textarea id="input" placeholder="start typing here…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    <div class="stats" style="margin:14px 0">
+      <div class="stat">WPM<b id="wpm">0</b></div>
+      <div class="stat">Accuracy<b id="acc">100%</b></div>
+      <div class="stat">Best WPM<b id="best">0</b></div>
+    </div>
+    <div class="output" id="msg" style="min-height:1.2em"></div>
+    <button class="btn purple" id="newBtn">New sentence</button>
+  </div>
+</div>
+<script>
+const SENTS=[
+ "The sleepy orange cat knocked the pencil off the table on purpose.",
+ "A wobbly tower of pancakes is the breakfast of true champions.",
+ "Tiny robots dream of electric sheep and very good snacks.",
+ "Whisper a secret to the moon and it keeps it forever.",
+ "Forty fuzzy ducks marched proudly across the quiet village square.",
+ "Coding at midnight feels heroic until the coffee runs out.",
+ "The friendly dragon only wanted to borrow a cup of sugar.",
+ "Bright purple bubbles floated lazily over the sunny meadow.",
+ "Never trust a smiling penguin holding a tiny accordion.",
+ "Stardust and curiosity built every great adventure we know.",
+ "The library cat judges your book choices with quiet wisdom.",
+ "A perfectly ripe peach is basically summer wearing a disguise.",
+ "Gentle giants tiptoe so they never wake the sleeping clouds.",
+ "Practice makes the keyboard feel like a friendly old piano.",
+ "Somewhere a teapot is singing a song about cozy afternoons."
+];
+const sampleEl=document.getElementById('sample'),input=document.getElementById('input');
+const wpmEl=document.getElementById('wpm'),accEl=document.getElementById('acc');
+const bestEl=document.getElementById('best'),msg=document.getElementById('msg');
+let target,start=null,done=false,timer=null;
+let best=+(localStorage.getItem('typing_best')||0);bestEl.textContent=best;
+
+function newSentence(){
+  target=SENTS[Math.random()*SENTS.length|0];
+  input.value='';start=null;done=false;msg.textContent='';
+  wpmEl.textContent='0';accEl.textContent='100%';
+  clearInterval(timer);render();input.focus();
+}
+function render(){
+  const typed=input.value;
+  let html='';
+  for(let i=0;i<target.length;i++){
+    const ch=target[i].replace('<','&lt;');
+    if(i<typed.length){html+='<span class="'+(typed[i]===target[i]?'ok':'bad')+'">'+ch+'</span>';}
+    else if(i===typed.length){html+='<span class="cur">'+ch+'</span>';}
+    else html+=ch;
+  }
+  sampleEl.innerHTML=html;
+}
+function liveStats(){
+  const typed=input.value;
+  if(!start)return;
+  const mins=(Date.now()-start)/60000;
+  let correct=0;
+  for(let i=0;i<typed.length;i++)if(typed[i]===target[i])correct++;
+  const words=typed.length/5;
+  wpmEl.textContent=mins>0?Math.round(words/mins):0;
+  accEl.textContent=typed.length?Math.round(correct/typed.length*100)+'%':'100%';
+}
+input.addEventListener('input',()=>{
+  if(done){input.value=input.value.slice(0,target.length);return;}
+  if(!start){start=Date.now();timer=setInterval(liveStats,200);}
+  if(input.value.length>target.length)input.value=input.value.slice(0,target.length);
+  render();liveStats();
+  if(input.value===target)finish();
+});
+function finish(){
+  done=true;clearInterval(timer);liveStats();
+  const wpm=+wpmEl.textContent;
+  if(wpm>best){best=wpm;localStorage.setItem('typing_best',best);bestEl.textContent=best;}
+  msg.innerHTML='✅ Done! <b>'+wpm+' WPM</b> at '+accEl.textContent+' accuracy';
+  document.querySelector('.card').classList.add('pop');
+  setTimeout(()=>document.querySelector('.card').classList.remove('pop'),300);
+}
+document.getElementById('newBtn').addEventListener('click',newSentence);
+newSentence();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

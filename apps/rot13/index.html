@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cipher Wheel · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .wheel{width:240px;height:240px;margin:6px auto;position:relative}
+  .wheel svg{width:100%;height:100%}
+  .ring text{font-family:var(--mono);font-weight:800;font-size:9px;fill:var(--ink)}
+  .outer{fill:var(--yellow)}
+  .inner{fill:var(--pink)}
+  .knob{fill:var(--ink)}
+  .arrow{fill:var(--purple)}
+  #shift{width:100%}
+  .shiftnum{font-family:var(--mono);font-weight:900;font-size:26px}
+  textarea{min-height:90px}
+  .mode{font-family:var(--mono);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔐 Cipher Wheel</span>
+  <span class="spacer"></span>
+  <span class="num">#43</span>
+</div>
+<div class="wrap">
+  <div class="card stack center">
+    <div class="muted">Twist the dial. Caesar's secret decoder ring — set it to 13 for classic ROT13.</div>
+    <div class="wheel">
+      <svg viewBox="0 0 200 200" id="ring">
+        <g class="ring" id="outerG"></g>
+        <g class="ring" id="innerG"></g>
+        <circle cx="100" cy="100" r="22" class="knob"/>
+        <polygon points="100,2 92,18 108,18" class="arrow"/>
+        <circle cx="100" cy="100" r="4" fill="var(--paper)"/>
+      </svg>
+    </div>
+    <div class="row" style="justify-content:center">
+      <span class="pill">SHIFT</span>
+      <span class="shiftnum" id="shiftNum">13</span>
+    </div>
+    <input type="range" id="shift" min="0" max="25" value="13">
+    <div class="row" style="justify-content:center;gap:8px">
+      <button class="btn" id="zero">↺ 0</button>
+      <button class="btn pink" id="thirteen">ROT13</button>
+      <button class="btn purple" id="swap">⇅ swap text</button>
+    </div>
+  </div>
+
+  <div class="card stack" style="margin-top:18px">
+    <label class="mode">YOUR TEXT</label>
+    <textarea id="input" placeholder="Type a secret here...">Meet me by the old oak at noon.</textarea>
+    <label class="mode">SHIFTED RESULT</label>
+    <textarea id="output" readonly></textarea>
+    <div class="row">
+      <button class="btn blue" id="copy">📋 Copy result</button>
+      <span class="muted" id="copied"></span>
+    </div>
+  </div>
+</div>
+<script>
+const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const shift = document.getElementById('shift');
+const shiftNum = document.getElementById('shiftNum');
+const input = document.getElementById('input');
+const output = document.getElementById('output');
+const outerG = document.getElementById('outerG');
+const innerG = document.getElementById('innerG');
+
+// build outer ring (fixed alphabet) and inner ring (shifted)
+function buildRing(g, radius, cls){
+  g.innerHTML = '';
+  const seg = 360/26;
+  // backing circle
+  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',100); c.setAttribute('cy',100); c.setAttribute('r',radius+9);
+  c.setAttribute('class',cls); c.setAttribute('stroke','var(--ink)'); c.setAttribute('stroke-width','2');
+  g.appendChild(c);
+  return seg;
+}
+function placeLetters(g, radius, letters){
+  const seg = 360/26;
+  for(let i=0;i<26;i++){
+    const ang = (i*seg - 90) * Math.PI/180;
+    const x = 100 + radius*Math.cos(ang);
+    const y = 100 + radius*Math.sin(ang);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x); t.setAttribute('y',y);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+    t.setAttribute('transform',`rotate(${i*seg} ${x} ${y})`);
+    t.textContent = letters[i];
+    g.appendChild(t);
+  }
+}
+
+function caesar(str, s){
+  return str.replace(/[a-z]/gi, ch => {
+    const up = ch === ch.toUpperCase();
+    const base = up ? 65 : 97;
+    return String.fromCharCode((ch.charCodeAt(0)-base + s)%26 + base);
+  });
+}
+
+function render(){
+  const s = +shift.value;
+  shiftNum.textContent = s;
+  output.value = caesar(input.value, s);
+  // redraw rings
+  outerG.innerHTML=''; innerG.innerHTML='';
+  buildRing(outerG, 78, 'outer');
+  buildRing(innerG, 50, 'inner');
+  placeLetters(outerG, 78, A);
+  const shifted = A.map((_,i)=>A[(i+26-s)%26]); // inner letter aligned under outer i maps to plaintext
+  placeLetters(innerG, 50, A.map((_,i)=>A[(i+s)%26]));
+}
+
+shift.addEventListener('input', render);
+input.addEventListener('input', render);
+document.getElementById('zero').onclick = ()=>{ shift.value=0; render(); };
+document.getElementById('thirteen').onclick = ()=>{ shift.value=13; render(); };
+document.getElementById('swap').onclick = ()=>{ input.value = output.value; render(); };
+document.getElementById('copy').onclick = async ()=>{
+  const txt = output.value;
+  try{ await navigator.clipboard.writeText(txt); }
+  catch(e){ output.select(); document.execCommand('copy'); }
+  const c = document.getElementById('copied');
+  c.textContent = 'copied! 🤫';
+  setTimeout(()=>c.textContent='', 1500);
+};
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

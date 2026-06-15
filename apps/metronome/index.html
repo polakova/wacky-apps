@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metronome · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.pend{
+  position:relative;width:200px;height:200px;margin:0 auto;
+}
+.pivot{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  width:14px;height:14px;border-radius:50%;background:var(--ink);z-index:3}
+.arm{
+  position:absolute;left:50%;bottom:24px;width:6px;height:150px;
+  background:linear-gradient(180deg,var(--purple),var(--pink));
+  border-radius:6px;transform-origin:bottom center;
+  transition:transform .12s ease;
+}
+.bob{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  width:26px;height:26px;border-radius:50%;background:var(--orange);
+  border:3px solid var(--ink)}
+.beats{display:flex;gap:10px;justify-content:center;margin:10px 0}
+.dot{width:22px;height:22px;border-radius:50%;border:3px solid var(--ink);background:#fff}
+.dot.on{background:var(--cyan)}
+.dot.accent.on{background:var(--pink)}
+.bpm{font-family:var(--mono);font-weight:900;font-size:44px}
+input[type=range]{width:100%}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎵 Metronome</span>
+  <span class="spacer"></span>
+  <span class="num">#81</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">Keep the beat. Tap the tempo or drag. Beat 1 gets the pink accent.</div>
+    <div class="bpm" id="bpmDisp">100</div>
+    <div class="muted" style="margin-top:-6px">BPM</div>
+    <div class="pend" style="margin:14px auto">
+      <div class="arm" id="arm"><div class="bob"></div></div>
+      <div class="pivot"></div>
+    </div>
+    <div class="beats" id="beats"></div>
+    <input type="range" id="slider" min="40" max="220" value="100">
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn purple" id="play">▶ Start</button>
+      <button class="btn blue" id="tap">👆 Tap tempo</button>
+      <select id="meter">
+        <option value="4">4/4</option>
+        <option value="3">3/4</option>
+        <option value="2">2/4</option>
+        <option value="6">6/8</option>
+      </select>
+    </div>
+  </div>
+</div>
+<script>
+let bpm=100, beatsPerBar=4, playing=false, beat=0, timer=null, ac=null, swing=1;
+const arm=document.getElementById('arm'), bpmDisp=document.getElementById('bpmDisp');
+const slider=document.getElementById('slider'), beatsEl=document.getElementById('beats');
+const playB=document.getElementById('play'), meter=document.getElementById('meter');
+
+function buildDots(){
+  beatsEl.innerHTML='';
+  for(let i=0;i<beatsPerBar;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' accent':'');
+    beatsEl.appendChild(d);
+  }
+}
+buildDots();
+function click(accent){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), t=ac.currentTime;
+    o.type='square';
+    o.frequency.value=accent?1500:1000;
+    o.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.linearRampToValueAtTime(accent?0.4:0.25,t+0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+    o.start(t); o.stop(t+0.06);
+  }catch(e){}
+}
+function tick(){
+  const accent=(beat===0);
+  click(accent);
+  const dots=beatsEl.children;
+  for(const d of dots) d.classList.remove('on');
+  dots[beat].classList.add('on');
+  swing=-swing;
+  arm.style.transform=`rotate(${swing*22}deg)`;
+  beat=(beat+1)%beatsPerBar;
+}
+function start(){
+  if(!ac){ try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} }
+  playing=true; playB.textContent='⏸ Stop'; beat=0;
+  tick();
+  timer=setInterval(tick, 60000/bpm);
+}
+function stop(){
+  playing=false; playB.textContent='▶ Start'; clearInterval(timer);
+  arm.style.transform='rotate(0deg)';
+  for(const d of beatsEl.children) d.classList.remove('on');
+}
+function setBpm(v){
+  bpm=Math.max(40,Math.min(220,Math.round(v)));
+  bpmDisp.textContent=bpm; slider.value=bpm;
+  if(playing){ clearInterval(timer); timer=setInterval(tick,60000/bpm); }
+}
+slider.oninput=()=>setBpm(+slider.value);
+playB.onclick=()=>playing?stop():start();
+meter.onchange=()=>{ beatsPerBar=+meter.value; buildDots(); beat=0; };
+
+let taps=[];
+document.getElementById('tap').onclick=()=>{
+  const now=performance.now();
+  taps=taps.filter(t=>now-t<2500); taps.push(now);
+  if(taps.length>=2){
+    let sum=0; for(let i=1;i<taps.length;i++) sum+=taps[i]-taps[i-1];
+    const avg=sum/(taps.length-1);
+    setBpm(60000/avg);
+  }
+};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

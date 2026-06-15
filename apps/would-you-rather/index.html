@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Would You Rather · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤔</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .vs{font-family:var(--mono);font-weight:900;font-size:22px;margin:6px 0;color:var(--purple)}
+  .choice{display:block;width:100%;text-align:left;font-size:18px;padding:18px;margin:0;line-height:1.3}
+  .choice .pct{display:none;font-family:var(--mono);font-weight:900;margin-top:8px;font-size:15px}
+  .choice.revealed .pct{display:block}
+  .bar{height:10px;background:var(--ink);border-radius:999px;margin-top:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:var(--cyan);transition:width .6s ease}
+  .picked{outline:4px solid var(--orange);outline-offset:2px}
+  .q{font-size:clamp(18px,4vw,24px);font-weight:900;margin-bottom:14px;line-height:1.25}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🤔 Would You Rather</span>
+  <span class="spacer"></span>
+  <span class="num">#30</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div class="q center" id="q">Would you rather... read this, or click below?</div>
+    <div class="stack">
+      <button class="btn blue choice" id="cA"><span class="lbl">A</span><div class="pct" id="pA"></div><div class="bar"><i id="bA"></i></div></button>
+      <div class="vs center">— OR —</div>
+      <button class="btn pink choice" id="cB"><span class="lbl">B</span><div class="pct" id="pB"></div><div class="bar"><i id="bB"></i></div></button>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button class="btn" id="next">🎲 New Dilemma</button>
+    </div>
+    <p class="muted center" id="status" style="margin-top:12px">Choose wisely. The fake internet is watching.</p>
+  </div>
+</div>
+<script>
+const A = [
+  "have fingers that smell faintly of pancakes forever",
+  "be able to pause time but only while sneezing",
+  "have a tiny orchestra that plays whenever you enter a room",
+  "always know the exact time without checking",
+  "be fluent in every language but only while whispering",
+  "have a pet dragon the size of a hamster",
+  "teleport, but you always land 3 feet too high",
+  "have hair that changes color with your mood",
+  "be slightly famous for a thing you didn't do",
+  "have a remote that fast-forwards boring conversations",
+  "always find the perfect parking spot, anywhere",
+  "be able to talk to houseplants who gossip a lot",
+  "have shoes that are always the right temperature",
+  "summon a sandwich once a day with a snap",
+  "be able to breathe underwater but only in soup",
+  "have a personal narrator with a soothing voice",
+  "never need an umbrella again, rain dodges you",
+  "be able to lift cars but only on Tuesdays",
+  "have a memory that perfectly recalls song lyrics",
+  "win every coin flip for the rest of your life",
+  "have a tail you can wag when you're happy",
+  "be invisible only when nobody is looking anyway"
+];
+const B = [
+  "be able to high-five through any screen",
+  "have a backpack that's always exactly what you need",
+  "speak to animals but they're all extremely sarcastic",
+  "have a fridge that's always stocked with one snack",
+  "glow gently in the dark like a friendly nightlight",
+  "have a cloud that follows you with perfect shade",
+  "be unbeatable at thumb wars across the galaxy",
+  "have a phone battery that never, ever dies",
+  "be able to fold laundry instantly with a clap",
+  "have a doorbell that announces your arrival epically",
+  "instantly know if milk has gone bad by vibe alone",
+  "have socks that never go missing in the wash",
+  "be able to whistle any tune flawlessly forever",
+  "have a tiny helpful robot that lives in your pocket",
+  "make any chair the most comfortable chair on earth",
+  "be able to nap for 8 hours in 8 minutes",
+  "have a garden that grows snacks instead of weeds",
+  "always pick the fastest line at the store",
+  "be able to dry instantly like a happy dog",
+  "have a hat that knows exactly what you're thinking",
+  "make traffic lights turn green just by humming",
+  "have a shadow that does little encouraging dances"
+];
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+const cA=document.getElementById('cA'),cB=document.getElementById('cB');
+const lblA=cA.querySelector('.lbl'),lblB=cB.querySelector('.lbl');
+const pA=document.getElementById('pA'),pB=document.getElementById('pB');
+const bA=document.getElementById('bA'),bB=document.getElementById('bB');
+const status=document.getElementById('status');
+let answered=false, pctA=50;
+let ac;
+function tone(f){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type='square';o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2);o.start();o.stop(ac.currentTime+.2);}catch(e){}}
+function fresh(){
+  answered=false;
+  let a=rand(A), b=rand(B);
+  lblA.textContent='🅰️ '+a;
+  lblB.textContent='🅱️ '+b;
+  cA.classList.remove('revealed','picked'); cB.classList.remove('revealed','picked');
+  bA.style.width='0'; bB.style.width='0';
+  pctA = 8 + Math.floor(Math.random()*85);
+  status.textContent='Choose wisely. The fake internet is watching.';
+}
+function reveal(picked){
+  if(answered) return; answered=true;
+  tone(picked==='A'?520:660);
+  pA.textContent='👍 '+pctA+'% of people';
+  pB.textContent='👍 '+(100-pctA)+'% of people';
+  cA.classList.add('revealed'); cB.classList.add('revealed');
+  requestAnimationFrame(()=>{bA.style.width=pctA+'%';bB.style.width=(100-pctA)+'%';});
+  (picked==='A'?cA:cB).classList.add('picked');
+  const mine = picked==='A'?pctA:100-pctA;
+  status.textContent = mine>=55 ? "You're with the crowd. Comfy." : mine<=45 ? "Bold! You went rogue. Respect. 🦅" : "Wow, a true coin-flip nation.";
+}
+cA.onclick=()=>reveal('A');
+cB.onclick=()=>reveal('B');
+document.getElementById('next').onclick=()=>{tone(440);fresh();};
+fresh();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

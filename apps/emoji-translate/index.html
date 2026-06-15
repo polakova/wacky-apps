@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emoji-fy · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😎</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .out{font-size:clamp(20px,5vw,28px);font-weight:700;line-height:1.6;
+    background:linear-gradient(135deg,var(--cyan),var(--yellow));
+    border:3px solid var(--ink);border-radius:14px;padding:16px;min-height:70px;word-break:break-word}
+  textarea{min-height:90px}
+  .out mark{background:transparent;padding:0;color:inherit}
+  .out .hit{background:rgba(255,255,255,.55);border-radius:6px;padding:0 2px}
+  .keep label{font-size:14px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">😎 Emoji-fy</span>
+  <span class="spacer"></span>
+  <span class="num">#35</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <p class="muted center" style="margin:0">Type a sentence. Watch words turn into tiny pictures. 🪄</p>
+    <textarea id="in" placeholder="i love pizza and my cat in the rain">i love pizza and my cat dancing in the rain with a happy heart</textarea>
+    <div class="row keep" style="justify-content:center">
+      <label class="muted"><input type="checkbox" id="keep" style="width:auto;padding:0" checked> keep the words too</label>
+    </div>
+    <div class="out" id="out"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="copy">📋 Copy</button>
+      <span class="pill" id="count">0 words emoji-fied</span>
+    </div>
+  </div>
+</div>
+<script>
+const MAP={
+  love:"❤️",heart:"💖",happy:"😄",sad:"😢",angry:"😡",cry:"😭",laugh:"😂",
+  cat:"🐱",dog:"🐶",bird:"🐦",fish:"🐟",bear:"🐻",fox:"🦊",pig:"🐷",cow:"🐮",
+  pizza:"🍕",coffee:"☕",cake:"🍰",apple:"🍎",banana:"🍌",taco:"🌮",cookie:"🍪",bread:"🍞",
+  sun:"☀️",moon:"🌙",star:"⭐",rain:"🌧️",snow:"❄️",cloud:"☁️",fire:"🔥",water:"💧",
+  rainbow:"🌈",flower:"🌸",tree:"🌳",rocket:"🚀",car:"🚗",plane:"✈️",boat:"⛵",
+  money:"💰",time:"⏰",music:"🎵",party:"🎉",gift:"🎁",book:"📚",phone:"📱",
+  home:"🏠",dancing:"💃",dance:"💃",sleep:"😴",sleepy:"😴",cool:"😎",
+  ghost:"👻",alien:"👽",robot:"🤖",king:"👑",queen:"👑",magic:"✨",
+  yes:"👍",no:"👎",ok:"👌",hi:"👋",hello:"👋",bye:"👋",eyes:"👀",brain:"🧠",
+  hot:"🥵",cold:"🥶",strong:"💪",fast:"💨",idea:"💡",question:"❓",
+  pizza_party:"🍕",dragon:"🐉",unicorn:"🦄",butterfly:"🦋",bee:"🐝",
+  ocean:"🌊",mountain:"⛰️",beach:"🏖️",sleeping:"😴",winner:"🏆",
+  game:"🎮",paint:"🎨",camera:"📷",clock:"🕐",key:"🔑",lock:"🔒",
+  poop:"💩",sparkle:"✨",crown:"👑",pumpkin:"🎃",snowman:"⛄",
+  hungry:"😋",yummy:"😋",sick:"🤒",dead:"💀",skull:"💀",
+  thinking:"🤔",wink:"😉",kiss:"😘",hug:"🤗",scared:"😱",
+  pretzel:"🥨",donut:"🍩",candy:"🍬","ice":"🧊",popcorn:"🍿"
+};
+const inp=document.getElementById('in'),out=document.getElementById('out'),keep=document.getElementById('keep'),count=document.getElementById('count');
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function render(){
+  const v=inp.value;
+  if(!v.trim()){ out.textContent='😎 your emoji sentence will appear here'; count.textContent='0 words emoji-fied'; return; }
+  let hits=0;
+  const html = v.split(/(\s+)/).map(tok=>{
+    if(/^\s+$/.test(tok)) return tok;
+    const clean=tok.toLowerCase().replace(/[^a-z]/g,'');
+    const em=MAP[clean];
+    if(em){ hits++; return keep.checked? '<span class="hit">'+esc(tok)+'</span> '+em : em; }
+    return esc(tok);
+  }).join('');
+  out.innerHTML=html;
+  count.textContent = hits+' word'+(hits===1?'':'s')+' emoji-fied';
+}
+inp.addEventListener('input',render);
+keep.addEventListener('change',render);
+document.getElementById('copy').onclick=async()=>{
+  const t=out.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  const btn=document.getElementById('copy'),o=btn.textContent;btn.textContent='✅ Copied!';btn.classList.add('pop');setTimeout(()=>{btn.textContent=o;btn.classList.remove('pop');},1200);
+};
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

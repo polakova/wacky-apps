@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roshambo · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✊</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .arena{display:flex;justify-content:space-around;align-items:center;margin:14px 0}
+  .hand{font-size:clamp(56px,18vw,110px);transition:transform .1s}
+  .hand.shake{animation:rps .5s}
+  @keyframes rps{0%,100%{transform:translateY(0)}25%{transform:translateY(-18px)}75%{transform:translateY(0)}}
+  .vs{font-family:var(--mono);font-weight:900;font-size:22px;color:var(--purple)}
+  .choices{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .cbtn{font-size:46px;background:#fff;border:4px solid var(--ink);border-radius:18px;
+    width:92px;height:92px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .05s}
+  .cbtn:hover{background:var(--cyan)}
+  .cbtn:active{transform:translate(3px,3px);box-shadow:none}
+  #verdict{font-size:clamp(24px,7vw,38px);font-weight:900;min-height:1.2em}
+  .win{color:#16a34a}.lose{color:#dc2626}.draw{color:var(--purple)}
+  .board{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .sc{background:#fff;border:4px solid var(--ink);border-radius:14px;padding:8px 18px;box-shadow:var(--shadow-sm)}
+  .sc b{font-size:28px;display:block}
+  .lbl{position:absolute;font-size:13px;color:var(--ink);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">✊ Roshambo</span>
+  <span class="spacer"></span>
+  <span class="num">#27</span>
+</div>
+<div class="wrap">
+  <div class="card center stack">
+    <div class="muted">You vs. the famously moody CPU. Best of forever.</div>
+    <div class="arena">
+      <div style="text-align:center"><div class="hand" id="you">✊</div><div class="muted">YOU</div></div>
+      <div class="vs">VS</div>
+      <div style="text-align:center"><div class="hand" id="cpu" style="transform:scaleX(-1)">✊</div><div class="muted">CPU</div></div>
+    </div>
+    <div id="verdict">Pick your weapon!</div>
+    <div class="choices">
+      <button class="cbtn" data-m="rock">✊</button>
+      <button class="cbtn" data-m="paper">✋</button>
+      <button class="cbtn" data-m="scissors">✌️</button>
+    </div>
+    <div class="board">
+      <div class="sc">Wins<b id="w">0</b></div>
+      <div class="sc">Losses<b id="l">0</b></div>
+      <div class="sc">Draws<b id="d">0</b></div>
+    </div>
+    <button class="btn" id="reset" style="font-size:14px;padding:8px 14px">reset scoreboard</button>
+  </div>
+</div>
+<script>
+const EMO={rock:'✊',paper:'✋',scissors:'✌️'};const BEATS={rock:'scissors',paper:'rock',scissors:'paper'};
+const youEl=document.getElementById('you'),cpuEl=document.getElementById('cpu'),verdict=document.getElementById('verdict');
+let sc=JSON.parse(localStorage.getItem('rpsScore')||'{"w":0,"l":0,"d":0}');
+function paint(){document.getElementById('w').textContent=sc.w;document.getElementById('l').textContent=sc.l;document.getElementById('d').textContent=sc.d;}
+paint();
+let ac;function tone(f,t,type){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+  o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(.2,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+t);o.start();o.stop(ac.currentTime+t);}catch(e){}}
+const WINQ=["Victory! The CPU sighs dramatically.","You win — pure tactical genius.","Take that! 🎉","A clean win. Showoff."];
+const LOSEQ=["The CPU gloats quietly.","Ouch! Outplayed.","CPU wins this round. Rematch?","So close, yet so defeated."];
+const DRAWQ=["Great minds clash. Draw!","Identical! Spooky.","A standoff. Try again.","Tie! The crowd shrugs."];
+let busy=false;
+function play(m){
+  if(busy)return;busy=true;
+  youEl.classList.add('shake');cpuEl.classList.add('shake');
+  youEl.textContent='✊';cpuEl.textContent='✊';verdict.textContent='Ro… sham… BO!';verdict.className='';
+  tone(300,.1);setTimeout(()=>tone(380,.1),160);setTimeout(()=>tone(460,.1),320);
+  setTimeout(()=>{
+    youEl.classList.remove('shake');cpuEl.classList.remove('shake');
+    const cpu=['rock','paper','scissors'][Math.floor(Math.random()*3)];
+    youEl.textContent=EMO[m];cpuEl.textContent=EMO[cpu];
+    let r,cls,q;
+    if(m===cpu){r='draw';cls='draw';q=DRAWQ;sc.d++;tone(440,.2);}
+    else if(BEATS[m]===cpu){r='win';cls='win';q=WINQ;sc.w++;tone(660,.15);setTimeout(()=>tone(880,.2),120);}
+    else{r='lose';cls='lose';q=LOSEQ;sc.l++;tone(200,.3,'sawtooth');}
+    verdict.textContent=q[Math.floor(Math.random()*q.length)];verdict.className=cls;
+    verdict.classList.add('pop');localStorage.setItem('rpsScore',JSON.stringify(sc));paint();
+    busy=false;
+  },520);
+}
+document.querySelectorAll('.cbtn').forEach(b=>b.onclick=()=>play(b.dataset.m));
+addEventListener('keydown',e=>{const k={r:'rock',p:'paper',s:'scissors'}[e.key.toLowerCase()];if(k)play(k);});
+document.getElementById('reset').onclick=()=>{sc={w:0,l:0,d:0};localStorage.setItem('rpsScore',JSON.stringify(sc));paint();verdict.textContent='Scoreboard wiped. Fresh start!';verdict.className='';};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

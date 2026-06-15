@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dad Joke Dispenser · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👔</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .machine{background:#3a86ff;border:4px solid var(--ink);border-radius:20px;box-shadow:var(--shadow);padding:22px;color:#fff;text-align:center}
+  .slot{background:#fff;color:var(--ink);border:4px solid var(--ink);border-radius:14px;min-height:120px;padding:18px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+  .setup{font-size:clamp(19px,4.4vw,26px);font-weight:800}
+  .punch{font-size:clamp(20px,4.8vw,28px);font-weight:900;color:var(--purple)}
+  .react{font-size:46px;min-height:48px}
+  .tie{font-size:50px;display:inline-block}
+  .wobble{animation:wob .5s}
+  @keyframes wob{0%,100%{transform:rotate(0)}25%{transform:rotate(12deg)}75%{transform:rotate(-12deg)}}
+  .counter{font-family:var(--mono);font-weight:800;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">👔 Dad Joke Dispenser</span>
+  <span class="spacer"></span>
+  <span class="num">#8</span>
+</div>
+<div class="wrap">
+  <div class="machine">
+    <div class="tie" id="tie">👔</div>
+    <p style="font-weight:800;margin:6px 0 16px">Insert eye-roll. Dispense groan.</p>
+    <div class="slot">
+      <div class="setup" id="setup">Press the button. Dad is ready.</div>
+      <div class="punch" id="punch"></div>
+      <div class="react" id="react"></div>
+    </div>
+    <div class="counter" id="counter"></div>
+    <div class="row center" style="justify-content:center;margin-top:16px">
+      <button class="btn yellow" id="main">🎩 Tell me one!</button>
+      <button class="btn pink" id="copy" style="display:none">📋 Copy</button>
+    </div>
+  </div>
+</div>
+<script>
+const jokes=[
+  ["Why did the scarecrow get a promotion?","He was outstanding in his field."],
+  ["I only know 25 letters of the alphabet.","I don't know y."],
+  ["What do you call a fish wearing a bowtie?","Sofishticated."],
+  ["Why did the bicycle fall over?","It was two tired."],
+  ["I'm reading a book about anti-gravity.","It's impossible to put down."],
+  ["What do you call cheese that isn't yours?","Nacho cheese."],
+  ["Why don't eggs tell jokes?","They'd crack each other up."],
+  ["I used to hate facial hair.","But then it grew on me."],
+  ["What did the ocean say to the beach?","Nothing, it just waved."],
+  ["Why did the coffee file a police report?","It got mugged."],
+  ["How do you organize a space party?","You planet."],
+  ["I made a belt out of watches.","It was a waist of time."],
+  ["What's brown and sticky?","A stick."],
+  ["Why can't your nose be 12 inches long?","Then it'd be a foot."],
+  ["What do you call a pile of cats?","A meow-tain."],
+  ["I told my suitcase no vacation this year.","Now I'm dealing with emotional baggage."],
+  ["Why did the math book look sad?","It had too many problems."],
+  ["What do you call a sleeping dinosaur?","A dino-snore."],
+  ["I'm afraid of the calendar.","Its days are numbered."],
+  ["Why did the cookie go to the doctor?","It was feeling crummy."],
+  ["What do you call a bear with no teeth?","A gummy bear."],
+  ["I tried to catch fog yesterday.","Mist."],
+  ["Why don't skeletons fight each other?","They don't have the guts."],
+  ["What's a vampire's favorite fruit?","A neck-tarine."]
+];
+const reacts=["🥁 ba-dum-tss","😩 *groan*","🙄 oh dad...","😂 *snort*","🪦 RIP my dignity","🫠 why","👏 classic","😬 ...","🤦 nope"];
+const setup=document.getElementById('setup'),punch=document.getElementById('punch'),
+  react=document.getElementById('react'),main=document.getElementById('main'),
+  copy=document.getElementById('copy'),tie=document.getElementById('tie'),
+  counter=document.getElementById('counter');
+let cur=null,revealed=false,last=-1;
+let count=+(localStorage.getItem('dadjokes')||0);
+function showCount(){counter.textContent="Groans dispensed: "+count;}
+showCount();
+let ac;
+function beep(freqs){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);o.frequency.value=f;o.type='triangle';
+      const t=ac.currentTime+i*0.09;g.gain.setValueAtTime(0.18,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.12);o.start(t);o.stop(t+0.13);});
+  }catch(e){}
+}
+function newJoke(){
+  let i;do{i=Math.floor(Math.random()*jokes.length)}while(i===last&&jokes.length>1);
+  last=i;cur=jokes[i];revealed=false;
+  setup.textContent=cur[0];punch.textContent="";react.textContent="";
+  setup.classList.remove('pop');void setup.offsetWidth;setup.classList.add('pop');
+  tie.classList.remove('wobble');void tie.offsetWidth;tie.classList.add('wobble');
+  main.textContent="👉 Reveal the punchline";copy.style.display="none";
+  beep([330,392]);
+}
+function reveal(){
+  revealed=true;
+  punch.textContent=cur[1];
+  punch.classList.remove('pop');void punch.offsetWidth;punch.classList.add('pop');
+  react.textContent=reacts[Math.floor(Math.random()*reacts.length)];
+  main.textContent="🎩 Tell me another!";copy.style.display="";
+  count++;localStorage.setItem('dadjokes',count);showCount();
+  beep([523,415,392,330]);
+}
+main.addEventListener('click',()=>{ if(!cur||revealed) newJoke(); else reveal(); });
+copy.addEventListener('click',()=>{
+  const txt=cur[0]+" "+cur[1];
+  const done=()=>{const o=copy.textContent;copy.textContent="✅ Copied!";setTimeout(()=>copy.textContent=o,1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{});}
+  else{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy')}catch(e){}t.remove();done();}
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

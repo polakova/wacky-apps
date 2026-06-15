@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cheesy Pickup Lines · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧀</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .love-card{background:linear-gradient(160deg,#fff,#ffe9f3);border-color:var(--pink);position:relative;overflow:hidden}
+  #line{font-style:italic}
+  .cheese{font-family:var(--mono);font-size:13px;color:var(--pink);font-weight:800;letter-spacing:1px}
+  .rating{margin-top:10px;font-size:22px}
+  .hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:80}
+  .heart{position:absolute;bottom:-30px;font-size:26px;animation:floatup linear forwards;user-select:none}
+  @keyframes floatup{
+    0%{transform:translateY(0) scale(.6) rotate(0);opacity:0}
+    10%{opacity:1}
+    100%{transform:translateY(-105vh) scale(1.1) rotate(var(--r));opacity:0}
+  }
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:var(--pink);font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🧀 Cheesy Pickup Lines</span>
+  <span class="spacer"></span>
+  <span class="num">#7</span>
+</div>
+<div class="wrap stack">
+  <div class="card love-card center stack">
+    <div class="cheese">🧀 EXTRA CHEESE, NO REGRETS 🧀</div>
+    <div class="output" id="line">Press the button and prepare to cringe-smile.</div>
+    <div class="rating" id="rating">🧀🧀🧀</div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="gen">💘 New line</button>
+      <button class="btn" id="copy">📋 Copy</button>
+    </div>
+    <div class="muted">Wholesome, harmless, and dangerously corny.</div>
+  </div>
+</div>
+<div class="hearts" id="hearts"></div>
+<div class="toast" id="toast">Copied! Use responsibly. 💕</div>
+<script>
+const lines=[
+  "Are you a parking ticket? Because you've got 'fine' written all over you.",
+  "Do you have a map? I keep getting lost in this conversation with you.",
+  "If you were a vegetable, you'd be a cute-cumber.",
+  "Are you made of copper and tellurium? Because you're Cu-Te.",
+  "I must be a snowflake, because I've fallen for you.",
+  "Do you like raisins? How do you feel about a date sometime?",
+  "You must be a magician, because whenever I look at you everyone else disappears.",
+  "Are you a campfire? Because you're hot and I want s'more.",
+  "If kindness were a sport, you'd be the all-star team captain.",
+  "Are you Wi-Fi? Because I'm really feeling a connection.",
+  "You must be the square root of negative one, because you can't be real.",
+  "Are you a library book? Because I'm definitely checking you out.",
+  "I'd say you're a 10, but I'm missing a couple chromosomes of chill around you.",
+  "Are you a dictionary? Because you add meaning to my life.",
+  "If you were a fruit, you'd be a fine-apple.",
+  "Do you believe in love at first sight, or should I walk by with this puppy again?",
+  "Are you a battery? Because you just gave me a charge.",
+  "You must be a keyboard, because you're just my type.",
+  "Are you a sunrise? Because you make my whole day start better.",
+  "I'm not great at flirting, but you make me want to practice.",
+  "Are you a comfy blanket? Because being near you feels like home.",
+  "If smiles were currency, you'd make me a billionaire.",
+  "Are you a baker? Because you're a cutie-pie.",
+  "Do you have a name, or can I call you 'mine' eventually?",
+  "Are you the moon? Because even on my worst nights you'd light things up."
+];
+const ratings=["🧀","🧀🧀","🧀🧀🧀","🧀🧀🧀🧀","🧀🧀🧀🧀🧀"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const lineEl=document.getElementById('line'),rating=document.getElementById('rating'),hearts=document.getElementById('hearts');
+let last="";
+const heartSet=["💕","💖","💗","❤️","💘","💝","🧀","😘"];
+function burst(){
+  for(let i=0;i<16;i++){
+    const h=document.createElement('div');h.className='heart';
+    h.textContent=heartSet[Math.floor(Math.random()*heartSet.length)];
+    h.style.left=(Math.random()*100)+'vw';
+    h.style.fontSize=(18+Math.random()*22)+'px';
+    h.style.animationDuration=(2.4+Math.random()*2)+'s';
+    h.style.setProperty('--r',(Math.random()*120-60)+'deg');
+    hearts.appendChild(h);
+    setTimeout(()=>h.remove(),4600);
+  }
+}
+function gen(){
+  let l;do{l=pick(lines);}while(l===last&&lines.length>1);last=l;
+  lineEl.textContent='"'+l+'"';
+  rating.textContent="Cheese level: "+pick(ratings);
+  lineEl.classList.remove('pop');void lineEl.offsetWidth;lineEl.classList.add('pop');
+  burst();
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=lineEl.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+lineEl.textContent="Press the button and prepare to cringe-smile.";
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

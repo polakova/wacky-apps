@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ant Farm · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐜</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #sand{background:#e9d8a6;border:4px solid var(--ink);border-radius:18px;
+    box-shadow:var(--shadow);width:100%;touch-action:none;cursor:crosshair}
+  .hud{justify-content:center}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐜 Ant Farm</span>
+  <span class="spacer"></span>
+  <span class="num">#66</span>
+</div>
+
+<div class="wrap">
+  <canvas id="sand" width="700" height="460"></canvas>
+  <div class="row hud" style="margin-top:14px">
+    <span class="pill">Ants: <span id="cnt">12</span></span>
+    <span class="pill">Crumbs eaten: <span id="eaten">0</span></span>
+    <button class="btn blue" id="more">+ more ants</button>
+    <button class="btn" id="clear">clear crumbs</button>
+  </div>
+  <p class="center muted">Tap anywhere to drop a tasty crumb. The little ants will wander over. 🐜</p>
+</div>
+
+<script>
+const cv=document.getElementById("sand"), ctx=cv.getContext("2d");
+const cntEl=document.getElementById("cnt"), eatenEl=document.getElementById("eaten");
+let W=cv.width,H=cv.height;
+let ants=[], foods=[], eaten=0;
+
+function rand(a,b){return a+Math.random()*(b-a);}
+function newAnt(){return {x:rand(0,W),y:rand(0,H),a:rand(0,Math.PI*2),wob:rand(0,9),legs:0};}
+for(let i=0;i<12;i++) ants.push(newAnt());
+
+function addFood(x,y){ if(foods.length<60) foods.push({x,y,r:rand(3,5)}); }
+function pos(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;
+  return {x:(t.clientX-r.left)*W/r.width, y:(t.clientY-r.top)*H/r.height};}
+cv.addEventListener("mousedown",e=>{const p=pos(e);addFood(p.x,p.y);});
+cv.addEventListener("touchstart",e=>{const p=pos(e);addFood(p.x,p.y);e.preventDefault();},{passive:false});
+
+document.getElementById("more").onclick=()=>{for(let i=0;i<4;i++)ants.push(newAnt());cntEl.textContent=ants.length;};
+document.getElementById("clear").onclick=()=>{foods=[];};
+
+function nearest(ant){
+  let best=null,bd=1e9;
+  for(const f of foods){const d=(f.x-ant.x)**2+(f.y-ant.y)**2; if(d<bd){bd=d;best=f;}}
+  return {f:best,d:Math.sqrt(bd)};
+}
+
+function step(){
+  for(const ant of ants){
+    const tgt=nearest(ant);
+    if(tgt.f){
+      const desired=Math.atan2(tgt.f.y-ant.y, tgt.f.x-ant.x);
+      let diff=desired-ant.a;
+      while(diff>Math.PI)diff-=Math.PI*2; while(diff<-Math.PI)diff+=Math.PI*2;
+      ant.a+=diff*0.12; // steer toward crumb
+      if(tgt.d<6){ // eat
+        const i=foods.indexOf(tgt.f); if(i>=0)foods.splice(i,1);
+        eaten++; eatenEl.textContent=eaten;
+      }
+    } else {
+      ant.wob+=rand(-0.4,0.4);
+      ant.a+=Math.sin(ant.wob)*0.12; // idle wander
+    }
+    const sp=tgt.f?1.5:1.0;
+    ant.x+=Math.cos(ant.a)*sp; ant.y+=Math.sin(ant.a)*sp;
+    // bounce off walls
+    if(ant.x<6){ant.x=6;ant.a=Math.PI-ant.a;} if(ant.x>W-6){ant.x=W-6;ant.a=Math.PI-ant.a;}
+    if(ant.y<6){ant.y=6;ant.a=-ant.a;} if(ant.y>H-6){ant.y=H-6;ant.a=-ant.a;}
+    ant.legs+=0.4;
+  }
+}
+
+function drawAnt(a){
+  ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.a);
+  ctx.strokeStyle="#5b3a1a"; ctx.lineWidth=1;
+  for(let i=-1;i<=1;i++){const off=Math.sin(a.legs+i)*2.2;
+    ctx.beginPath();ctx.moveTo(i*2.5,0);ctx.lineTo(i*2.5,3.5+off);ctx.moveTo(i*2.5,0);ctx.lineTo(i*2.5,-3.5-off);ctx.stroke();}
+  ctx.fillStyle="#2b1b0f";
+  for(const s of [-4,0,4.5]){ctx.beginPath();ctx.ellipse(s,0,2.4,1.8,0,0,7);ctx.fill();}
+  ctx.restore();
+}
+
+function loop(){
+  step();
+  ctx.clearRect(0,0,W,H);
+  // crumbs
+  for(const f of foods){ctx.fillStyle="#7a5230";ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,7);ctx.fill();}
+  for(const a of ants) drawAnt(a);
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

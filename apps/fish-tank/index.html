@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Virtual Fish Tank · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐠</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#04141a}
+  .wrap{max-width:920px}
+  .screen{position:relative;border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+    overflow:hidden;cursor:pointer}
+  canvas{display:block}
+  .sub{color:#7fe7ff;text-align:center;font-family:var(--mono);margin:0 0 14px}
+  .hint{position:absolute;top:10px;left:0;right:0;text-align:center;color:#fff;
+    font-family:var(--mono);font-weight:800;pointer-events:none;text-shadow:0 0 8px #003}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐠 Virtual Fish Tank</span>
+  <span class="spacer"></span>
+  <span class="num">#55</span>
+</div>
+<div class="wrap">
+  <p class="sub">a calm little aquarium · tap to drop fish flakes</p>
+  <div class="screen">
+    <canvas id="c"></canvas>
+    <div class="hint" id="hint">tap the water to feed 🍤</div>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;
+const fishColors=["#ff7a45","#ffd23f","#16e0bd","#ff5da2","#3a86ff","#19ff5a"];
+let fish=[],bubbles=[],flakes=[],plants=[];
+function rnd(a,b){return a+Math.random()*(b-a);}
+function size(){
+  W=cv.width=Math.min(900,document.querySelector('.wrap').clientWidth);
+  H=cv.height=Math.min(560,window.innerHeight*0.64);
+  plants=[];for(let i=0;i<6;i++)plants.push({x:rnd(0,W),h:rnd(40,110),w:rnd(8,16),ph:Math.random()*6,c:rnd(80,160)});
+  if(!fish.length)spawn();
+}
+function spawn(){
+  fish=[];for(let i=0;i<6;i++)fish.push({
+    x:rnd(40,W-40),y:rnd(40,H-60),
+    dir:Math.random()<0.5?-1:1,
+    sp:rnd(0.6,1.4),size:rnd(16,26),
+    c:fishColors[i%fishColors.length],
+    wob:Math.random()*6,target:null
+  });
+}
+addEventListener('resize',size);size();
+function feed(x,y){
+  for(let i=0;i<8;i++)flakes.push({x:x+rnd(-12,12),y:y+rnd(-6,6),vy:rnd(0.3,0.8),
+    vx:rnd(-0.3,0.3),life:1,c:"hsl("+rnd(20,45)+",90%,55%)"});
+  document.getElementById('hint').style.display='none';
+}
+function pt(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;
+  feed((t.clientX-r.left)*(W/r.width),(t.clientY-r.top)*(H/r.height));}
+cv.addEventListener('mousedown',pt);
+cv.addEventListener('touchstart',e=>{e.preventDefault();pt(e);},{passive:false});
+function drawFish(f){
+  ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.dir,1);
+  const s=f.size;
+  ctx.fillStyle=f.c;
+  ctx.beginPath();ctx.ellipse(0,0,s,s*0.6,0,0,7);ctx.fill();
+  // tail (wobbles)
+  const tw=Math.sin(f.wob)*s*0.3;
+  ctx.beginPath();ctx.moveTo(-s*0.8,0);ctx.lineTo(-s*1.5,-s*0.5+tw);ctx.lineTo(-s*1.5,s*0.5+tw);ctx.closePath();ctx.fill();
+  // eye
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s*0.5,-s*0.12,s*0.16,0,7);ctx.fill();
+  ctx.fillStyle="#111";ctx.beginPath();ctx.arc(s*0.55,-s*0.12,s*0.08,0,7);ctx.fill();
+  ctx.restore();
+}
+function frame(){
+  // water gradient
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#1aa3c7");g.addColorStop(1,"#063a52");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // sandy floor
+  ctx.fillStyle="#d8c48a";ctx.beginPath();ctx.moveTo(0,H);
+  for(let x=0;x<=W;x+=40)ctx.lineTo(x,H-18-Math.sin(x*0.05)*6);
+  ctx.lineTo(W,H);ctx.fill();
+  // plants
+  for(const p of plants){p.ph+=0.02;ctx.strokeStyle="hsl("+p.c+",60%,40%)";
+    ctx.lineWidth=p.w;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(p.x,H-14);
+    ctx.quadraticCurveTo(p.x+Math.sin(p.ph)*18,H-14-p.h*0.6,p.x+Math.sin(p.ph)*8,H-14-p.h);ctx.stroke();}
+  // flakes
+  for(let i=flakes.length-1;i>=0;i--){const fl=flakes[i];fl.x+=fl.vx;fl.y+=fl.vy;
+    if(fl.y>H-18){flakes.splice(i,1);continue;}
+    ctx.fillStyle=fl.c;ctx.fillRect(fl.x,fl.y,3,3);}
+  // bubbles
+  if(Math.random()<0.25)bubbles.push({x:rnd(0,W),y:H-20,r:rnd(2,6),sp:rnd(0.6,1.6)});
+  for(let i=bubbles.length-1;i>=0;i--){const b=bubbles[i];b.y-=b.sp;b.x+=Math.sin(b.y*0.05)*0.3;
+    if(b.y<-10){bubbles.splice(i,1);continue;}
+    ctx.strokeStyle="rgba(255,255,255,0.5)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,7);ctx.stroke();}
+  // fish behavior
+  for(const f of fish){
+    f.wob+=0.2;
+    // find nearest flake to chase
+    if((!f.target||f.target.gone)&&flakes.length){
+      let best=null,bd=1e9;
+      for(const fl of flakes){const d=(fl.x-f.x)**2+(fl.y-f.y)**2;if(d<bd){bd=d;best=fl;}}
+      f.target=best;
+    }
+    if(f.target&&flakes.indexOf(f.target)===-1){f.target=null;}
+    if(f.target){
+      const dx=f.target.x-f.x,dy=f.target.y-f.y,d=Math.hypot(dx,dy)||1;
+      f.dir=dx<0?-1:1;
+      f.x+=dx/d*f.sp*1.8;f.y+=dy/d*f.sp*1.8;
+      if(d<f.size*0.8){const idx=flakes.indexOf(f.target);if(idx>-1)flakes.splice(idx,1);f.target=null;}
+    } else {
+      f.x+=f.dir*f.sp;
+      f.y+=Math.sin(f.wob*0.5)*0.6;
+      if(f.x<f.size*1.6){f.dir=1;}if(f.x>W-f.size*1.6){f.dir=-1;}
+      if(f.y<30)f.y=30;if(f.y>H-40)f.y=H-40;
+    }
+    drawFish(f);
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

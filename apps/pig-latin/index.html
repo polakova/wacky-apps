@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pig Latin · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐷</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background-color:#fff0f4}
+  .pig{font-size:48px;text-align:center;animation:wig 2s ease-in-out infinite}
+  @keyframes wig{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  .out{font-family:var(--mono);font-weight:800;font-size:clamp(18px,4.5vw,24px);
+    background:var(--pink);color:#fff;border:3px solid var(--ink);border-radius:14px;
+    padding:16px;min-height:60px;word-break:break-word;line-height:1.5}
+  textarea{min-height:90px}
+  .dir .btn{font-size:13px;padding:8px 14px}
+  .dir .btn.on{background:var(--purple);color:#fff}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐷 Pig Latin</span>
+  <span class="spacer"></span>
+  <span class="num">#34</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <div class="pig">🐷✨</div>
+    <p class="muted center" style="margin:0">Iggyway, peak-say igpay atinlay! Talk like a fancy farm scholar.</p>
+    <div class="row dir" style="justify-content:center">
+      <button class="btn on" data-d="to">English → Pig Latin</button>
+      <button class="btn" data-d="from">Pig Latin → English</button>
+    </div>
+    <textarea id="in" placeholder="type your secret message">pigs are surprisingly smart and very clean</textarea>
+    <div class="out" id="out"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn purple" id="copy">📋 Copy oink</button>
+    </div>
+  </div>
+</div>
+<script>
+const inp=document.getElementById('in'),out=document.getElementById('out');
+let dir='to';
+function matchCase(src,res){
+  if(src===src.toUpperCase()&&/[A-Z]/.test(src)) return res.toUpperCase();
+  if(/^[A-Z]/.test(src)) return res.charAt(0).toUpperCase()+res.slice(1);
+  return res;
+}
+function toPig(w){
+  const m=w.match(/^([A-Za-z]+)(.*)$/); if(!m) return w;
+  const core=m[1], tail=m[2]||'';
+  let res;
+  if(/^[aeiouAEIOU]/.test(core)){
+    res=core+'way';
+  }else{
+    const cm=core.match(/^([^aeiouAEIOU]+)(.*)$/);
+    const cons=cm[1], rest=cm[2];
+    res=(rest+cons+'ay');
+  }
+  return matchCase(core,res)+tail;
+}
+function fromPig(w){
+  const m=w.match(/^([A-Za-z]+)(.*)$/); if(!m) return w;
+  let core=m[1]; const tail=m[2]||'';
+  const lower=core.toLowerCase();
+  let res;
+  if(lower.endsWith('way')){
+    res=core.slice(0,-3);
+  }else if(lower.endsWith('ay')){
+    const body=core.slice(0,-2);
+    // last cluster was moved to end; we can't perfectly know split, assume 1+ consonants moved.
+    // Heuristic: find trailing consonant cluster, move to front.
+    const cm=body.match(/^(.*?)([^aeiouAEIOU]+)$/);
+    if(cm && cm[2]){ res=cm[2]+cm[1]; } else { res=body; }
+  }else{ res=core; }
+  return matchCase(core,res)+tail;
+}
+function translate(){
+  const fn = dir==='to'?toPig:fromPig;
+  const v=inp.value;
+  out.textContent = v.trim()? v.split(/(\s+)/).map(t=>/\s/.test(t)||t===''?t:fn(t)).join('') : (dir==='to'?'🐷 Onslatedtray ordsway appearway erehay!':'Your message will appear here!');
+}
+inp.addEventListener('input',translate);
+document.querySelectorAll('.dir .btn').forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll('.dir .btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');dir=b.dataset.d;translate();};
+});
+document.getElementById('copy').onclick=async()=>{
+  const t=out.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  const btn=document.getElementById('copy'),o=btn.textContent;btn.textContent='✅ Opiedcay!';btn.classList.add('pop');setTimeout(()=>{btn.textContent=o;btn.classList.remove('pop');},1200);
+};
+translate();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

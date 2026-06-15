@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Higher or Lower · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔼</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #hint{font-size:clamp(40px,12vw,72px);font-weight:900;min-height:1.1em;transition:transform .1s}
+  #hint.up{color:var(--blue)}#hint.down{color:var(--orange)}#hint.win{color:#16a34a}
+  .guessrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .guessrow input{width:140px;text-align:center;font-size:24px;font-weight:900}
+  .meter{height:18px;background:#fff;border:3px solid var(--ink);border-radius:999px;overflow:hidden;margin:6px 0}
+  .meter>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--pink));width:0;transition:width .3s}
+  .log{font-family:var(--mono);font-size:14px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .chip{background:#fff;border:2px solid var(--ink);border-radius:8px;padding:2px 8px}
+  .chip.h{color:var(--blue)}.chip.l{color:var(--orange)}
+  #attempts b{font-size:24px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔼 Higher or Lower</span>
+  <span class="spacer"></span>
+  <span class="num">#28</span>
+</div>
+<div class="wrap">
+  <div class="card center stack">
+    <div class="muted">I'm thinking of a number from <b>1 to 100</b>. Can you read my mind?</div>
+    <div id="hint">🤔</div>
+    <div class="meter"><div id="bar"></div></div>
+    <div class="muted" id="range">Somewhere between 1 and 100…</div>
+    <div class="guessrow">
+      <input id="g" type="number" min="1" max="100" placeholder="1–100" inputmode="numeric">
+      <button class="btn pink" id="go">Guess</button>
+    </div>
+    <div id="attempts">Attempts: <b>0</b></div>
+    <div class="log" id="log"></div>
+    <button class="btn purple" id="again" style="display:none">Play again 🔁</button>
+    <div class="muted" id="best"></div>
+  </div>
+</div>
+<script>
+const hint=document.getElementById('hint'),g=document.getElementById('g'),logEl=document.getElementById('log'),
+  attEl=document.querySelector('#attempts b'),bar=document.getElementById('bar'),rangeEl=document.getElementById('range'),
+  again=document.getElementById('again'),go=document.getElementById('go'),best=document.getElementById('best');
+let secret,attempts,lo,hi,over;
+let bestScore=localStorage.getItem('hlBest');
+function showBest(){best.textContent=bestScore?('🏅 Best: '+bestScore+' attempts'):'';}
+let ac;function tone(f,t,type){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),gn=ac.createGain();o.connect(gn);gn.connect(ac.destination);
+  o.type=type||'sine';o.frequency.value=f;gn.gain.setValueAtTime(.2,ac.currentTime);
+  gn.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+t);o.start();o.stop(ac.currentTime+t);}catch(e){}}
+function newGame(){
+  secret=1+Math.floor(Math.random()*100);attempts=0;lo=1;hi=100;over=false;
+  hint.textContent='🤔';hint.className='';attEl.textContent='0';logEl.innerHTML='';
+  bar.style.width='0';rangeEl.textContent='Somewhere between 1 and 100…';
+  again.style.display='none';go.disabled=false;g.disabled=false;g.value='';g.focus();showBest();
+}
+function guess(){
+  if(over)return;const v=parseInt(g.value,10);
+  if(isNaN(v)||v<1||v>100){hint.textContent='1–100!';hint.className='';tone(200,.2,'sawtooth');g.classList.add('shake');setTimeout(()=>g.classList.remove('shake'),400);return;}
+  attempts++;attEl.textContent=attempts;
+  const chip=document.createElement('span');chip.className='chip';chip.textContent=v;logEl.appendChild(chip);
+  if(v===secret){
+    over=true;hint.textContent='🎉 '+v+'!';hint.className='win';hint.classList.add('pop');
+    rangeEl.innerHTML='You read my mind in <b>'+attempts+'</b> guesses!';
+    tone(660,.15);setTimeout(()=>tone(880,.15),120);setTimeout(()=>tone(1100,.25),240);
+    if(!bestScore||attempts<+bestScore){bestScore=attempts;localStorage.setItem('hlBest',attempts);best.textContent='🏅 NEW BEST: '+attempts+' attempts!';}
+    else showBest();
+    go.disabled=true;g.disabled=true;again.style.display='inline-block';return;
+  }
+  if(v<secret){hint.textContent='🔼 HIGHER';hint.className='up';chip.classList.add('h');lo=Math.max(lo,v+1);tone(440,.12);}
+  else{hint.textContent='🔽 LOWER';hint.className='down';chip.classList.add('l');hi=Math.min(hi,v-1);tone(330,.12);}
+  hint.classList.remove('pop');void hint.offsetWidth;hint.classList.add('pop');
+  rangeEl.innerHTML='Now somewhere between <b>'+lo+'</b> and <b>'+hi+'</b>.';
+  bar.style.width=Math.min(100,(100-(hi-lo))/100*100)+'%';
+  g.value='';g.focus();
+}
+go.onclick=guess;again.onclick=newGame;
+g.addEventListener('keydown',e=>{if(e.key==='Enter')guess();});
+newGame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

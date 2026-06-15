@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deep Quote Poster · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.poster{
+  position:relative;width:100%;aspect-ratio:1/1;max-width:480px;margin:0 auto;
+  border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:32px;
+}
+.poster .sun{
+  position:absolute;width:42%;aspect-ratio:1/1;border-radius:50%;
+  bottom:18%;left:50%;transform:translateX(-50%);
+  filter:blur(2px);opacity:.85;
+}
+.poster .quote{
+  position:relative;z-index:2;color:#fff;font-weight:900;
+  font-size:clamp(20px,5.5vw,30px);line-height:1.25;
+  text-shadow:0 2px 14px rgba(0,0,0,.55);letter-spacing:.3px;
+}
+.poster .by{
+  position:absolute;bottom:18px;z-index:2;color:#fff;opacity:.9;
+  font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  text-shadow:0 1px 8px rgba(0,0,0,.6);
+}
+.poster .qmark{position:absolute;top:8px;left:18px;z-index:2;font-size:60px;color:#fff;opacity:.35}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🌅 Deep Quote Poster</span>
+  <span class="spacer"></span>
+  <span class="num">#99</span>
+</div>
+<div class="wrap">
+  <p class="center muted">Profoundly meaningless wisdom, freshly gradient-ed. Screenshot &amp; ruin a friend's feed.</p>
+  <div class="poster" id="poster">
+    <div class="sun" id="sun"></div>
+    <div class="qmark">"</div>
+    <div class="quote" id="quote"></div>
+    <div class="by" id="by"></div>
+  </div>
+  <div class="row center" style="justify-content:center;margin-top:18px">
+    <button class="btn pink" id="newBtn">✨ New Wisdom</button>
+    <button class="btn" id="copyBtn">📋 Copy</button>
+  </div>
+  <p class="center muted" id="msg"></p>
+</div>
+<script>
+const A=["Breathe","Manifest","Whisper","Become","Unleash","Honor","Chase","Water","Trust","Release","Embrace","Dance with","Befriend","Outgrow","Rewild","Soften into","Gather","Forgive"];
+const B=["the storm","your shadow","the unseen","tomorrow's light","the quiet ocean","your inner moon","every sunrise","the wild silence","your truest self","the cosmic hum","the empty page","gentle thunder","the morning fog","forgotten dreams","the velvet dark","your raw becoming","the slow river","unspoken stars"];
+const C=["and the universe will whisper back.","because growth lives in the discomfort.","for stillness is its own rebellion.","while the world keeps spinning anyway.","and watch your edges dissolve.","until even the silence applauds.","then let it go, beautifully.","for you are both the wave and the shore.","and bloom where no one is watching.","because soft is a kind of strong.","and the rest will rearrange itself.","for magic prefers the unguarded heart.","and call it your wild becoming.","because the journey is the destination's cousin.","and gravity will learn your name.","for every ending is a shy beginning.","and let the mundane be sacred.","because you, too, are weather."];
+const NAMES=["— The Universe","— Anonymous (probably)","— A very deep app","— Your higher self","— A sleepy oracle","— Someone's vision board","— The morning light","— Unknown sage","— A wandering cloud","— Definitely not a fortune cookie","— The ancient WiFi","— A houseplant","— The collective hum","— A passing breeze","— Yourself, eventually","— The 4am thoughts"];
+const GR=[
+ ["#ff9a8b","#ff6a88","#ff99ac","#ffd86f"],
+ ["#7b2ff7","#f107a3","#ff7a45","#ffd23f"],
+ ["#0b486b","#3a86ff","#f56217","#ffd23f"],
+ ["#654ea3","#eaafc8","#ff7eb3","#ffd86f"],
+ ["#1a2a6c","#b21f1f","#fdbb2d","#ffe29f"],
+ ["#16e0bd","#3a86ff","#7b2ff7","#ff5da2"],
+ ["#ee9ca7","#ffdde1","#ff7a45","#c94b4b"],
+ ["#283c86","#45a247","#ffd23f","#ff7a45"],
+ ["#3a1c71","#d76d77","#ffaf7b","#ffd23f"],
+ ["#005c97","#363795","#ff5da2","#ffd86f"],
+ ["#42275a","#734b6d","#ff7eb3","#ffd23f"],
+ ["#0f0c29","#302b63","#f56217","#ffd86f"]
+];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const $=id=>document.getElementById(id);
+let cur="";
+function newQuote(){
+  const txt=pick(A)+" "+pick(B)+", "+pick(C);
+  cur=txt;
+  $("quote").textContent=txt;
+  $("by").textContent=pick(NAMES);
+  const g=pick(GR);
+  const ang=Math.floor(Math.random()*360);
+  $("poster").style.background=`linear-gradient(${ang}deg, ${g[0]}, ${g[1]} 55%, ${g[2]})`;
+  $("sun").style.background=`radial-gradient(circle at 35% 35%, #fff8, ${g[3]}, ${g[2]})`;
+  $("quote").classList.remove("pop");void $("quote").offsetWidth;$("quote").classList.add("pop");
+  $("msg").textContent="";
+}
+$("newBtn").onclick=newQuote;
+$("copyBtn").onclick=async()=>{
+  const t=cur+"\n"+$("by").textContent+" #deep #blessed";
+  try{await navigator.clipboard.writeText(t);}catch(e){
+    const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+  }
+  $("msg").textContent="Copied. The world is now a little more profound. 🌻";
+};
+newQuote();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

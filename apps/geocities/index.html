@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoCities Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #frame{border:4px solid var(--ink);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;
+    margin-top:16px;min-height:380px;font-family:"Comic Sans MS","Comic Sans",cursive}
+  .gc-pad{padding:18px;text-align:center}
+  .gc-title{font-size:clamp(26px,7vw,44px);font-weight:900;line-height:1.1}
+  .gc-marq{border:3px solid #000;padding:5px 0;font-weight:800;margin:12px 0}
+  .gc-box{border:4px ridge;padding:14px;margin:12px 0;display:inline-block;max-width:100%}
+  .gc-link{font-weight:900;text-decoration:underline}
+  .rainbow{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .gc-emoji{font-size:30px}
+  .gc-counter{display:inline-block;background:#000;color:#0f0;font-family:var(--mono);
+    padding:4px 10px;border:2px solid #0f0;font-weight:900;letter-spacing:3px}
+  .spin{display:inline-block;animation:spin 2s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🌐 GeoCities Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#96</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big">🌐 GeoCities Generator</h1>
+    <p class="muted">Smash the button. Witness a homepage that should NOT exist. Refresh for fresh chaos.</p>
+    <button class="btn pink" id="gen">🎲 Generate a hideous homepage</button>
+    <div id="frame"></div>
+  </div>
+</div>
+<script>
+const R=a=>a[Math.floor(Math.random()*a.length)];
+const NAMES=["Steve","Britney","XxDragonLordxX","WebSurfer99","CoolDude2000","PixelPrincess",
+  "TheRealKev","MoonChild","NetNinja","GuitarGuy42","CaptainHTML","SparkleQueen","RadRyan","FrostByte"];
+const TOPICS=["My Awesome Homepage","Welcome 2 My Realm","The Ultimate Cat Shrine","Skateboard Tips & Trickz",
+  "My Pet Iguana Steve","Webring Headquarters","Totally Tubular Tunes","Dragons & Dial-Up",
+  "My Beanie Baby Vault","Conspiracy Corner (it's the pigeons)","The Pog Museum","Anime Fan Zone"];
+const BG=["#ffff00,#ff00ff","#00ffff,#0000ff","#00ff00,#000000","#ff6600,#660066","#ff0066,#000066","#ccffcc,#003300"];
+const FONTS=["#ff0000","#00aa00","#0000ff","#aa00aa","#ff8800"];
+const HOOKS=["You are visitor:","Hits since I learned HTML:","Cool people who visited:","Souls counted:"];
+const BLURB=["This page is best viewed at 1AM on a CRT monitor.",
+  "WARNING: contains 100% pure WebRing energy.",
+  "I made this entirely on the family computer. Don't touch the BIOS.",
+  "Sign my guestbook or the iguana gets no treats.",
+  "Loading the background music… please wait 6–9 minutes.",
+  "I built this site so you don't have to. You're welcome.",
+  "All gifs handcrafted in MS Paint with love and a mouse."];
+const EMO=["🐉","🌟","💿","😎","🐸","🔥","👾","🦎","🎸","💀","🍕","🛹","🌈","👽","📟","💾"];
+const LINKS=["My Links","Guestbook","About Me","Webring »","Cool Sites","E-mail Me!","Photo Album","My Top 8"];
+function gen(){
+  const bg=R(BG),fc=R(FONTS),name=R(NAMES);
+  const e=()=>R(EMO);
+  const counter=String(Math.floor(Math.random()*900000)).padStart(6,'0');
+  const html=`<div class="gc-pad" style="background:repeating-linear-gradient(45deg,${bg.split(',')[0]},${bg.split(',')[0]} 18px,${bg.split(',')[1]} 18px,${bg.split(',')[1]} 36px);color:${fc}">
+    <div class="gc-title rainbow blink">${R(TOPICS)}</div>
+    <p style="font-weight:900;font-size:18px">${e()} A ${name} Production ${e()}</p>
+    <span class="spin gc-emoji">${e()}</span> <span class="gc-emoji">${e()}</span>
+    <span class="spin gc-emoji">${e()}</span>
+    <div class="gc-marq" style="background:${fc};color:#fff">
+      <marquee scrollamount="6">${e()}${e()} WELCOME TO MY CORNER OF THE WEB!! ${e()}${e()} ENJOY YOUR STAY!! ${e()}${e()}</marquee>
+    </div>
+    <div class="gc-box" style="border-color:${fc};background:rgba(255,255,255,.65);color:#000">
+      <p style="font-weight:800">${R(BLURB)}</p>
+      <p>${e()} ${R(BLURB)} ${e()}</p>
+    </div>
+    <div style="margin:14px 0">${LINKS.slice(0,5+Math.floor(Math.random()*3)).map(l=>
+      `<a class="gc-link" style="color:${fc}" href="javascript:void(0)" onclick="this.textContent='🚧 under construction!'">[ ${l} ]</a>`).join(' &nbsp; ')}</div>
+    <p style="font-weight:800">${R(HOOKS)} <span class="gc-counter">${counter}</span></p>
+    <p style="font-weight:900">${e()}${e()}${e()} © ${1996+Math.floor(Math.random()*5)} ${name} ${e()}${e()}${e()}</p>
+    <p style="font-size:12px;font-weight:800">⏳ This site is proudly Under Construction ⏳</p>
+  </div>`;
+  document.getElementById('frame').innerHTML=html;
+}
+document.getElementById('gen').onclick=gen;
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

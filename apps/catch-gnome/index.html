@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catch the Gnome · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧙</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #arena{position:relative;height:320px;border:4px solid var(--ink);border-radius:18px;
+    background:repeating-linear-gradient(45deg,#eafff8,#eafff8 18px,#d8fbf0 18px,#d8fbf0 36px);
+    overflow:hidden;box-shadow:var(--shadow);touch-action:none}
+  #gnome{position:absolute;font-size:46px;cursor:pointer;user-select:none;
+    transition:left .12s ease,top .12s ease;line-height:1}
+  #gnome.scared{animation:wiggle .25s infinite}
+  @keyframes wiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+  .hud{font-family:var(--mono);font-weight:800;font-size:18px}
+  #win{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;background:rgba(255,210,63,.94);text-align:center;gap:6px}
+  .taunt{min-height:1.4em;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🧙 Catch the Gnome</span>
+  <span class="spacer"></span>
+  <span class="num">#93</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1 class="big">🧙 Catch the Gnome</h1>
+    <p class="muted">He's slippery. The closer you get, the faster he bolts. Tap/click to catch.</p>
+    <div class="row" style="justify-content:space-between">
+      <span class="hud">⏱️ <span id="time">0.0</span>s</span>
+      <span class="hud">🏆 Best: <span id="best">—</span></span>
+      <button class="btn purple" id="reset">New gnome</button>
+    </div>
+    <div class="taunt" id="taunt">Catch me if you can, slowpoke!</div>
+    <div id="arena">
+      <div id="gnome">🧙</div>
+      <div id="win">
+        <div class="big">🎉 GOTCHA! 🎉</div>
+        <div id="wintxt"></div>
+        <button class="btn pink" id="again">Catch another</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const arena=document.getElementById('arena'),g=document.getElementById('gnome'),
+  timeEl=document.getElementById('time'),bestEl=document.getElementById('best'),
+  win=document.getElementById('win'),taunt=document.getElementById('taunt');
+let gx,gy,t0,raf,caught=false,actx;
+let best=localStorage.getItem('gnome_best');bestEl.textContent=best?(+best).toFixed(1)+'s':'—';
+const TAUNTS=["Too slow!","Nice try, pointer person!","Gnomes rule!","Catch me if you can!",
+  "Whoosh!","Missed by a mile!","I drink mushroom tea, you can't keep up!","Beep boop, can't touch this!"];
+function beep(f,d){if(!actx)return;const o=actx.createOscillator(),gn=actx.createGain();
+  o.frequency.value=f;o.connect(gn);gn.connect(actx.destination);gn.gain.value=.18;
+  o.start();gn.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.stop(actx.currentTime+d);}
+function place(){const r=arena.getBoundingClientRect();
+  gx=Math.random()*(r.width-50);gy=Math.random()*(r.height-50);
+  g.style.left=gx+'px';g.style.top=gy+'px';}
+function flee(px,py){
+  const r=arena.getBoundingClientRect();const cx=gx+23,cy=gy+23;
+  const dx=cx-px,dy=cy-py,dist=Math.hypot(dx,dy);
+  if(dist>150)return;
+  g.classList.add('scared');
+  const panic=Math.max(40,(150-dist)*2.2); // closer = bigger jump
+  const ang=Math.atan2(dy,dx)+(Math.random()-.5);
+  let nx=gx+Math.cos(ang)*panic,ny=gy+Math.sin(ang)*panic;
+  nx=Math.max(0,Math.min(r.width-46,nx));ny=Math.max(0,Math.min(r.height-46,ny));
+  // bounce off walls toward center if stuck
+  if(nx<=0||nx>=r.width-46)nx=r.width/2-23;
+  if(ny<=0||ny>=r.height-46)ny=r.height/2-23;
+  gx=nx;gy=ny;g.style.left=gx+'px';g.style.top=gy+'px';
+  if(Math.random()<.04)taunt.textContent=TAUNTS[Math.floor(Math.random()*TAUNTS.length)];
+}
+function moveHandler(e){
+  if(caught)return;const r=arena.getBoundingClientRect();
+  const p=e.touches?e.touches[0]:e;flee(p.clientX-r.left,p.clientY-r.top);
+}
+arena.addEventListener('mousemove',moveHandler);
+arena.addEventListener('touchmove',e=>{moveHandler(e);},{passive:true});
+g.addEventListener('mousedown',catchIt);
+g.addEventListener('touchstart',e=>{e.preventDefault();catchIt();});
+function catchIt(){
+  if(caught)return;caught=true;cancelAnimationFrame(raf);
+  if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  beep(660,.1);setTimeout(()=>beep(990,.2),100);
+  const elapsed=(performance.now()-t0)/1000;
+  document.getElementById('wintxt').textContent=`You wrangled the gnome in ${elapsed.toFixed(1)} seconds.`;
+  if(!best||elapsed<+best){best=elapsed;localStorage.setItem('gnome_best',best);
+    bestEl.textContent=elapsed.toFixed(1)+'s';}
+  win.style.display='flex';g.classList.remove('scared');
+}
+function tick(){if(caught)return;timeEl.textContent=((performance.now()-t0)/1000).toFixed(1);raf=requestAnimationFrame(tick);}
+function start(){caught=false;win.style.display='none';taunt.textContent='Catch me if you can, slowpoke!';
+  place();t0=performance.now();tick();}
+document.getElementById('reset').onclick=start;
+document.getElementById('again').onclick=start;
+start();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

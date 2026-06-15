@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whale Song · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐋</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:linear-gradient(#0a3d62,#022b3a 60%,#011a24);background-attachment:fixed;color:#dff6ff}
+  h1.big{color:#fff;text-shadow:0 2px 12px #04668c}
+  .ocean{position:relative;border:4px solid #022b3a;border-radius:20px;background:rgba(2,40,60,.5);
+    box-shadow:6px 6px 0 #011620;padding:26px;overflow:hidden}
+  .whale{font-size:84px;display:inline-block;transition:transform .5s}
+  .swim{animation:swim 6s ease-in-out infinite}
+  @keyframes swim{0%,100%{transform:translateX(-8px) rotate(-4deg)}50%{transform:translateX(8px) rotate(4deg)}}
+  .bubble{position:absolute;bottom:-20px;border-radius:50%;background:rgba(255,255,255,.25);
+    border:1px solid rgba(255,255,255,.4);animation:rise linear forwards;pointer-events:none}
+  @keyframes rise{to{transform:translateY(-260px);opacity:0}}
+  .sub{color:#a9e4ff}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🐋 Whale Song</span>
+  <span class="spacer"></span>
+  <span class="num">#75</span>
+</div>
+<div class="wrap">
+  <div class="ocean center stack" id="ocean">
+    <h1 class="big">🐋 Whale Song</h1>
+    <p class="sub muted">Deep, slow swoops from the dark blue. Close your eyes. 🌊</p>
+    <div><span class="whale" id="whale">🐋</span></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn blue" id="sing">🎶 Sing</button>
+      <button class="btn" id="stop">🤫 Hush</button>
+    </div>
+    <p class="sub muted" id="status">The pod is resting…</p>
+  </div>
+</div>
+<script>
+let ac,master,singing=false,loopT;
+const moods=['a lonely call across the trench','a mother answering her calf','a song of warm currents','an ancient, patient hum','greetings to a passing pod'];
+
+function ensure(){
+  if(!ac){
+    ac=new (window.AudioContext||window.webkitAudioContext)();
+    master=ac.createGain();master.gain.value=0.0;
+    const verb=ac.createBiquadFilter();verb.type='lowpass';verb.frequency.value=900;
+    master.connect(verb);verb.connect(ac.destination);
+  }
+  if(ac.state==='suspended')ac.resume();
+}
+
+function call(){
+  const t=ac.currentTime;
+  const base=70+Math.random()*120;            // low fundamental
+  const peak=base*(1.6+Math.random()*1.8);    // swoop up
+  const dur=2.5+Math.random()*2.5;
+  const o=ac.createOscillator(); o.type='sine';
+  const o2=ac.createOscillator(); o2.type='sine'; o2.detune.value=8; // slight beating
+  const g=ac.createGain();
+  o.frequency.setValueAtTime(base,t);
+  o.frequency.exponentialRampToValueAtTime(peak,t+dur*0.45);
+  o.frequency.exponentialRampToValueAtTime(base*0.8,t+dur);
+  o2.frequency.setValueAtTime(base,t);
+  o2.frequency.exponentialRampToValueAtTime(peak,t+dur*0.45);
+  o2.frequency.exponentialRampToValueAtTime(base*0.8,t+dur);
+  // slow vibrato
+  const lfo=ac.createOscillator(); lfo.frequency.value=4.5+Math.random()*2;
+  const lfoG=ac.createGain(); lfoG.gain.value=peak*0.02;
+  lfo.connect(lfoG); lfoG.connect(o.frequency); lfoG.connect(o2.frequency);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.35,t+0.6);
+  g.gain.setValueAtTime(0.35,t+dur*0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);o2.connect(g);g.connect(master);
+  o.start(t);o2.start(t);lfo.start(t);
+  o.stop(t+dur+0.1);o2.stop(t+dur+0.1);lfo.stop(t+dur+0.1);
+  document.getElementById('status').textContent='🎵 '+moods[Math.floor(Math.random()*moods.length)]+'…';
+  return dur;
+}
+
+function loop(){
+  if(!singing) return;
+  const d=call();
+  loopT=setTimeout(loop,(d+0.8+Math.random()*1.5)*1000);
+}
+
+function bubbles(){
+  if(!singing) return;
+  const o=document.getElementById('ocean');
+  const b=document.createElement('div'); b.className='bubble';
+  const sz=6+Math.random()*16; b.style.width=sz+'px';b.style.height=sz+'px';
+  b.style.left=(15+Math.random()*70)+'%';
+  b.style.animationDuration=(3+Math.random()*3)+'s';
+  o.appendChild(b); setTimeout(()=>b.remove(),6000);
+  setTimeout(bubbles,500+Math.random()*600);
+}
+
+document.getElementById('sing').addEventListener('click',()=>{
+  ensure(); if(singing) return; singing=true;
+  master.gain.setTargetAtTime(0.9,ac.currentTime,1.2);
+  document.getElementById('whale').classList.add('swim');
+  loop(); bubbles();
+});
+document.getElementById('stop').addEventListener('click',()=>{
+  if(!singing) return; singing=false; clearTimeout(loopT);
+  if(ac) master.gain.setTargetAtTime(0.0,ac.currentTime,0.8);
+  document.getElementById('whale').classList.remove('swim');
+  document.getElementById('status').textContent='The pod is resting…';
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

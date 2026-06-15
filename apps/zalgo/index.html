@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zalgo Curse · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩸</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#0c0410;background-image:radial-gradient(#2a0a1f 1px,transparent 1px);color:#f3d9e6}
+  .wrap{color:#f3d9e6}
+  .card{background:#160620;border-color:#ff2d6b;box-shadow:6px 6px 0 #5b0a2c;color:#f3d9e6}
+  .muted{color:#c98aa8;opacity:1}
+  h2{color:#ff5da2;text-shadow:0 0 8px #ff2d6b}
+  textarea{background:#0c0410;color:#ffd6e6;border-color:#ff2d6b}
+  .out{font-size:clamp(22px,5vw,30px);line-height:1.9;word-break:break-word;
+    min-height:70px;padding:14px;border:3px solid #ff2d6b;border-radius:12px;
+    background:#0c0410;color:#ff8ab5;overflow:hidden}
+  input[type=range]{width:100%;accent-color:#ff2d6b}
+  .lvl{font-family:var(--mono);font-weight:900;color:#ff5da2}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🩸 Zalgo Curse</span>
+  <span class="spacer"></span>
+  <span class="num">#32</span>
+</div>
+<div class="wrap">
+  <div class="card stack">
+    <h2 style="margin:0">H̷e̸ ̴c̵o̶m̷e̸s̴</h2>
+    <p class="muted" style="margin:0">Feed the void some text. It will return it... changed.</p>
+    <textarea id="in" placeholder="type something innocent">summon the cursed font</textarea>
+    <div>
+      <div class="row" style="justify-content:space-between">
+        <span class="muted">Curse intensity</span>
+        <span class="lvl" id="lvl">creeping</span>
+      </div>
+      <input type="range" id="amt" min="1" max="40" value="8">
+    </div>
+    <div class="out" id="out" aria-live="off"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="copy">📋 Copy the curse</button>
+      <button class="btn purple" id="clear">🧹 Banish</button>
+    </div>
+  </div>
+</div>
+<script>
+// Combining diacritical marks (above, middle, below)
+const UP="̀́̂̃̄̅̆̇̈̉̊̋̌̍̎̏̐̑̒̓̔̽̾̿͂͆͊͋͌͐͑͒͗͛".split("");
+const MID="̴̵̶̷̸҉̡̢̧̨".split("");
+const DN="̖̗̘̙̜̝̞̟̠̤̥̦̩̪̫̬̭̮̯̰̱̲̳̹̺̻̼͇͈͉ͅ".split("");
+const inp=document.getElementById('in'), out=document.getElementById('out'), amt=document.getElementById('amt'), lvl=document.getElementById('lvl');
+const NAMES=["whisper","creeping","unsettled","haunted","writhing","unbound","V̶O̶I̶D̶"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function zalgo(s,n){
+  return [...s].map(ch=>{
+    if(ch==='\n'||ch===' ') return ch;
+    let r=ch;
+    const up=Math.floor(Math.random()*(n/2+1));
+    const mid=Math.floor(Math.random()*(n/6+1));
+    const dn=Math.floor(Math.random()*(n/2+1));
+    for(let i=0;i<up;i++) r+=pick(UP);
+    for(let i=0;i<mid;i++) r+=pick(MID);
+    for(let i=0;i<dn;i++) r+=pick(DN);
+    return r;
+  }).join('');
+}
+function render(){
+  const n=+amt.value;
+  lvl.textContent = NAMES[Math.min(NAMES.length-1, Math.floor(n/6))];
+  const v=inp.value || 'the void is hungry';
+  out.textContent = zalgo(v, n);
+}
+inp.addEventListener('input', render);
+amt.addEventListener('input', render);
+document.getElementById('copy').onclick=async()=>{
+  const t=out.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  const b=document.getElementById('copy'),o=b.textContent;b.textContent='✅ It spreads...';setTimeout(()=>b.textContent=o,1300);
+};
+document.getElementById('clear').onclick=()=>{inp.value='';render();inp.focus();};
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

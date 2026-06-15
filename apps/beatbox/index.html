@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beatbox Pads · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#120c1f;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);color:#f3eaff}
+  h1.big{color:#fff}
+  .pads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
+  @media(max-width:380px){.pads{gap:10px}}
+  .pad{aspect-ratio:1;border:4px solid #000;border-radius:18px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-family:var(--mono);font-weight:900;color:#fff;user-select:none;
+    box-shadow:5px 5px 0 #000;transition:transform .05s,box-shadow .05s,filter .08s}
+  .pad .ico{font-size:34px}
+  .pad .key{font-size:12px;opacity:.7;background:rgba(0,0,0,.3);padding:1px 8px;border-radius:6px}
+  .pad:active,.pad.hit{transform:translate(2px,2px);box-shadow:1px 1px 0 #000;filter:brightness(1.5)}
+  .pad.hit{outline:3px solid #fff}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎛️ Beatbox Pads</span>
+  <span class="spacer"></span>
+  <span class="num">#74</span>
+</div>
+<div class="wrap">
+  <div class="center stack">
+    <h1 class="big">🎛️ Beatbox Pads</h1>
+    <p class="muted" style="color:#c8b6f0">Tap the pads or smash keys <b>Q W E A S D</b>. Drop a beat! 🥁</p>
+  </div>
+  <div class="pads" id="pads"></div>
+  <p class="center muted" style="color:#9d86c8">All sounds are synthesized live — pure vibes, zero samples.</p>
+</div>
+<script>
+let ac;
+const pads=[
+  {name:'KICK', ico:'👊', key:'q', color:'#ff5da2', f:'kick'},
+  {name:'SNARE',ico:'✋', key:'w', color:'#3a86ff', f:'snare'},
+  {name:'HAT',  ico:'🎩', key:'e', color:'#16e0bd', f:'hat'},
+  {name:'CLAP', ico:'👏', key:'a', color:'#ffd23f', f:'clap'},
+  {name:'TOM',  ico:'🪘', key:'s', color:'#ff7a45', f:'tom'},
+  {name:'ZAP',  ico:'⚡', key:'d', color:'#7b2ff7', f:'zap'}
+];
+function ensure(){if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();}
+
+function noiseBurst(t,dur,filterType,freq){
+  const len=ac.sampleRate*dur, b=ac.createBuffer(1,len,ac.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=ac.createBufferSource(); s.buffer=b;
+  const f=ac.createBiquadFilter(); f.type=filterType; f.frequency.value=freq;
+  const g=ac.createGain(); g.gain.value=0.5;
+  s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t);
+}
+
+const synth={
+  kick(t){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(150,t);
+    o.frequency.exponentialRampToValueAtTime(45,t+0.18);g.gain.setValueAtTime(0.9,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.32);},
+  snare(t){noiseBurst(t,0.2,'highpass',1500);const o=ac.createOscillator(),g=ac.createGain();
+    o.type='triangle';o.frequency.value=180;g.gain.setValueAtTime(0.5,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.12);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.13);},
+  hat(t){noiseBurst(t,0.05,'highpass',7000);},
+  clap(t){[0,0.02,0.04].forEach(o=>noiseBurst(t+o,0.07,'bandpass',1200));},
+  tom(t){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(220,t);
+    o.frequency.exponentialRampToValueAtTime(90,t+0.25);g.gain.setValueAtTime(0.8,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.28);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.3);},
+  zap(t){const o=ac.createOscillator(),g=ac.createGain();o.type='sawtooth';
+    o.frequency.setValueAtTime(900,t);o.frequency.exponentialRampToValueAtTime(120,t+0.18);
+    g.gain.setValueAtTime(0.4,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+    o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.22);}
+};
+
+const grid=document.getElementById('pads'); const byKey={};
+pads.forEach(p=>{
+  const el=document.createElement('div'); el.className='pad';
+  el.style.background=p.color;
+  el.innerHTML=`<span class="ico">${p.ico}</span><span>${p.name}</span><span class="key">${p.key.toUpperCase()}</span>`;
+  const fire=()=>{ensure();synth[p.f](ac.currentTime+0.001);el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),110);};
+  el.addEventListener('pointerdown',e=>{e.preventDefault();fire();});
+  byKey[p.key]=fire;
+  grid.appendChild(el);
+});
+window.addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();if(byKey[k])byKey[k]();});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

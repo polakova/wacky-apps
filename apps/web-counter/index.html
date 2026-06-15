@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retro Hit Counter · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .odometer{display:inline-flex;gap:4px;background:#000;padding:10px;border:4px solid var(--ink);
+    border-radius:10px;box-shadow:var(--shadow)}
+  .digit{width:34px;height:52px;background:linear-gradient(#222,#000);color:#39ff14;
+    font-family:var(--mono);font-weight:900;font-size:34px;display:flex;align-items:center;
+    justify-content:center;border-radius:5px;border:1px solid #333;overflow:hidden;position:relative;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.8);text-shadow:0 0 6px #39ff14}
+  .digit.roll{animation:roll .4s}
+  @keyframes roll{0%{transform:translateY(-12px);opacity:.2}100%{transform:translateY(0);opacity:1}}
+  .badge{display:inline-block;background:linear-gradient(135deg,#00f,#0ff);color:#fff;
+    font-family:var(--mono);font-size:11px;font-weight:800;padding:3px 8px;border:2px outset #88f;
+    margin:3px;border-radius:3px;text-shadow:1px 1px 0 #006}
+  .badge.b2{background:linear-gradient(135deg,#f0f,#f00)}
+  .badge.b3{background:linear-gradient(135deg,#0a0,#0f0);color:#003}
+  .gb{background:#fff8c4;border:3px dashed var(--ink);border-radius:12px;padding:14px;margin-top:18px}
+  .gb-entry{font-family:var(--mono);font-size:13px;border-bottom:1px dotted #999;padding:5px 0}
+  .rainbow{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f);-webkit-background-clip:text;
+    background-clip:text;color:transparent;font-weight:900}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔢 Retro Hit Counter</span>
+  <span class="spacer"></span>
+  <span class="num">#94</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <h1 class="big rainbow">You are visitor number…</h1>
+    <div class="odometer" id="odo"></div>
+    <p style="font-family:var(--mono);font-weight:800;margin-top:14px">★ Thanks for surfing by! ★</p>
+    <div style="margin:10px 0">
+      <span class="badge blink">Best viewed in Netscape Navigator</span>
+      <span class="badge b2">800×600 ✦ 256 colors</span>
+      <span class="badge b3">Y2K Ready!</span>
+      <span class="badge">Made with 💾</span>
+    </div>
+    <div class="row center" style="justify-content:center">
+      <button class="btn pink" id="bump">Count me again! (+1)</button>
+      <button class="btn" id="reset">Reset odometer</button>
+    </div>
+
+    <div class="gb">
+      <h3 style="margin:0 0 8px">📖 Sign my Guestbook!</h3>
+      <div class="row">
+        <input id="gname" placeholder="Your name" style="flex:1;min-width:110px">
+        <input id="gmsg" placeholder="Cool site!" style="flex:2;min-width:120px">
+        <button class="btn blue" id="sign">Sign</button>
+      </div>
+      <div id="entries"></div>
+    </div>
+  </div>
+</div>
+<script>
+const odo=document.getElementById('odo');
+let count=Number(localStorage.getItem('hits_count')||0);
+if(count===0){count=1+Math.floor(Math.random()*9000);} // give a fun seed first time
+function render(n){
+  const s=String(n).padStart(7,'0');
+  const cells=[...odo.children];
+  if(cells.length!==7){odo.innerHTML='';for(let i=0;i<7;i++){const d=document.createElement('div');
+    d.className='digit';odo.appendChild(d);} }
+  [...odo.children].forEach((c,i)=>{if(c.textContent!==s[i]){c.textContent=s[i];
+    c.classList.remove('roll');void c.offsetWidth;c.classList.add('roll');}});
+}
+function save(){localStorage.setItem('hits_count',count);}
+render(count);save();
+document.getElementById('bump').onclick=()=>{count++;render(count);save();};
+document.getElementById('reset').onclick=()=>{count=1;render(count);save();};
+
+// guestbook
+const SEED=[{n:"WebmasterDave",m:"Killer homepage, bookmarked! 🔖"},
+  {n:"xX_dialup_Xx",m:"Loaded in only 4 minutes, blazing fast!"},
+  {n:"GrandmaNet",m:"How do I make the cursor sparkle? Help."}];
+let gb=JSON.parse(localStorage.getItem('hits_gb')||'null')||SEED;
+const entries=document.getElementById('entries');
+function drawGB(){entries.innerHTML=gb.slice(-12).reverse().map(e=>
+  `<div class="gb-entry"><b>${esc(e.n)}</b>: ${esc(e.m)}</div>`).join('');}
+function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+document.getElementById('sign').onclick=()=>{
+  const n=document.getElementById('gname').value.trim()||'Anonymous Surfer';
+  const m=document.getElementById('gmsg').value.trim()||'Cool site! 👍';
+  gb.push({n,m});localStorage.setItem('hits_gb',JSON.stringify(gb.slice(-50)));drawGB();
+  document.getElementById('gname').value='';document.getElementById('gmsg').value='';};
+drawGB();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

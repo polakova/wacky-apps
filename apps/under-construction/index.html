@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Under Construction · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚧</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .uc{background:#ffe169;border:6px solid var(--ink);border-radius:14px;padding:24px;text-align:center;
+    box-shadow:var(--shadow);background-image:repeating-linear-gradient(45deg,
+      #ffe169 0 28px,#1a1623 28px 40px);background-clip:padding-box}
+  .uc-inner{background:#fff;border:4px solid var(--ink);border-radius:10px;padding:20px}
+  .barrier{font-size:clamp(34px,9vw,60px);letter-spacing:6px}
+  .digger{font-size:48px;display:inline-block;animation:dig .7s infinite}
+  @keyframes dig{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(6px) rotate(8deg)}
+    50%{transform:translateX(0) rotate(0)}75%{transform:translateX(-6px) rotate(-8deg)}}
+  .spinner{font-size:40px;display:inline-block;animation:spin 1.4s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  marquee{border:3px solid var(--ink);background:#000;color:#0f0;font-family:var(--mono);
+    font-weight:800;padding:6px 0;border-radius:6px;margin:14px 0}
+  .flame{display:inline-block;animation:flame .5s infinite alternate}
+  @keyframes flame{from{transform:scale(.85)}to{transform:scale(1.15)}}
+  .bar{height:24px;background:#ddd;border:3px solid var(--ink);border-radius:8px;overflow:hidden;margin:14px 0}
+  .bar>div{height:100%;background:repeating-linear-gradient(45deg,var(--orange) 0 12px,var(--yellow) 12px 24px);
+    width:0;transition:width .4s;display:flex;align-items:center;justify-content:flex-end;
+    font-family:var(--mono);font-weight:800;color:var(--ink);padding-right:6px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🚧 Under Construction</span>
+  <span class="spacer"></span>
+  <span class="num">#95</span>
+</div>
+<div class="wrap">
+  <div class="uc">
+    <div class="uc-inner">
+      <div class="barrier">🚧🚧🚧</div>
+      <h1 class="big blink" style="color:var(--orange)">UNDER CONSTRUCTION</h1>
+      <p style="font-weight:800;font-size:18px">This page is being lovingly hand-coded in Notepad.</p>
+      <div>
+        <span class="digger">👷</span>
+        <span class="spinner">⚙️</span>
+        <span class="digger" style="animation-delay:.2s">🚜</span>
+        <span class="flame">🔥</span>
+        <span class="spinner" style="animation-direction:reverse">🛠️</span>
+      </div>
+      <marquee scrollamount="7">★彡 PLEASE COME BACK SOON ☆ FREE GIFS INSIDE ☆ POWERED BY DIAL-UP ☆ 100% HANDCRAFTED PIXELS 彡★</marquee>
+      <div class="bar"><div id="pf">0%</div></div>
+      <p style="font-family:var(--mono);font-weight:800" id="status"></p>
+      <p style="font-family:var(--mono);font-size:13px">Last updated: <b id="updated"></b></p>
+      <button class="btn pink" id="refresh">🔄 Check construction progress</button>
+    </div>
+  </div>
+</div>
+<script>
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function randDate(){const y=1996+Math.floor(Math.random()*5);
+  return `${MONTHS[Math.floor(Math.random()*12)]} ${1+Math.floor(Math.random()*28)}, ${y}`;}
+const STATUS=["Mixing fresh pixels…","Buffering the buffer…","Asking the webmaster's mom for snacks…",
+  "Polishing the <blink> tags…","Wrangling a stray GIF…","Waiting for the modem to reconnect…",
+  "Aligning tables with 47 nested cells…","Convincing Internet Explorer to behave…",
+  "Sweeping up leftover semicolons…","Re-ticking the visitor counter…"];
+let pct=0;
+function setProg(){pct=Math.min(99,pct+Math.floor(Math.random()*22)+3);if(pct>=99)pct=Math.floor(Math.random()*40)+5;
+  const pf=document.getElementById('pf');pf.style.width=pct+'%';pf.textContent=pct+'%';
+  document.getElementById('status').textContent='🚧 '+STATUS[Math.floor(Math.random()*STATUS.length)];}
+function refresh(){document.getElementById('updated').textContent=randDate();setProg();}
+document.getElementById('refresh').onclick=refresh;
+document.getElementById('updated').textContent=randDate();
+pct=Math.floor(Math.random()*60)+10;setProg();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

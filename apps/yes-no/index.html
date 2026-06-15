@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Oracle · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .oracle-card{text-align:center;position:relative;overflow:hidden}
+  #verdict{font-size:clamp(70px,22vw,160px);font-weight:900;line-height:1;
+    margin:10px 0;letter-spacing:2px;transition:transform .15s;min-height:1.1em}
+  #verdict.show{animation:slam .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes slam{0%{transform:scale(2.6);opacity:0}55%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}
+  .yes{color:#16a34a;text-shadow:5px 5px 0 var(--ink)}
+  .no{color:#dc2626;text-shadow:5px 5px 0 var(--ink)}
+  #sub{font-size:clamp(16px,4vw,22px);font-weight:800;font-style:italic;min-height:1.4em;color:var(--purple)}
+  #flash{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0}
+  #flash.fy{background:#16e0bd;animation:fl .55s}
+  #flash.fn{background:#ff5da2;animation:fl .55s}
+  @keyframes fl{0%{opacity:.9}100%{opacity:0}}
+  #ask{margin-bottom:14px}
+  .orb{font-size:clamp(60px,16vw,120px);transition:transform .3s;display:inline-block}
+  .orb.think{animation:wob .25s linear infinite}
+  @keyframes wob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔮 The Oracle</span>
+  <span class="spacer"></span>
+  <span class="num">#22</span>
+</div>
+<div id="flash"></div>
+<div class="wrap">
+  <div class="card oracle-card stack">
+    <div class="muted">Ask a yes/no question. The Oracle does not negotiate.</div>
+    <input id="ask" type="text" placeholder="Will today be a good day?" maxlength="120">
+    <div class="orb" id="orb">🔮</div>
+    <div id="verdict"></div>
+    <div id="sub">The mists are calm. Click below.</div>
+    <div class="center"><button class="btn purple" id="go">CONSULT THE ORACLE</button></div>
+  </div>
+</div>
+<script>
+const YES_SUBS=[
+  "The stars wink in agreement.","Even the cat nods.","Yes, and twice on Tuesdays.",
+  "Destiny gives a thumbs up.","The fog clears: go for it.","Affirmative, says the cosmic squirrel.",
+  "The runes are glowing happily.","A resounding, sparkly yes.","Fortune leans your way.","Yes — boldly so."];
+const NO_SUBS=[
+  "The crystal grows cloudy.","Not today, friend.","The owl shakes its head.",
+  "Fate suggests a nap instead.","The mists say absolutely not.","No, but with great affection.",
+  "The tea leaves spell N-O.","Hard pass from the heavens.","The universe shrugs: nope.","No — perhaps try kinder timing."];
+let ac;
+function beep(f,t){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+  o.frequency.value=f;o.type="sine";g.gain.setValueAtTime(.0001,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.25,ac.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+t);
+  o.start();o.stop(ac.currentTime+t);}catch(e){}}
+const orb=document.getElementById('orb'),verdict=document.getElementById('verdict'),
+  sub=document.getElementById('sub'),flash=document.getElementById('flash'),go=document.getElementById('go');
+let busy=false;
+function consult(){
+  if(busy)return;busy=true;go.disabled=true;
+  verdict.textContent="";verdict.className="";sub.textContent="The Oracle ponders…";
+  orb.classList.add('think');beep(220,.15);
+  let n=0;const tick=setInterval(()=>{orb.textContent=["🔮","✨","🌫️","🪄"][n++%4];beep(300+Math.random()*200,.05);},120);
+  setTimeout(()=>{
+    clearInterval(tick);orb.classList.remove('think');orb.textContent="🔮";
+    const yes=Math.random()<.5;
+    flash.className=yes?'fy':'fn';void flash.offsetWidth;
+    verdict.textContent=yes?"YES":"NO";verdict.className=(yes?'yes':'no')+' show';
+    sub.textContent=(yes?YES_SUBS:NO_SUBS)[Math.floor(Math.random()*10)];
+    if(yes){beep(523,.12);setTimeout(()=>beep(784,.2),90);}else{beep(196,.3);}
+    setTimeout(()=>flash.className='',560);
+    busy=false;go.disabled=false;
+  },1500);
+}
+go.onclick=consult;
+document.getElementById('ask').addEventListener('keydown',e=>{if(e.key==='Enter')consult();});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

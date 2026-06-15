@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dodge the Blocks · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  canvas{margin:14px auto;border:4px solid var(--ink);border-radius:14px;
+    background:linear-gradient(#1a1240,#3a1f6e);box-shadow:var(--shadow-sm);
+    touch-action:none;width:min(86vw,320px);height:min(115vw,440px);cursor:none}
+  .stat{display:flex;gap:10px;justify-content:center;font-family:var(--mono);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🚀 Dodge the Blocks</span>
+  <span class="spacer"></span>
+  <span class="num">#111</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="stat">
+      <span class="pill">Time <b id="time">0.0</b>s</span>
+      <span class="pill" style="background:var(--orange)">Best <b id="best">0.0</b>s</span>
+    </div>
+    <canvas id="cv" width="320" height="440"></canvas>
+    <div class="output" id="msg" style="min-height:1.2em">Move with mouse, ← →, or drag. Avoid the junk!</div>
+    <button class="btn pink" id="go">Launch 🚀</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const timeEl=document.getElementById('time'),bestEl=document.getElementById('best');
+const msg=document.getElementById('msg'),goBtn=document.getElementById('go');
+let best=+(localStorage.getItem('dodge_best')||0);bestEl.textContent=best.toFixed(1);
+const EMO=['🪨','📦','☄️','🛰️','🧱','🥌'];
+let ship,blocks=[],running,startT,spawnT,speed,left,right,last;
+
+function reset(){
+  ship={x:W/2,y:H-40,w:30,h:26};blocks=[];running=true;startT=performance.now();
+  spawnT=0;speed=110;left=right=false;last=performance.now();
+  msg.textContent='Dodge! 💫';goBtn.textContent='Restart';
+}
+function spawn(){
+  const w=26+Math.random()*22;
+  blocks.push({x:Math.random()*(W-w),y:-w,w,h:w,vy:speed+Math.random()*60,e:EMO[Math.random()*EMO.length|0]});
+}
+function loop(now){
+  if(!running)return;
+  const dt=(now-last)/1000;last=now;
+  const elapsed=(now-startT)/1000;
+  timeEl.textContent=elapsed.toFixed(1);
+  speed=110+elapsed*14; // ramp difficulty
+  // ship move via keys
+  if(left)ship.x-=260*dt;if(right)ship.x+=260*dt;
+  ship.x=Math.max(ship.w/2,Math.min(W-ship.w/2,ship.x));
+  // spawn
+  spawnT-=dt;const interval=Math.max(.28,.85-elapsed*.02);
+  if(spawnT<=0){spawn();spawnT=interval;}
+  // update + collide
+  for(const b of blocks)b.y+=b.vy*dt;
+  blocks=blocks.filter(b=>b.y<H+40);
+  for(const b of blocks){
+    if(ship.x+ship.w/2-4>b.x&&ship.x-ship.w/2+4<b.x+b.w&&
+       ship.y+ship.h/2-4>b.y&&ship.y-ship.h/2+4<b.y+b.h){return gameOver(elapsed);}
+  }
+  draw();requestAnimationFrame(loop);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // stars
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  for(let i=0;i<24;i++){const sx=(i*53)%W,sy=((i*97)+(performance.now()/14))%H;ctx.fillRect(sx,sy,2,2);}
+  ctx.font='26px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const b of blocks)ctx.fillText(b.e,b.x+b.w/2,b.y+b.h/2);
+  ctx.font='30px serif';if(ship)ctx.fillText('🚀',ship.x,ship.y);
+}
+function gameOver(t){
+  running=false;
+  if(t>best){best=t;localStorage.setItem('dodge_best',best);bestEl.textContent=best.toFixed(1);msg.innerHTML='🏆 New record: '+t.toFixed(1)+'s';}
+  else msg.innerHTML='💥 Boom! You survived '+t.toFixed(1)+'s';
+  goBtn.textContent='Try again';
+  document.querySelector('.card').classList.add('shake');
+  setTimeout(()=>document.querySelector('.card').classList.remove('shake'),400);
+  if(ac){const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='sawtooth';o.frequency.setValueAtTime(220,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(60,ac.currentTime+.4);
+    g.gain.setValueAtTime(.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.45);
+    o.start();o.stop(ac.currentTime+.45);}
+}
+let ac;
+function start(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();reset();requestAnimationFrame(loop);}
+goBtn.addEventListener('click',start);
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a'){left=true;e.preventDefault();}if(e.key==='ArrowRight'||e.key==='d'){right=true;e.preventDefault();}});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')left=false;if(e.key==='ArrowRight'||e.key==='d')right=false;});
+function pointTo(clientX){const r=cv.getBoundingClientRect();ship&&(ship.x=Math.max(ship.w/2,Math.min(W-ship.w/2,(clientX-r.left)/r.width*W)));}
+cv.addEventListener('mousemove',e=>{if(running)pointTo(e.clientX);});
+cv.addEventListener('touchmove',e=>{if(running){pointTo(e.touches[0].clientX);e.preventDefault();}},{passive:false});
+draw();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

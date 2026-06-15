@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Melody Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎼</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .staff{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:18px 0;min-height:120px;align-items:flex-end}
+  .note{width:42px;border-radius:10px 10px 6px 6px;border:3px solid var(--ink);
+    box-shadow:var(--shadow-sm);display:flex;align-items:flex-end;justify-content:center;
+    color:var(--ink);font-family:var(--mono);font-weight:900;font-size:13px;padding-bottom:4px;
+    transition:transform .12s ease}
+  .note.lit{transform:translateY(-8px) scale(1.06);background:var(--cyan)!important;box-shadow:0 6px 0 var(--ink)}
+  .name-strip{font-family:var(--mono);letter-spacing:2px;text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎼 Melody Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#72</span>
+</div>
+<div class="wrap">
+  <div class="card center stack">
+    <h1 class="big">🎼 Melody Generator</h1>
+    <p class="muted">A fresh little pentatonic tune, every tap. No wrong notes here. 🎵</p>
+    <div class="staff" id="staff"></div>
+    <div class="name-strip muted" id="names"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn purple" id="newBtn">🎲 New tune</button>
+      <button class="btn pink" id="playBtn">▶ Play</button>
+    </div>
+    <p class="muted" id="mood"></p>
+  </div>
+</div>
+<script>
+let ac;
+// C major pentatonic across two octaves
+const scale=[
+  {n:'C4',f:261.63},{n:'D4',f:293.66},{n:'E4',f:329.63},{n:'G4',f:392.00},{n:'A4',f:440.00},
+  {n:'C5',f:523.25},{n:'D5',f:587.33},{n:'E5',f:659.25},{n:'G5',f:783.99},{n:'A5',f:880.00}
+];
+const colors=['var(--pink)','var(--yellow)','var(--orange)','var(--cyan)','var(--blue)','#b388ff'];
+const moods=['serene ☁️','bouncy 🦘','dreamy 🌙','curious 🐈','sunny ☀️','wistful 🍂','playful 🎈','mysterious 🔮'];
+let melody=[];
+
+function gen(){
+  const len=6+Math.floor(Math.random()*4); // 6-9 notes
+  melody=[];
+  let idx=Math.floor(Math.random()*4)+2; // start mid
+  for(let i=0;i<len;i++){
+    // stepwise-ish wander for musicality
+    const step=[-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)];
+    idx=Math.max(0,Math.min(scale.length-1,idx+step));
+    const dur=[.22,.22,.34,.45][Math.floor(Math.random()*4)];
+    melody.push({...scale[idx],dur});
+  }
+  render();
+  document.getElementById('mood').textContent='Mood: '+moods[Math.floor(Math.random()*moods.length)];
+}
+
+function render(){
+  const staff=document.getElementById('staff'); staff.innerHTML='';
+  const hi=Math.max(...melody.map(m=>m.f)), lo=Math.min(...melody.map(m=>m.f));
+  melody.forEach((m,i)=>{
+    const el=document.createElement('div'); el.className='note';
+    const h=40+ (hi===lo?40:(m.f-lo)/(hi-lo)*60);
+    el.style.height=h+'px';
+    el.style.background=colors[i%colors.length];
+    el.textContent=m.n.replace(/[0-9]/,'');
+    el.dataset.i=i;
+    staff.appendChild(el);
+  });
+  document.getElementById('names').textContent=melody.map(m=>m.n).join(' · ');
+}
+
+function blip(freq,t,dur){
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type='triangle'; o.frequency.value=freq;
+  o.connect(g); g.connect(ac.destination);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.3,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t); o.stop(t+dur+0.05);
+}
+
+async function play(){
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==='suspended') await ac.resume();
+  let t=ac.currentTime+0.06;
+  const els=[...document.querySelectorAll('.note')];
+  melody.forEach((m,i)=>{
+    blip(m.f,t,m.dur*1.6);
+    const at=(t-ac.currentTime)*1000;
+    setTimeout(()=>{els.forEach(e=>e.classList.remove('lit'));els[i]&&els[i].classList.add('lit');},at);
+    t+=m.dur;
+  });
+  setTimeout(()=>els.forEach(e=>e.classList.remove('lit')),(t-ac.currentTime)*1000+200);
+}
+
+document.getElementById('newBtn').addEventListener('click',()=>{gen();play();});
+document.getElementById('playBtn').addEventListener('click',play);
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

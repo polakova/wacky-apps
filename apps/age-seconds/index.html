@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Age in Seconds · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.bignum{font-family:var(--mono);font-weight:900;font-size:clamp(30px,8vw,54px);
+  color:var(--purple);letter-spacing:1px;word-break:break-all}
+.stat{display:flex;justify-content:space-between;gap:10px;
+  font-family:var(--mono);border-bottom:2px dashed var(--ink);padding:8px 0}
+.stat b{color:var(--pink)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⏱️ Age in Seconds</span>
+  <span class="spacer"></span>
+  <span class="num">#82</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">How long have you been a person? Down to the second. Deep breath.</div>
+    <div class="row" style="justify-content:center;margin:16px 0">
+      <input type="date" id="dob" max="2026-06-15">
+      <button class="btn pink" id="go">Begin counting</button>
+    </div>
+    <div id="result" style="display:none">
+      <div class="muted">You have existed for approximately</div>
+      <div class="bignum" id="secs">0</div>
+      <div class="muted">seconds</div>
+      <div class="stat"><span>📅 Days alive</span><b id="days">0</b></div>
+      <div class="stat"><span>🌙 Full moons seen</span><b id="moons">0</b></div>
+      <div class="stat"><span>❤️ Heartbeats (≈72 bpm)</span><b id="beats">0</b></div>
+      <div class="stat"><span>😴 Hours probably slept</span><b id="sleep">0</b></div>
+      <div class="stat"><span>🌍 Trips around the Sun</span><b id="years">0</b></div>
+      <div class="muted" id="quip" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+<script>
+const dob=document.getElementById('dob'), go=document.getElementById('go');
+const result=document.getElementById('result');
+const secsEl=document.getElementById('secs'), daysEl=document.getElementById('days');
+const moonsEl=document.getElementById('moons'), beatsEl=document.getElementById('beats');
+const sleepEl=document.getElementById('sleep'), yearsEl=document.getElementById('years');
+const quipEl=document.getElementById('quip');
+const QUIPS=[
+ "That's a lot of Tuesdays.",
+ "Light from a star 1 light-year away, leaving on your birthday, would only now be arriving.",
+ "You've blinked roughly that many times… give or take.",
+ "Somewhere in there you laughed for the first time. Hi, you.",
+ "Each second is brand new. None get reused. Wild.",
+ "You are statistically excellent at staying alive.",
+ "The universe has been keeping count this whole time.",
+ "Plenty of seconds left, too. Spend a few here.",
+];
+let timer=null, born=null;
+function commas(n){ return Math.floor(n).toLocaleString('en-US'); }
+function update(){
+  const now=Date.now();
+  const ms=now-born.getTime();
+  const sec=ms/1000;
+  secsEl.textContent=commas(sec);
+  const days=sec/86400;
+  daysEl.textContent=commas(days);
+  moonsEl.textContent=commas(days/29.53);
+  beatsEl.textContent=commas(sec/60*72);
+  sleepEl.textContent=commas(days*8);   // ~8h/day
+  yearsEl.textContent=(days/365.25).toFixed(2);
+}
+go.onclick=()=>{
+  if(!dob.value){ dob.classList.add('shake'); setTimeout(()=>dob.classList.remove('shake'),400); return; }
+  born=new Date(dob.value+'T00:00:00');
+  if(isNaN(born) || born.getTime()>Date.now()){ alert("Pick a date in the past, time traveler."); return; }
+  result.style.display='block';
+  result.classList.add('pop');
+  quipEl.textContent=QUIPS[Math.floor(Math.random()*QUIPS.length)];
+  update();
+  clearInterval(timer);
+  timer=setInterval(update,1000);
+};
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

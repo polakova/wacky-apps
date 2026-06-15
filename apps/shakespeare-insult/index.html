@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bard Burn · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .parchment{
+    background:#f3e2bf;
+    background-image:radial-gradient(circle at 20% 30%,rgba(120,80,20,.12),transparent 40%),
+      radial-gradient(circle at 80% 70%,rgba(120,80,20,.14),transparent 45%);
+    border:none;border-radius:4px;color:#3a2a12;
+    box-shadow:var(--shadow),inset 0 0 60px rgba(120,80,20,.25);
+    padding:34px 26px;position:relative;font-family:Georgia,"Times New Roman",serif}
+  .parchment::before,.parchment::after{content:"";position:absolute;left:0;right:0;height:18px;
+    background:radial-gradient(circle at 8px -4px,transparent 9px,#f3e2bf 10px) repeat-x;background-size:16px 18px}
+  .parchment::before{top:-12px;transform:rotate(180deg)}
+  .parchment::after{bottom:-12px}
+  .scrolltitle{text-align:center;font-variant:small-caps;letter-spacing:2px;font-weight:bold;font-size:15px;opacity:.7}
+  .insult{font-size:clamp(22px,5.2vw,34px);font-weight:bold;line-height:1.3;text-align:center;margin:22px 0;font-style:italic}
+  .insult .quill{color:#7a3b1d}
+  .seal{text-align:center;font-size:34px;margin-top:8px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:var(--yellow);font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎭 Bard Burn</span>
+  <span class="spacer"></span>
+  <span class="num">#3</span>
+</div>
+<div class="wrap stack">
+  <div class="parchment">
+    <div class="scrolltitle">~ Ye Olde Insult Forge ~</div>
+    <div class="insult" id="insult"><span class="quill">Thou</span> beslubbering fool-born measle!</div>
+    <div class="seal">🪶</div>
+  </div>
+  <div class="row center" style="justify-content:center">
+    <button class="btn purple" id="gen">⚔️ Hurl an insult</button>
+    <button class="btn" id="copy">📜 Copy</button>
+  </div>
+  <div class="muted center">All harmless, archaic, and PG. No real nobles were harmed.</div>
+</div>
+<div class="toast" id="toast">Copied, thou clever knave!</div>
+<script>
+const col1=["artless","beslubbering","churlish","clouted","craven","dankish","fawning","frothy","gleeking",
+  "goatish","impertinent","loggerheaded","mewling","puny","rank","reeky","saucy","spongy","tottering",
+  "villainous","wayward","yeasty","bootless","cockered","droning","fobbing","jarring","mangled","puking","weedy"];
+const col2=["base-court","clay-brained","dizzy-eyed","dread-bolted","earth-vexing","fly-bitten","fool-born",
+  "half-faced","hedge-born","ill-nurtured","milk-livered","onion-eyed","plume-plucked","reeling-ripe",
+  "rough-hewn","rude-growing","shard-borne","sheep-biting","spur-galled","swag-bellied","toad-spotted",
+  "weather-bitten","beef-witted","crook-pated","doghearted","elf-skinned","flap-mouthed","idle-headed","motley-minded","pottle-deep"];
+const col3=["apple-john","baggage","barnacle","bladder","boar-pig","bugbear","clack-dish","codpiece",
+  "death-token","flap-dragon","gudgeon","haggard","harpy","jolthead","lewdster","maggot-pie","malt-worm",
+  "measle","minnow","miscreant","moldwarp","mumble-news","nut-hook","pigeon-egg","pignut","scut",
+  "skainsmate","strumpet","vassal","whey-face"];
+const seals=["🪶","📜","⚔️","🏰","👑","🎭"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const ins=document.getElementById('insult');
+function gen(){
+  ins.innerHTML=`<span class="quill">Thou</span> ${pick(col1)} ${pick(col2)} ${pick(col3)}!`;
+  document.querySelector('.seal').textContent=pick(seals);
+  ins.classList.remove('pop');void ins.offsetWidth;ins.classList.add('pop');
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=ins.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

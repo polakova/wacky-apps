@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hangman · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪢</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  canvas{margin:10px auto;border:4px solid var(--ink);border-radius:14px;background:#fff;
+    box-shadow:var(--shadow-sm)}
+  .word{font-family:var(--mono);font-size:clamp(24px,7vw,40px);font-weight:900;
+    letter-spacing:8px;margin:8px 0;min-height:1.3em;word-break:break-word}
+  .keys{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:420px;margin:10px auto}
+  .key{font-family:var(--mono);font-weight:800;font-size:16px;width:34px;height:40px;
+    border:3px solid var(--ink);border-radius:8px;background:var(--yellow);cursor:pointer;
+    box-shadow:var(--shadow-sm)}
+  .key:active{transform:translate(2px,2px);box-shadow:none}
+  .key.good{background:var(--cyan)}.key.bad{background:#bbb;color:#666}
+  .key:disabled{cursor:default}
+  .hint{font-style:italic}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🪢 Hangman</span>
+  <span class="spacer"></span>
+  <span class="num">#108</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <canvas id="cv" width="200" height="220"></canvas>
+    <p class="muted hint" id="hint"></p>
+    <div class="word" id="word"></div>
+    <div class="output" id="msg" style="min-height:1.2em"></div>
+    <div class="keys" id="keys"></div>
+    <button class="btn pink" id="newWord">New word</button>
+  </div>
+</div>
+<script>
+const WORDS=[
+ ["PENGUIN","a tuxedo bird that can't fly"],["WAFFLE","breakfast with little square pockets"],
+ ["GALAXY","a swirl of a billion stars"],["BANJO","a twangy stringed instrument"],
+ ["VOLCANO","a mountain that sometimes burps lava"],["PRETZEL","a salty knotted snack"],
+ ["JUGGLE","keeping many things in the air"],["CACTUS","a prickly desert plant"],
+ ["ROCKET","it goes whoosh into space"],["HAMSTER","a tiny wheel-running pet"],
+ ["UMBRELLA","keeps the rain off your head"],["NOODLE","slurpy and a little wobbly"],
+ ["WIZARD","casts spells, owns a pointy hat"],["DOLPHIN","a clever splashy ocean friend"],
+ ["MUFFIN","a cupcake that skipped frosting"],["TRUMPET","a brass instrument that goes ta-da"],
+ ["IGLOO","a cozy house made of ice"],["KAYAK","a word the same backwards, also a boat"],
+ ["MAMMOTH","a fuzzy ancient elephant"],["ZIGZAG","a path that can't pick a direction"],
+ ["JACKPOT","what slot machines dream about"],["QUOKKA","the world's smiliest marsupial"],
+ ["BUBBLE","round, floaty, and pops"],["GOSSIP","whispered neighborhood news"]
+];
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const wordEl=document.getElementById('word'),msg=document.getElementById('msg');
+const keysEl=document.getElementById('keys'),hintEl=document.getElementById('hint');
+let word,hint,guessed,misses,done;
+const MAXMISS=6;
+
+function newWord(){
+  const w=WORDS[Math.random()*WORDS.length|0];
+  word=w[0];hint=w[1];guessed=new Set();misses=0;done=false;
+  hintEl.textContent='Hint: '+hint;msg.textContent='';
+  buildKeys();render();draw();
+}
+function buildKeys(){
+  keysEl.innerHTML='';
+  for(let c=65;c<=90;c++){
+    const ch=String.fromCharCode(c);
+    const b=document.createElement('button');
+    b.className='key';b.textContent=ch;b.addEventListener('click',()=>guess(ch));
+    keysEl.appendChild(b);
+  }
+}
+function render(){
+  wordEl.textContent=word.split('').map(ch=>guessed.has(ch)?ch:'_').join(' ');
+}
+function guess(ch){
+  if(done||guessed.has(ch))return;
+  guessed.add(ch);
+  const btn=[...keysEl.children].find(b=>b.textContent===ch);btn.disabled=true;
+  if(word.includes(ch)){btn.classList.add('good');beep(660);render();checkWin();}
+  else{btn.classList.add('bad');misses++;beep(180);draw();
+    if(misses>=MAXMISS)lose();}
+}
+function checkWin(){
+  if(word.split('').every(ch=>guessed.has(ch))){
+    done=true;msg.innerHTML='🎉 You saved them! It was <b>'+word+'</b>';beep(880);
+  }
+}
+function lose(){
+  done=true;msg.innerHTML='😵 Out of guesses! Word was <b>'+word+'</b>';
+  document.querySelector('.card').classList.add('shake');
+  setTimeout(()=>document.querySelector('.card').classList.remove('shake'),400);
+}
+function draw(){
+  ctx.clearRect(0,0,200,220);ctx.lineWidth=5;ctx.strokeStyle='#1a1623';ctx.lineCap='round';
+  // gallows
+  ctx.beginPath();ctx.moveTo(20,210);ctx.lineTo(120,210);
+  ctx.moveTo(50,210);ctx.lineTo(50,20);ctx.lineTo(140,20);ctx.lineTo(140,45);ctx.stroke();
+  const parts=[
+    ()=>{ctx.beginPath();ctx.arc(140,62,17,0,7);ctx.stroke();}, // head
+    ()=>{ctx.beginPath();ctx.moveTo(140,79);ctx.lineTo(140,140);ctx.stroke();}, // body
+    ()=>{ctx.beginPath();ctx.moveTo(140,95);ctx.lineTo(115,120);ctx.stroke();}, // arm
+    ()=>{ctx.beginPath();ctx.moveTo(140,95);ctx.lineTo(165,120);ctx.stroke();}, // arm
+    ()=>{ctx.beginPath();ctx.moveTo(140,140);ctx.lineTo(118,180);ctx.stroke();}, // leg
+    ()=>{ctx.beginPath();ctx.moveTo(140,140);ctx.lineTo(162,180);ctx.stroke();
+         // worried face
+         ctx.fillStyle='#1a1623';ctx.fillRect(133,58,3,3);ctx.fillRect(144,58,3,3);}
+  ];
+  ctx.strokeStyle='#ff5da2';
+  for(let i=0;i<misses&&i<parts.length;i++)parts[i]();
+  ctx.strokeStyle='#1a1623';
+}
+let ac;
+function beep(f){
+  if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+  o.frequency.value=f;o.type='triangle';
+  g.gain.setValueAtTime(.2,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.2);
+  o.start();o.stop(ac.currentTime+.2);
+}
+document.getElementById('newWord').addEventListener('click',newWord);
+addEventListener('keydown',e=>{const k=e.key.toUpperCase();if(k>='A'&&k<='Z'&&k.length===1)guess(k);});
+newWord();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

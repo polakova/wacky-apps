@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Excuse Machine · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙈</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .excuse-card{background:linear-gradient(135deg,#fff,#fff4d6);position:relative;overflow:hidden}
+  .excuse-card::before{content:"📋";position:absolute;top:-10px;right:-6px;font-size:90px;opacity:.07;transform:rotate(12deg)}
+  #excuse{font-style:italic}
+  .lead{font-family:var(--mono);font-weight:800;color:var(--purple);font-size:14px;letter-spacing:1px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:var(--cyan);font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .meter{font-family:var(--mono);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🙈 Excuse Machine</span>
+  <span class="spacer"></span>
+  <span class="num">#1</span>
+</div>
+<div class="wrap">
+  <div class="card excuse-card center stack">
+    <div class="lead">SORRY I'M LATE, BUT…</div>
+    <div class="output" id="excuse">Tap the button and let the machine cover for you.</div>
+    <div class="meter muted" id="meter"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="gen">🎲 Make an excuse</button>
+      <button class="btn" id="copy">📋 Copy</button>
+    </div>
+    <div class="muted">Believability not guaranteed. Plausible deniability included.</div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied! Now go use it.</div>
+<script>
+const openers=[
+  "I would have, but","Honestly I tried, except","I was totally going to, however",
+  "It's not my fault —","Believe me, I wanted to, but","I had it all planned, then",
+  "Against all odds,","Long story short,","You won't believe this, but",
+  "In my defense,","I was SO close, but","Tragically,","Right on schedule, until",
+  "Everything was fine until","I'd explain, but basically"
+];
+const subjects=[
+  "my neighbor's parrot","a rogue Roomba","my left shoe","a very persuasive pigeon",
+  "the office plant","my smart fridge","a confused GPS","my future self",
+  "an escaped sourdough starter","the local raccoon union","my horoscope","a glitchy elevator",
+  "my goldfish's lawyer","a haunted printer","the moon","my alarm clock's twin",
+  "a suspiciously chatty barista","my houseplant's therapist"
+];
+const verbs=[
+  "staged a dramatic protest","insisted on a karaoke duet","filed an urgent complaint",
+  "refused to cooperate","declared independence","challenged me to a staring contest",
+  "rerouted my entire morning","held a surprise meeting","demanded a snack negotiation",
+  "started a conga line","unionized without warning","took my keys hostage",
+  "rewrote my schedule in crayon","blocked the only exit","needed emotional support"
+];
+const endings=[
+  "and that's just science.","so really, blame physics.","which is technically a federal matter.",
+  "and I haven't recovered since.","so the timeline made no sense.","and frankly, who could?",
+  "so I had to handle it solo.","and the paperwork was endless.","so my hands were tied.",
+  "and you'd have done the same.","which the experts agree is rare.","so I lost track of time.",
+  "and it spiraled from there.","so honestly, I'm the real victim here.","and that's the whole truth, mostly."
+];
+const verdicts=["🟢 Surprisingly plausible","🟡 Worth a shot","🟠 Bold choice","🔴 Nobody will believe this","🟣 Genuinely unhinged"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const elE=document.getElementById('excuse'),meter=document.getElementById('meter');
+function gen(){
+  elE.textContent=`${pick(openers)} ${pick(subjects)} ${pick(verbs)}, ${pick(endings)}`;
+  meter.textContent="Believability: "+pick(verdicts);
+  elE.classList.remove('pop');void elE.offsetWidth;elE.classList.add('pop');
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=elE.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

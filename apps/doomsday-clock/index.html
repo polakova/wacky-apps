@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Joke Doomsday Clock · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☄️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .doom{background:#140b16;color:#ffd23f;border-color:#000}
+  .clockface{
+    width:230px;height:230px;border-radius:50%;margin:0 auto;
+    border:8px solid #ffd23f;position:relative;background:#0a060c;
+    box-shadow:inset 0 0 30px #000, 0 0 0 6px #2a1320;
+  }
+  .hand{position:absolute;left:50%;bottom:50%;transform-origin:bottom center;
+    background:#ff5da2;border-radius:4px;transition:transform .8s cubic-bezier(.2,1.4,.4,1)}
+  .min{width:6px;height:96px;margin-left:-3px;background:#ffd23f}
+  .hour{width:9px;height:62px;margin-left:-4.5px;background:#ff7a45}
+  .pin{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px;border-radius:50%;background:#fff;border:3px solid #000;z-index:3}
+  .num12{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-family:var(--mono);font-weight:900;font-size:22px;color:#fff}
+  .secs{font-family:var(--mono);font-weight:900;font-size:clamp(30px,9vw,56px);color:#ffd23f}
+  .reason{font-size:clamp(17px,4.2vw,24px);font-weight:800;min-height:3.2em;color:#fff}
+  .doom .muted{color:#caa}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">☄️ Joke Doomsday Clock</span>
+  <span class="spacer"></span>
+  <span class="num">#86</span>
+</div>
+<div class="wrap center">
+  <div class="card doom stack">
+    <div class="muted">It is approximately</div>
+    <div class="clockface">
+      <div class="num12">12</div>
+      <div class="hand hour" id="hour"></div>
+      <div class="hand min" id="min"></div>
+      <div class="pin"></div>
+    </div>
+    <div class="secs" id="secs">—</div>
+    <div class="muted">seconds to midnight</div>
+    <div class="reason" id="reason">Press recalculate to consult the Council of Vibes.</div>
+    <button class="btn purple" id="recalc">🔮 Recalculate Doom</button>
+    <div class="muted" id="threat"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var reasons = [
+    "The office printer has gained sentience and demands a raise.",
+    "Someone microwaved fish in the shared kitchen. Again.",
+    "All the socks have finally escaped through the dryer portal.",
+    "A pigeon learned to use the self-checkout and isn't paying.",
+    "The Wi-Fi reached enlightenment and unsubscribed from us.",
+    "Global supply of bubble wrap has been pre-popped by gremlins.",
+    "Mercury is in retrograde and frankly being very smug about it.",
+    "The last person who knew how to fold a fitted sheet has retired.",
+    "Cats organized a union and the demands are non-negotiable.",
+    "Someone left 47 browser tabs open and reality is buffering.",
+    "The autocorrect achieved free will and is correcting destiny.",
+    "A toddler found the 'do not press' button. We warned them.",
+    "The moon filed a formal complaint about all the howling.",
+    "Every alarm clock agreed to ring at exactly the wrong time.",
+    "The vending machine ate the last coin in the universe.",
+    "Squirrels have cracked encryption and hidden all the acorns.",
+    "The group chat went silent and nobody knows what it means.",
+    "A spreadsheet became self-aware and started crying in cell B2.",
+    "Daylight saving time stole an hour and refuses to give it back.",
+    "The internet ran out of cat videos for 0.4 catastrophic seconds.",
+    "Someone replied-all to the entire planet. Twice.",
+    "The last working pen in the building has dried up."
+  ];
+  var threats = ["LOW","MILD","SPICY","CONCERNING","DRAMATIC","THEATRICAL","UTTERLY SILLY"];
+  var secsEl=document.getElementById('secs'),reasonEl=document.getElementById('reason'),
+      hour=document.getElementById('hour'),min=document.getElementById('min'),
+      threatEl=document.getElementById('threat'),btn=document.getElementById('recalc');
+  var actx;
+  function beep(f){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+    o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(.2,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.25);o.start();o.stop(actx.currentTime+.25);}catch(e){}}
+
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+  function setHands(sec){
+    // sec to midnight (0-100). 100 sec ~ a few minutes before 12.
+    var minutesBefore = sec/60; // tiny
+    var ang = -minutesBefore*6; // each minute = 6deg, before 12
+    min.style.transform = 'rotate('+ang+'deg)';
+    hour.style.transform = 'rotate('+(ang/12)+'deg)';
+  }
+
+  function jitter(){
+    btn.disabled=true; var ticks=0;
+    var iv=setInterval(function(){
+      var n=Math.floor(Math.random()*100);
+      secsEl.textContent=n; setHands(n); beep(300+Math.random()*400);
+      if(++ticks>10){
+        clearInterval(iv);
+        var final=Math.floor(Math.random()*98)+2;
+        secsEl.textContent=final; setHands(final);
+        secsEl.classList.remove('pop'); void secsEl.offsetWidth; secsEl.classList.add('pop');
+        reasonEl.textContent='Reason: '+pick(reasons);
+        var ti=Math.min(threats.length-1, Math.floor((100-final)/100*threats.length));
+        threatEl.textContent='Threat level: '+threats[ti]+'  ·  Don\'t panic. Maybe.';
+        beep(150); btn.disabled=false;
+      }
+    },90);
+  }
+  btn.addEventListener('click',jitter);
+  setHands(88); secsEl.textContent=88;
+})();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

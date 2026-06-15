@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin the Wheel · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎡</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .wheelbox{position:relative;width:min(86vw,360px);margin:8px auto}
+  #wheel{width:100%;aspect-ratio:1;border-radius:50%;border:6px solid var(--ink);box-shadow:var(--shadow)}
+  .ptr{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:40px;z-index:3;
+    filter:drop-shadow(2px 2px 0 var(--ink))}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;
+    background:var(--yellow);border:4px solid var(--ink);border-radius:50%;z-index:2;font-size:22px;
+    display:flex;align-items:center;justify-content:center}
+  #winner{font-size:clamp(22px,6vw,34px)}
+  textarea{min-height:120px}
+  #cv{position:fixed;inset:0;pointer-events:none;z-index:300}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎡 Spin the Wheel</span>
+  <span class="spacer"></span>
+  <span class="num">#23</span>
+</div>
+<canvas id="cv"></canvas>
+<div class="wrap stack">
+  <div class="card center stack">
+    <div class="wheelbox">
+      <div class="ptr">▼</div>
+      <canvas id="wheel" width="600" height="600"></canvas>
+      <div class="hub">🎯</div>
+    </div>
+    <div class="output" id="winner">Add options, then spin!</div>
+    <button class="btn pink" id="spin">SPIN!</button>
+  </div>
+  <div class="card stack">
+    <label class="muted">One option per line (2–12 work best):</label>
+    <textarea id="opts">Pizza 🍕
+Tacos 🌮
+Sushi 🍣
+Burgers 🍔
+Salad 🥗
+Surprise me!</textarea>
+    <div class="row">
+      <button class="btn blue" id="apply">Update wheel</button>
+      <button class="btn" id="shuf">Shuffle</button>
+    </div>
+  </div>
+</div>
+<script>
+const C=['#ff5da2','#7b2ff7','#16e0bd','#ffd23f','#ff7a45','#3a86ff'];
+const cv=document.getElementById('wheel'),ctx=cv.getContext('2d'),R=300;
+const ta=document.getElementById('opts'),winner=document.getElementById('winner');
+let items=[],ang=0,spinning=false;
+let ac;function tick(f){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+  const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+  o.frequency.value=f;o.type="triangle";g.gain.setValueAtTime(.12,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.06);o.start();o.stop(ac.currentTime+.06);}catch(e){}}
+function read(){items=ta.value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,12);
+  if(items.length<2)items=['Yes','No'];draw();}
+function draw(){
+  ctx.clearRect(0,0,600,600);const n=items.length,step=2*Math.PI/n;
+  for(let i=0;i<n;i++){
+    const a0=ang+i*step,a1=a0+step;
+    ctx.beginPath();ctx.moveTo(R,R);ctx.arc(R,R,R-6,a0,a1);ctx.closePath();
+    ctx.fillStyle=C[i%C.length];ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#1a1623';ctx.stroke();
+    ctx.save();ctx.translate(R,R);ctx.rotate(a0+step/2);ctx.textAlign='right';
+    ctx.fillStyle='#1a1623';ctx.font='bold 26px system-ui';
+    let t=items[i];if(t.length>16)t=t.slice(0,15)+'…';
+    ctx.fillText(t,R-26,9);ctx.restore();
+  }
+}
+function spin(){
+  if(spinning)return;read();spinning=true;winner.textContent='…';
+  const dur=4200+Math.random()*900,start=performance.now();
+  const total=(6+Math.random()*4)*2*Math.PI;const from=ang;
+  let lastSeg=-1;
+  function frame(now){
+    const t=Math.min(1,(now-start)/dur);
+    const e=1-Math.pow(1-t,3.2);
+    ang=from+total*e;
+    const seg=Math.floor(((-ang-Math.PI/2)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)/(2*Math.PI/items.length));
+    if(seg!==lastSeg){lastSeg=seg;tick(420+Math.random()*120);}
+    draw();
+    if(t<1)requestAnimationFrame(frame);
+    else{
+      const norm=((ang%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+      // pointer at top = -PI/2. find index under pointer
+      const pointerAng=((-Math.PI/2-norm)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+      const idx=Math.floor(pointerAng/(2*Math.PI/items.length))%items.length;
+      winner.innerHTML='🏆 <b>'+items[idx]+'</b>';winner.classList.remove('pop');void winner.offsetWidth;winner.classList.add('pop');
+      tick(700);setTimeout(()=>tick(900),80);confetti();spinning=false;
+    }
+  }
+  requestAnimationFrame(frame);
+}
+document.getElementById('spin').onclick=spin;
+document.getElementById('apply').onclick=read;
+document.getElementById('shuf').onclick=()=>{read();for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}ta.value=items.join('\n');draw();};
+// confetti
+const cc=document.getElementById('cv'),cx=cc.getContext('2d');let parts=[];
+function rs(){cc.width=innerWidth;cc.height=innerHeight;}rs();addEventListener('resize',rs);
+function confetti(){for(let i=0;i<120;i++)parts.push({x:innerWidth/2,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,c:C[i%C.length],r:Math.random()*8+4,a:1});if(parts.length<=120)anim();}
+function anim(){cx.clearRect(0,0,cc.width,cc.height);parts.forEach(p=>{p.vy+=.4;p.x+=p.vx;p.y+=p.vy;p.a-=.012;cx.globalAlpha=Math.max(0,p.a);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.r,p.r);});parts=parts.filter(p=>p.a>0&&p.y<cc.height+40);if(parts.length)requestAnimationFrame(anim);else cx.clearRect(0,0,cc.width,cc.height);}
+read();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

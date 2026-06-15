@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mëtal Bänd Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤘</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+body{background:#0a0a0d;background-image:radial-gradient(#1c1c22 1px,transparent 1px);color:#e8e8ea}
+.wrap{position:relative}
+.metalcard{background:#111114;border-color:#000;box-shadow:6px 6px 0 #000,0 0 0 2px #b40000 inset}
+.big{color:#e8e8ea;text-shadow:0 0 10px #b40000}
+.bandname{font-family:Georgia,"Times New Roman",serif;font-weight:900;font-size:clamp(30px,9vw,62px);text-transform:uppercase;letter-spacing:2px;line-height:1.05;margin:14px 0;color:#dcdce0;text-shadow:2px 2px 0 #000,0 0 18px #b40000;word-break:break-word;transform:skewX(-3deg)}
+.subg{font-family:var(--mono);font-size:13px;color:#b40000;letter-spacing:3px;text-transform:uppercase}
+.spikes{font-size:22px;color:#b40000;letter-spacing:4px}
+.btn{background:#b40000;color:#fff;border-color:#000}
+.btn:hover{background:#ff1a1a}
+.btn.alt{background:#1c1c22;color:#e8e8ea}
+.btn.alt:hover{background:#333}
+.muted{color:#7a7a82}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#b40000;color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.album{font-family:var(--mono);font-size:13px;color:#9a9aa2;margin-top:10px}
+.album b{color:#dcdce0}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🤘 Mëtal Bänd Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#20</span>
+</div>
+
+<div class="wrap center">
+  <div class="card metalcard">
+    <div class="big">FÖRGE YÖUR BÄND</div>
+    <p class="muted">Summoning ominous names from the void… 🤘</p>
+
+    <div class="spikes">▰▰▰ ⛧ ▰▰▰</div>
+    <div class="subg" id="subg"></div>
+    <div class="bandname" id="band">…</div>
+    <div class="spikes">▰▰▰ ⛧ ▰▰▰</div>
+    <div class="album" id="album"></div>
+
+    <div class="row" style="justify-content:center;margin-top:20px">
+      <button class="btn" id="gen">⚡ SUMMON NAME</button>
+      <button class="btn alt" id="copy">📋 Copy</button>
+    </div>
+  </div>
+  <p class="muted center" style="margin-top:14px">Now go practice the same riff for six hours.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PRE=["Eternal","Bleeding","Frozen","Crimson","Wretched","Black","Forsaken","Unholy","Dying","Shattered","Molten","Cursed","Hollow","Ravenous","Withered","Silent","Infernal","Putrid","Doomed","Iron"];
+const CORE=["Throne","Abyss","Wolf","Reaper","Crypt","Serpent","Inferno","Sorrow","Hammer","Raven","Funeral","Tempest","Goat","Phantom","Tombstone","Maelstrom","Behemoth","Wyrm","Carnage","Ash"];
+const SOLO=["Gravewind","Hexenghoul","Nachtblud","Skullthrone","Doomhammer","Vörtex","Necrowail","Thundergörge","Mörbid Choir","Frostmaw","Bonechapel","Voidshriek","Dreadnaught","Sorrowmoon","Plaguefyre","Witchsmoke","Ironveil","Cryptkeeper","Ragnaröck","Doomtoad"];
+const SUBG=["Symphonic Death Metal","Doom Sludge","Blackened Folk Metal","Progressive Djent","Funeral Doom","Viking Power Metal","Atmospheric Black Metal","Technical Death Metal","Stoner Doom","Melodic Thrash","Pagan Metalcore","Cosmic Drone","Medieval Speed Metal","Nordic Frost Metal","Industrial Grindcore"];
+const ALB=["Hymns of the Forgotten Toaster","Chronicles of Mild Inconvenience","Whispers from the Sock Drawer","Requiem for a Dropped Burrito","Throne of Lukewarm Coffee","Echoes of the Unread Email","Saga of the Stubbed Toe","Ballad of the Dead Battery","Veil of Tuesday","Crypt of Forgotten Passwords"];
+const UML={a:'ä',A:'Ä',o:'ö',O:'Ö',u:'ü',U:'Ü',e:'ë',E:'Ë'};
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function metalize(s){
+  // randomly umlaut 1-2 eligible letters (the metal way)
+  const idx=[];for(let i=0;i<s.length;i++)if(UML[s[i]])idx.push(i);
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  const n=Math.min(idx.length,1+Math.floor(Math.random()*2));
+  let arr=s.split('');
+  for(let k=0;k<n;k++)arr[idx[k]]=UML[arr[idx[k]]];
+  return arr.join('');
+}
+let cur="";
+function gen(){
+  let name;
+  if(Math.random()<.5){name=pick(PRE)+" "+pick(CORE);}
+  else{name=pick(SOLO);}
+  name=metalize(name);
+  cur=name;
+  const b=document.getElementById('band');b.textContent=name;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+  document.getElementById('subg').textContent=pick(SUBG);
+  document.getElementById('album').innerHTML='Debut album: <b>“'+pick(ALB)+'”</b>';
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+document.getElementById('gen').onclick=gen;
+document.getElementById('copy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(cur);}
+  catch(e){const ta=document.createElement('textarea');ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Copied: '+cur+' 🤘');
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

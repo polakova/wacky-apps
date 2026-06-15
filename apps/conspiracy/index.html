@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conspiracy Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👽</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .corkboard{
+    background:#b07a3e;
+    background-image:radial-gradient(rgba(0,0,0,.18) 1px,transparent 1px),radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);
+    background-size:7px 7px,11px 11px;
+    border:10px solid #5a3a18;border-radius:8px;box-shadow:var(--shadow);
+    padding:30px 22px;position:relative;overflow:hidden;min-height:260px}
+  .string{position:absolute;height:3px;background:#c0241f;transform-origin:left center;opacity:.7;top:30px;left:30px;width:60%;transform:rotate(20deg)}
+  .string.b{top:auto;bottom:40px;left:40px;width:50%;transform:rotate(-15deg)}
+  .note{background:#fff8e6;color:#1a1623;font-family:var(--mono);border:1px solid #d8c89a;
+    box-shadow:2px 4px 8px rgba(0,0,0,.35);padding:20px 18px 22px;position:relative;
+    transform:rotate(-1.2deg);font-weight:700;font-size:clamp(18px,4.4vw,26px);line-height:1.35;z-index:2}
+  .pin{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:26px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+  .stamp{display:inline-block;margin-top:14px;border:3px solid #c0241f;color:#c0241f;font-family:var(--mono);
+    font-weight:900;padding:3px 12px;border-radius:6px;transform:rotate(-6deg);letter-spacing:2px;font-size:13px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:#ff5d5d;font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">👽 Conspiracy Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#4</span>
+</div>
+<div class="wrap stack">
+  <div class="corkboard">
+    <div class="string"></div><div class="string b"></div>
+    <div class="note">
+      <span class="pin">📌</span>
+      <div id="theory">Wake up! The pigeons are secretly photographing our breakfast.</div>
+      <div class="stamp" id="stamp">CLASSIFIED</div>
+    </div>
+  </div>
+  <div class="row center" style="justify-content:center">
+    <button class="btn pink" id="gen">🔴 Connect the dots</button>
+    <button class="btn" id="copy">📋 Copy</button>
+  </div>
+  <div class="muted center">Totally made up. Please do not actually distrust your toaster.</div>
+</div>
+<div class="toast" id="toast">Copied. Tell no one.</div>
+<script>
+const openers=["Wake up!","Think about it:","Nobody talks about how","Coincidence? No.","Open your eyes —",
+  "The truth is,","Sources confirm:","They don't want you to know that","Connect the dots:","Plain as day,",
+  "Deep down you KNOW","It's all linked:","Follow the breadcrumbs:","Whisper it, but","Undeniably,"];
+const groups=["the pigeons","Big Sock","the squirrel council","a secret committee of mimes","ancient librarians",
+  "the moon landlords","Big Houseplant","the lizard accountants","retired magicians","the cheese lobby",
+  "time-traveling toddlers","the umbrella syndicate","sentient elevators","the pasta guild","a cabal of barbers",
+  "the garden gnome network","off-duty wizards","the cloud bureaucracy","the left-sock collective","interdimensional pigeons"];
+const verbs=["are secretly controlling","have been quietly replacing","invented","keep recharging using",
+  "communicate through","are hoarding","reprogram us with","hide the real recipe for","are slowly rerouting",
+  "monitor your dreams via","run the underground market for","are erasing all memory of","power their lairs with",
+  "have rigged every","translate your thoughts into"];
+const objects=["traffic lights","missing socks","Tuesday afternoons","the price of bananas","escalator speeds",
+  "your Wi-Fi password","all the good parking spots","background music in elevators","the taste of tap water",
+  "the weather on weekends","leftover takeout containers","the snooze button","public fountains",
+  "the alphabet (the letter J specifically)","every single houseplant","ceiling fans","road potholes",
+  "the concept of mondays","unread emails","spare buttons"];
+const stamps=["CLASSIFIED","TOP SECRET","EYES ONLY","DO NOT SHARE","REDACTED","LEVEL 7","CONFIDENTIAL"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const th=document.getElementById('theory'),stamp=document.getElementById('stamp');
+function gen(){
+  th.textContent=`${pick(openers)} ${pick(groups)} ${pick(verbs)} ${pick(objects)}.`;
+  stamp.textContent=pick(stamps);
+  const note=document.querySelector('.note');
+  note.style.transform="rotate("+(Math.random()*4-2).toFixed(1)+"deg)";
+  th.classList.remove('pop');void th.offsetWidth;th.classList.add('pop');
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=th.textContent;
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

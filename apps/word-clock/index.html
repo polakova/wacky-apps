@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Word Clock · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔤</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.grid{
+  display:grid;gap:2px;
+  background:#101018;border:4px solid var(--ink);border-radius:16px;
+  padding:14px;box-shadow:var(--shadow);user-select:none;
+}
+.cell{
+  display:flex;align-items:center;justify-content:center;
+  aspect-ratio:1;font-family:var(--mono);font-weight:800;
+  font-size:clamp(10px,3.2vw,18px);color:#36364e;
+  transition:color .5s ease, text-shadow .5s ease;
+}
+.cell.on{color:#16e0bd;text-shadow:0 0 8px #16e0bd,0 0 16px rgba(22,224,189,.6)}
+.digital{font-family:var(--mono);font-weight:800;letter-spacing:2px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔤 Word Clock</span>
+  <span class="spacer"></span>
+  <span class="num">#78</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">It tells time the cozy human way — to the nearest five.</div>
+    <div id="grid" class="grid" style="margin:18px 0"></div>
+    <div class="output digital" id="digital">--:--</div>
+    <div class="muted" id="phrase">&nbsp;</div>
+  </div>
+</div>
+<script>
+/* Canonical 13-col grid. Word coords verified against these strings. */
+const ROWS = [
+  "ITLISJTWENTYX", // IT 0-1, IS 3-4, TWENTY 6-11
+  "QUARTERZFIVEX", // QUARTER 0-6, FIVE(min) 8-11
+  "TENHALFTOPAST", // TEN(min) 0-2, HALF 3-6, TO 7-8, PAST 9-12
+  "ONESIXTWELVEX", // ONE 0-2, SIX 3-5, TWELVE 6-11
+  "TWOEIGHTHREEX", // TWO 0-2, EIGHT 3-7, THREE 7-11 (shares the T)
+  "FOURFIVENINEX", // FOUR 0-3, FIVE 4-7, NINE 8-11
+  "SEVENELEVENXX", // SEVEN 0-4, ELEVEN 5-10
+  "TENXOCLOCKXXX"  // TEN(hour) 0-2, OCLOCK 4-9
+];
+const COLS = 13;
+const W = {
+  IT:[0,0,2], IS:[0,3,2], TWENTY:[0,6,6],
+  QUARTER:[1,0,7], FIVEMIN:[1,8,4],
+  TENMIN:[2,0,3], HALF:[2,3,4], TO:[2,7,2], PAST:[2,9,4],
+  ONE:[3,0,3], SIX:[3,3,3], TWELVE:[3,6,6],
+  TWO:[4,0,3], EIGHT:[4,3,5], THREE:[4,7,5],
+  FOUR:[5,0,4], FIVE:[5,4,4], NINE:[5,8,4],
+  SEVEN:[6,0,5], ELEVEN:[6,5,6],
+  TEN:[7,0,3], OCLOCK:[7,4,6]
+};
+const HOUR={1:"ONE",2:"TWO",3:"THREE",4:"FOUR",5:"FIVE",6:"SIX",7:"SEVEN",8:"EIGHT",9:"NINE",10:"TEN",11:"ELEVEN",12:"TWELVE"};
+const SAYHOUR={1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine",10:"ten",11:"eleven",12:"twelve"};
+
+const gridEl=document.getElementById('grid');
+gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
+const cells=[];
+ROWS.forEach(row=>{
+  for(let c=0;c<COLS;c++){
+    const d=document.createElement('div');
+    d.className='cell'; d.textContent=row[c];
+    gridEl.appendChild(d); cells.push(d);
+  }
+});
+function light(word){
+  const w=W[word]; if(!w) return;
+  const [r,c,len]=w;
+  for(let i=0;i<len;i++) cells[r*COLS+c+i].classList.add('on');
+}
+
+/* minute bucket -> {words to light (excluding hour), english} */
+const MIN = {
+  0:  {w:["OCLOCK"],            t:"%H o'clock"},
+  5:  {w:["FIVEMIN","PAST"],    t:"five past %H"},
+  10: {w:["TENMIN","PAST"],     t:"ten past %H"},
+  15: {w:["QUARTER","PAST"],    t:"quarter past %H"},
+  20: {w:["TWENTY","PAST"],     t:"twenty past %H"},
+  25: {w:["TWENTY","FIVEMIN","PAST"], t:"twenty-five past %H"},
+  30: {w:["HALF","PAST"],       t:"half past %H"},
+  35: {w:["TWENTY","FIVEMIN","TO"],   t:"twenty-five to %H"},
+  40: {w:["TWENTY","TO"],       t:"twenty to %H"},
+  45: {w:["QUARTER","TO"],      t:"quarter to %H"},
+  50: {w:["TENMIN","TO"],       t:"ten to %H"},
+  55: {w:["FIVEMIN","TO"],      t:"five to %H"}
+};
+
+function update(){
+  cells.forEach(c=>c.classList.remove('on'));
+  const now=new Date();
+  const h=now.getHours(), m=now.getMinutes();
+  let bucket=(Math.round(m/5)*5);   // 0..60
+  let hourOffset=0;
+  if(bucket===60){ bucket=0; hourOffset=1; }
+  if(bucket>30){ hourOffset=1; }    // "to" the next hour
+  const info=MIN[bucket];
+
+  // which hour word to show
+  let hr=(h+hourOffset)%24;
+  let hr12=hr%12; if(hr12===0)hr12=12;
+
+  light("IT"); light("IS");
+  info.w.forEach(light);
+  light(HOUR[hr12]);
+
+  document.getElementById('digital').textContent=
+    String(h).padStart(2,'0')+":"+String(m).padStart(2,'0');
+  document.getElementById('phrase').textContent=
+    "It is "+info.t.replace("%H", SAYHOUR[hr12])+".";
+}
+update();
+setInterval(update,1000);
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

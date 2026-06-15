@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cosmic Conch · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎱</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.ballwrap{display:flex;justify-content:center;margin:10px 0 4px}
+.ball{width:240px;max-width:78vw;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#555 0%,#1a1a1a 45%,#000 100%);
+  box-shadow:var(--shadow),inset -14px -18px 36px rgba(0,0,0,.8),inset 10px 12px 26px rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;position:relative}
+.ball:active{transform:scale(.98)}
+.ball.shake{animation:wob .6s}
+@keyframes wob{0%,100%{transform:translate(0,0) rotate(0)}15%{transform:translate(-10px,6px) rotate(-6deg)}40%{transform:translate(12px,-8px) rotate(7deg)}65%{transform:translate(-8px,4px) rotate(-4deg)}85%{transform:translate(6px,-3px) rotate(3deg)}}
+.window{width:46%;aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#1b2a6b,#0a1230);
+  clip-path:polygon(50% 8%,92% 88%,8% 88%);display:flex;align-items:center;justify-content:center;text-align:center;
+  box-shadow:inset 0 0 24px rgba(0,0,0,.9)}
+.ans{color:#9ec5ff;font-family:var(--mono);font-weight:800;font-size:clamp(11px,3vw,15px);line-height:1.2;padding:0 6px;text-shadow:0 0 8px #3a6bff;transition:opacity .25s;max-width:84%;transform:translateY(8%)}
+.ans.fade{opacity:0}
+.qrow{margin:18px 0 6px}
+.qrow input{width:100%;text-align:center}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--purple);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.qecho{font-family:var(--mono);font-size:13px;color:var(--purple);min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎱 Cosmic Conch</span>
+  <span class="spacer"></span>
+  <span class="num">#21</span>
+</div>
+
+<div class="wrap center">
+  <div class="card">
+    <div class="big">The Cosmic Conch 🎱</div>
+    <p class="muted">Ask a yes/no question. Then shake the orb of destiny.</p>
+
+    <div class="qrow">
+      <input id="q" placeholder="Will I become fabulously rich?" maxlength="120" autocomplete="off">
+    </div>
+    <div class="qecho" id="qecho"></div>
+
+    <div class="ballwrap">
+      <div class="ball" id="ball" role="button" tabindex="0" aria-label="Magic 8 ball, tap to shake">
+        <div class="window"><div class="ans" id="ans">8</div></div>
+      </div>
+    </div>
+
+    <div class="row" style="justify-content:center;margin-top:10px">
+      <button class="btn purple" id="shake">🔮 Shake the Conch</button>
+    </div>
+    <p class="muted" style="margin-top:10px">(Tap the orb too. It likes attention.)</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ANSWERS=[
+ // classic-style affirmatives (original wording)
+ "Absolutely yes","Signs point to yes","The stars say go for it","Without a doubt, friend","Yes, and treat yourself after",
+ "The conch nods sagely","Most certainly","All systems say YES","Yes, but bring snacks","Destiny approves",
+ // negatives
+ "Hard no from the cosmos","Not in this timeline","The conch is unimpressed","Doubtful, sweetie","Better not, honestly",
+ "Nope, try again Tuesday","The universe said meh","Don't bet your sandwich on it","No, but cute idea","The vibes say nah",
+ // non-committal / funny
+ "Ask again after coffee ☕","Reply hazy, try a nap","Cannot predict, conch is buffering","Concentrate harder, mortal","Outlook unclear, much like my Wi-Fi",
+ "The conch shrugs mysteriously","Maybe? It's complicated","Signs point to 'lol idk'","The future is loading… 47%","Mercury is retrograde, so… probably?",
+ "Yes, no, and also banana","The conch needs a snack first","42","That's between you and your houseplant","Bold of you to ask the conch that"];
+let last=-1, cur="", busy=false;
+const ans=document.getElementById('ans'), ball=document.getElementById('ball');
+function pick(){let i;do{i=Math.floor(Math.random()*ANSWERS.length)}while(i===last&&ANSWERS.length>1);last=i;return ANSWERS[i];}
+let actx;
+function beep(){
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+    o.type='sine';o.frequency.setValueAtTime(180,actx.currentTime);o.frequency.exponentialRampToValueAtTime(420,actx.currentTime+.5);
+    g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.18,actx.currentTime+.05);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.6);
+    o.start();o.stop(actx.currentTime+.62);
+  }catch(e){}
+}
+function shake(){
+  if(busy)return;busy=true;
+  const q=document.getElementById('q').value.trim();
+  document.getElementById('qecho').textContent=q?('You asked: “'+q+'”'):'';
+  ball.classList.remove('shake');void ball.offsetWidth;ball.classList.add('shake');
+  ans.classList.add('fade');ans.textContent='…';beep();
+  setTimeout(()=>{cur=pick();ans.textContent=cur;ans.classList.remove('fade');busy=false;},620);
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+ball.onclick=shake;
+ball.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();shake();}};
+document.getElementById('shake').onclick=shake;
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')shake();});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

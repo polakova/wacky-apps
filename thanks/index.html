@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thank you! · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💛</text></svg>">
+<link rel="stylesheet" href="../apps/_shared/wacky.css">
+<style>
+.tw{max-width:560px;margin:0 auto;padding:40px 18px 80px;text-align:center}
+.heart{font-size:64px;animation:beat 1s infinite}
+@keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.25)}}
+.actions{display:flex;flex-direction:column;gap:12px;margin:22px 0}
+.steps{text-align:left;background:#fff;border:3px solid var(--ink);border-radius:14px;
+  box-shadow:var(--shadow-sm);padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.5}
+.steps b{font-family:var(--mono)}
+.steps hr{border:none;border-top:2px dashed var(--ink);opacity:.3;margin:12px 0}
+.dl{font-family:var(--mono);font-weight:800;font-size:13px;word-break:break-all}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:-1}
+.tag{font-family:var(--mono);font-size:12px;opacity:.6;margin-top:-6px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../">← all 111</a>
+  <span class="title">💛 Thank You</span>
+  <span class="spacer"></span>
+  <span class="num">tip jar</span>
+</div>
+<canvas id="confetti"></canvas>
+<div class="tw">
+  <div class="heart">💛</div>
+  <h1 class="big">You're the best!</h1>
+  <p class="output" id="msg">Sorting out your download…</p>
+  <p class="tag" id="what"></p>
+
+  <div class="actions" id="actions"></div>
+
+  <div class="steps" id="android" style="display:none">
+    <p style="margin:.2em 0"><b>📲 Installing the .APK on Android:</b></p>
+    <p style="margin:.3em 0">1. Tap the install button above — the <b>.apk</b> downloads.</p>
+    <p style="margin:.3em 0">2. Open it from your notifications / Downloads.</p>
+    <p style="margin:.3em 0">3. If Android warns you, tap <i>Settings → allow from this source</i>, then <i>Install</i>. (It's safe — the app is offline and asks for no internet.)</p>
+    <hr>
+    <p style="margin:.2em 0">Prefer not to install? <a class="dl" id="webfallback" href="#">⬇️ grab the web version instead</a></p>
+  </div>
+
+  <div class="steps" id="ios" style="display:none">
+    <p style="margin:.2em 0"><b>📱 iPhone / iPad — make it an app icon:</b></p>
+    <p style="margin:.3em 0">iPhones can't install .apk files (that's Apple's rule), but this works just as well:</p>
+    <p style="margin:.3em 0">1. The app file opens/downloads above.</p>
+    <p style="margin:.3em 0">2. Open it in <b>Safari</b> → tap <b>Share</b> → <i>Add to Home Screen</i>.</p>
+    <p style="margin:.3em 0">3. It now lives on your home screen like a real app — fully offline. ☕</p>
+  </div>
+
+  <div class="steps" id="desktop" style="display:none">
+    <p style="margin:.2em 0"><b>💻 On a computer:</b> the buttons above give you the Android <b>.apk</b> (for your phone) and the <b>web version</b> (open in any browser).</p>
+    <p style="margin:.3em 0">Tip: on your phone, use “Add to Home Screen” to pin the web version like an app.</p>
+  </div>
+
+  <p class="muted">Everything stays free online too — come back &amp; play anytime.</p>
+  <a class="btn purple" href="../">🏠 Back to all 111 apps</a>
+</div>
+<script>
+// ---- what did they buy? (stored before the Stripe redirect) ----
+const buy = (() => { try { return localStorage.getItem('wacky_buy'); } catch(e){ return null; } })();
+const REPO = 'https://github.com/polakova/wacky-apps/releases/download/apks';
+
+const isBundle = buy === '__bundle__';
+const slug = (buy && !isBundle) ? buy : null;
+const label = isBundle ? 'All 111 Wacky Apps' : (slug ? slug.replace(/-/g,' ') : null);
+
+// download targets
+const apkUrl  = isBundle ? REPO + '/all-111-wacky-apps.apk' : (slug ? REPO + '/' + slug + '.apk' : null);
+const apkName = isBundle ? 'all-111-wacky-apps.apk' : (slug ? slug + '.apk' : null);
+const webUrl  = isBundle ? '../download/wacky-apps-bundle.zip' : (slug ? '../download/' + slug + '.html' : null);
+const webName = isBundle ? 'wacky-apps-bundle.zip' : (slug ? slug + '.html' : null);
+
+// platform
+const ua = navigator.userAgent || '';
+const isAndroid = /Android/i.test(ua);
+const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+
+const msg = document.getElementById('msg');
+const what = document.getElementById('what');
+const actions = document.getElementById('actions');
+
+function dl(url, name){ const a=document.createElement('a'); a.href=url; if(name)a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); }
+function btn(text, cls, fn){ const b=document.createElement('button'); b.className='btn '+cls; b.textContent=text;
+  b.addEventListener('click', fn); actions.appendChild(b); return b; }
+
+if (!buy) {
+  msg.innerHTML = 'Thanks for stopping by! If you just paid and don\'t see your download, head back to an app and tap <b>“Keep this app”</b> again.';
+  btn('🎁 Get the full bundle (.zip)', 'purple', () => dl('../download/wacky-apps-bundle.zip','wacky-apps-bundle.zip'));
+  document.getElementById('desktop').style.display = 'block';
+} else {
+  what.textContent = '☕ Your reward: ' + label;
+  if (isAndroid) {
+    msg.innerHTML = '📱 Your app is ready to install!';
+    btn('⬇️ Install the app (.APK)', 'pink', () => dl(apkUrl, apkName));
+    document.getElementById('android').style.display = 'block';
+    document.getElementById('webfallback').href = webUrl;
+    document.getElementById('webfallback').setAttribute('download', webName);
+    setTimeout(() => dl(apkUrl, apkName), 800);            // auto-start
+  } else if (isIOS) {
+    msg.innerHTML = '📱 Opening your app file…';
+    btn('⬇️ Get the app file', 'pink', () => dl(webUrl, webName));
+    document.getElementById('ios').style.display = 'block';
+    setTimeout(() => dl(webUrl, webName), 800);
+  } else {
+    msg.innerHTML = '⬇️ Your download is ready: <b>' + label + '</b>';
+    btn('🤖 Android app (.APK)', 'pink', () => dl(apkUrl, apkName));
+    btn('🌐 Web version', 'blue', () => dl(webUrl, webName));
+    document.getElementById('desktop').style.display = 'block';
+  }
+  try { localStorage.removeItem('wacky_buy'); } catch(e){}
+}
+
+// ---- confetti ----
+const cv = document.getElementById('confetti'), cx = cv.getContext('2d');
+let W,H,P=[];
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+addEventListener('resize',rs);rs();
+const cols=['#ff5da2','#7b2ff7','#16e0bd','#ffd23f','#ff7a45','#3a86ff'];
+for(let i=0;i<90;i++)P.push({x:Math.random()*W,y:Math.random()*-H,vy:2+Math.random()*3,
+  s:6+Math.random()*7,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.3});
+(function loop(){cx.clearRect(0,0,W,H);
+  P.forEach(p=>{p.y+=p.vy;p.r+=p.vr;if(p.y>H){p.y=-10;p.x=Math.random()*W;}
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore();});
+  requestAnimationFrame(loop);})();
+</script>
+</body>
+</html>

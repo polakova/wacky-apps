@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Disco Mode · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕺</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#0a0a0f;background-image:none;color:#fff;overflow:hidden}
+  .stage{position:fixed;inset:0;top:0;z-index:0;overflow:hidden;transition:background .08s}
+  .beams{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none}
+  .beam{position:absolute;left:50%;top:18%;width:50vmax;height:38px;
+    transform-origin:left center;filter:blur(2px);opacity:.55;border-radius:0 999px 999px 0}
+  .ball{position:absolute;left:50%;top:14%;width:120px;height:120px;margin-left:-60px;
+    border-radius:50%;transform-origin:center;
+    background:radial-gradient(circle at 35% 30%,#fff,#9ad 25%,#456 60%,#123);
+    box-shadow:0 0 40px rgba(180,210,255,.6),inset -10px -14px 26px rgba(0,0,0,.6)}
+  .ball::before{content:"";position:absolute;inset:0;border-radius:50%;
+    background-image:linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px);
+    background-size:15px 15px;mix-blend-mode:overlay}
+  .string{position:absolute;left:50%;top:0;width:3px;height:14%;background:#555;margin-left:-1px}
+  .dancer{position:absolute;left:50%;bottom:10%;font-size:84px;margin-left:-44px;
+    filter:drop-shadow(0 0 12px rgba(255,255,255,.4));animation:boogie .5s infinite alternate}
+  @keyframes boogie{from{transform:translateY(0) rotate(-7deg)}to{transform:translateY(-14px) rotate(7deg)}}
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;gap:14px;
+    align-items:center;justify-content:center;flex-wrap:wrap;
+    padding:14px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);border-top:3px solid var(--pink)}
+  .panel label{font-family:var(--mono);font-weight:800;font-size:14px}
+  input[type=range]{accent-color:var(--pink)}
+  #bpmv{font-family:var(--mono);font-weight:900;min-width:64px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🕺 Disco Mode</span>
+  <span class="spacer"></span>
+  <span class="num">#64</span>
+</div>
+
+<div class="stage" id="stage">
+  <div class="beams" id="beams"></div>
+  <div class="string"></div>
+  <div class="ball" id="ball"></div>
+  <div class="dancer">🕺</div>
+</div>
+
+<div class="panel">
+  <button class="btn pink" id="toggle">Start the party ✨</button>
+  <label>BPM <span id="bpmv">120</span></label>
+  <input type="range" id="bpm" min="60" max="200" value="120" style="width:160px">
+</div>
+
+<script>
+const colors=["#ff5da2","#7b2ff7","#16e0bd","#ffd23f","#ff7a45","#3a86ff","#ff2e63","#08d9d6"];
+const stage=document.getElementById("stage"), beamsBox=document.getElementById("beams"), ball=document.getElementById("ball");
+const bpm=document.getElementById("bpm"), bpmv=document.getElementById("bpmv"), toggle=document.getElementById("toggle");
+
+// build beams
+const BEAMS=7, beams=[];
+for(let i=0;i<BEAMS;i++){
+  const b=document.createElement("div"); b.className="beam";
+  beamsBox.appendChild(b); beams.push(b);
+}
+
+let running=false, raf=0, last=0, t=0, flashAcc=0, ci=0;
+function beat(){return 60000/+bpm.value;}
+
+function frame(now){
+  if(!last) last=now;
+  const dt=now-last; last=now; t+=dt;
+  // spin ball
+  ball.style.transform="rotate("+(t*0.18)+"deg)";
+  // rotate beams
+  beams.forEach((b,i)=>{
+    const ang=(t*0.05 + i*(360/BEAMS))%360;
+    b.style.transform="rotate("+ang+"deg)";
+    b.style.background="linear-gradient(90deg,"+colors[(i+ (t/300|0))%colors.length]+" ,transparent)";
+  });
+  // flash on the beat
+  flashAcc+=dt;
+  if(flashAcc>=beat()){
+    flashAcc-=beat(); ci=(ci+1)%colors.length;
+    stage.style.background="radial-gradient(circle at 50% 30%,"+colors[ci]+"33,#0a0a0f 70%)";
+    document.body.style.background=colors[(ci+3)%colors.length]+"18";
+  }
+  raf=requestAnimationFrame(frame);
+}
+
+function start(){ running=true; toggle.textContent="Stop 🛑"; toggle.classList.remove("pink"); last=0; raf=requestAnimationFrame(frame); }
+function stop(){ running=false; toggle.textContent="Start the party ✨"; toggle.classList.add("pink"); cancelAnimationFrame(raf); stage.style.background=""; document.body.style.background="#0a0a0f"; }
+toggle.onclick=()=>running?stop():start();
+bpm.oninput=()=>bpmv.textContent=bpm.value+" bpm";
+bpmv.textContent="120 bpm";
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

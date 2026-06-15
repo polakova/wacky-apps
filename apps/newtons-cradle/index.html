@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Newton's Cradle · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔵</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #cradle{border:4px solid var(--ink);border-radius:14px;box-shadow:var(--shadow);
+    background:linear-gradient(#fff,#f3ecff);width:100%;touch-action:none;cursor:grab}
+  #cradle:active{cursor:grabbing}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🔵 Newton's Cradle</span>
+  <span class="spacer"></span>
+  <span class="num">#63</span>
+</div>
+<div class="wrap stack">
+  <p class="muted center" style="margin:0">Drag any ball aside and let go. Click for a quick tick. Hypnotic, right?</p>
+  <canvas id="cradle" width="640" height="420"></canvas>
+  <div class="row" style="justify-content:center">
+    <label class="muted">Balls <input id="num" type="range" min="3" max="8" value="5"></label>
+    <button class="btn" id="sound">Sound: On 🔔</button>
+    <button class="btn purple" id="reset">Reset</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cradle'),cx=cv.getContext('2d');
+let W,H,balls=[],N=5,L,bx0,topY,actx,soundOn=true;
+function resize(){const r=cv.getBoundingClientRect();W=cv.width=r.width;H=cv.height=Math.round(r.width*0.66);build();}
+new ResizeObserver(resize).observe(cv);
+function build(){
+  const margin=W*0.12; L=H*0.5; topY=H*0.16;
+  const span=W-margin*2, R=Math.min(span/(N*2)*0.92,L*0.16);
+  balls=[];
+  for(let i=0;i<N;i++){const px=margin+R+ (N>1?(span-2*R)*(i/(N-1)):0);
+    balls.push({px,a:0,va:0,r:R});}
+  // ensure pivots spaced by 2R so adjacent balls just touch at rest
+  for(let i=0;i<N;i++)balls[i].px=margin+R+i*2*R*1.02;
+  const totW=(N-1)*2*R*1.02;balls.forEach((b,i)=>b.px=W/2-totW/2+i*2*R*1.02);
+  topY=H*0.14;
+}
+document.getElementById('num').oninput=e=>{N=+e.target.value;build();};
+document.getElementById('reset').onclick=()=>build();
+document.getElementById('sound').onclick=e=>{soundOn=!soundOn;e.target.textContent='Sound: '+(soundOn?'On 🔔':'Off 🔕');};
+function clack(v){if(!soundOn)return;try{actx=actx||new(AudioContext||webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type='sine';
+  o.frequency.value=320+Math.min(Math.abs(v),3)*120;g.gain.value=Math.min(.25,.05+Math.abs(v)*.08);
+  o.connect(g);g.connect(actx.destination);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.09);
+  o.start();o.stop(actx.currentTime+.1);}catch(e){}}
+function bob(b){return{x:b.px+Math.sin(b.a)*L,y:topY+Math.cos(b.a)*L};}
+// drag
+let drag=null;
+function evt(e){const r=cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+function down(e){const m=evt(e);for(const b of balls){const p=bob(b);if(Math.hypot(m.x-p.x,m.y-p.y)<b.r*1.4){drag=b;b.va=0;break;}}if(drag)e.preventDefault();}
+function move(e){if(!drag)return;const m=evt(e);drag.a=Math.atan2(m.x-drag.px,m.y-topY);
+  drag.a=Math.max(-1.2,Math.min(1.2,drag.a));e.preventDefault();}
+function up(){drag=null;}
+['mousedown','touchstart'].forEach(ev=>cv.addEventListener(ev,down,{passive:false}));
+['mousemove','touchmove'].forEach(ev=>cv.addEventListener(ev,move,{passive:false}));
+['mouseup','touchend','mouseleave'].forEach(ev=>cv.addEventListener(ev,up));
+const G=0.4;
+function step(){
+  for(const b of balls){if(b===drag)continue;
+    b.va+=-G/L*Math.sin(b.a);b.va*=0.9995;b.a+=b.va;}
+  // collisions: adjacent balls swap velocity when overlapping & approaching
+  for(let i=0;i<balls.length-1;i++){const a=balls[i],b=balls[i+1];
+    const pa=bob(a),pb=bob(b),dist=pb.x-pa.x;
+    if(dist< a.r+b.r-0.5){
+      const rel=b.va-a.va;
+      if(rel<0){ // approaching
+        if(a!==drag&&b!==drag){const t=a.va;a.va=b.va;b.va=t;clack(rel);}
+        else{ // one held: reflect the moving one
+          if(a===drag){b.va=Math.abs(rel)*1;}else{a.va=-Math.abs(rel)*1;}
+          clack(rel);
+        }
+        // separate
+        const push=(a.r+b.r-dist)/(2*L);if(a!==drag)a.a-=push;if(b!==drag)b.a+=push;
+      }
+    }
+  }
+}
+function draw(){
+  cx.clearRect(0,0,W,H);
+  const frameY=topY-H*0.02;
+  // frame top bar
+  const lx=balls[0].px-balls[0].r*1.2, rx=balls[N-1].px+balls[N-1].r*1.2;
+  cx.strokeStyle='#3a2c1a';cx.lineWidth=8;cx.beginPath();cx.moveTo(lx,frameY);cx.lineTo(rx,frameY);cx.stroke();
+  for(const b of balls){const p=bob(b);
+    cx.strokeStyle='rgba(40,30,60,.5)';cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(b.px,frameY);cx.lineTo(p.x,p.y);cx.stroke();
+    const g=cx.createRadialGradient(p.x-b.r*.3,p.y-b.r*.3,b.r*.15,p.x,p.y,b.r);
+    g.addColorStop(0,'#9ec5ff');g.addColorStop(.6,'#3a86ff');g.addColorStop(1,'#1a3f8f');
+    cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,b.r,0,7);cx.fill();
+    cx.strokeStyle='#16224a';cx.lineWidth=2;cx.stroke();
+    cx.fillStyle='rgba(255,255,255,.6)';cx.beginPath();cx.arc(p.x-b.r*.32,p.y-b.r*.32,b.r*.2,0,7);cx.fill();
+  }
+}
+function loop(){step();draw();requestAnimationFrame(loop);}
+resize();
+// give it a gentle start
+setTimeout(()=>{if(balls[0])balls[0].a=-0.9;},200);
+loop();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

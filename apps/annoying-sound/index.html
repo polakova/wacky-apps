@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Most Annoying Sound · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .timer{font-family:var(--mono);font-size:clamp(48px,16vw,110px);font-weight:900;text-align:center;line-height:1}
+  .rank{font-weight:900;text-align:center;font-size:clamp(18px,5vw,26px);min-height:1.2em}
+  .danger{background:var(--orange)!important;color:#fff}
+  .quiver{animation:quiver .12s infinite}
+  @keyframes quiver{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}75%{transform:translate(2px,-1px)}}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🚨 Most Annoying Sound</span>
+  <span class="spacer"></span>
+  <span class="num">#76</span>
+</div>
+<div class="wrap">
+  <div class="card center stack">
+    <h1 class="big">🚨 Most Annoying Sound</h1>
+    <p class="muted">Press it. Endure it. Become a legend. (Or just press Stop.) 😈</p>
+    <div class="timer" id="timer">0.0</div>
+    <p class="muted">seconds endured</p>
+    <div class="rank" id="rank"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn pink" id="go">😖 START THE SUFFERING</button>
+      <button class="btn" id="stop">🛑 Make it stop!</button>
+    </div>
+    <p class="muted" id="best"></p>
+    <p class="muted">🔉 Please lower your volume first. We warned you.</p>
+  </div>
+</div>
+<script>
+let ac,osc,osc2,gain,lfo,playing=false,t0=0,raf,best=+(localStorage.getItem('annoyBest')||0);
+const timer=document.getElementById('timer'),rank=document.getElementById('rank'),
+      card=document.querySelector('.card'),go=document.getElementById('go');
+
+function showBest(){document.getElementById('best').textContent=best?('🏆 Your endurance record: '+best.toFixed(1)+'s'):'';}
+showBest();
+
+function rankFor(s){
+  if(s<2) return '🐭 Quitter? No shame.';
+  if(s<5) return '🙂 Mild discomfort achieved.';
+  if(s<10) return '😬 Now we\'re talking.';
+  if(s<20) return '😵 Iron eardrums!';
+  if(s<40) return '🦾 Certified menace.';
+  return '👑 Legendary. Please see a doctor.';
+}
+
+function start(){
+  ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==='suspended')ac.resume();
+  osc=ac.createOscillator(); osc.type='sawtooth';
+  osc2=ac.createOscillator(); osc2.type='square'; osc2.detune.value=18; // beating dissonance
+  gain=ac.createGain(); gain.gain.value=0.0001;
+  // wobble LFO on amplitude for that nails-on-chalkboard feel
+  lfo=ac.createOscillator(); lfo.frequency.value=7;
+  const lfoG=ac.createGain(); lfoG.gain.value=0.06;
+  lfo.connect(lfoG); lfoG.connect(gain.gain);
+  osc.connect(gain); osc2.connect(gain); gain.connect(ac.destination);
+  const t=ac.currentTime;
+  osc.frequency.setValueAtTime(900,t);
+  osc2.frequency.setValueAtTime(905,t);
+  // slow relentless rise then sit high
+  osc.frequency.exponentialRampToValueAtTime(2400,t+8);
+  osc2.frequency.exponentialRampToValueAtTime(2412,t+8);
+  gain.gain.exponentialRampToValueAtTime(0.12,t+0.1);
+  osc.start();osc2.start();lfo.start();
+  playing=true; t0=performance.now();
+  card.classList.add('quiver'); go.classList.add('danger'); go.textContent='😩 still going…';
+  tick();
+}
+function tick(){
+  if(!playing)return;
+  const s=(performance.now()-t0)/1000;
+  timer.textContent=s.toFixed(1);
+  rank.textContent=rankFor(s);
+  raf=requestAnimationFrame(tick);
+}
+function stop(){
+  if(!playing)return; playing=false; cancelAnimationFrame(raf);
+  const s=(performance.now()-t0)/1000;
+  if(gain){gain.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.05);
+    osc.stop(ac.currentTime+0.1);osc2.stop(ac.currentTime+0.1);lfo.stop(ac.currentTime+0.1);}
+  card.classList.remove('quiver'); go.classList.remove('danger'); go.textContent='😖 START THE SUFFERING';
+  if(s>best){best=s;localStorage.setItem('annoyBest',best);rank.textContent='🎉 NEW RECORD! '+rankFor(s);}
+  showBest();
+}
+go.addEventListener('click',()=>{if(!playing)start();});
+document.getElementById('stop').addEventListener('click',stop);
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

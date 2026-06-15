@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warp Starfield · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  html,body{height:100%}
+  body{background:#000;background-image:none;overflow:hidden}
+  .wacky-bar{position:fixed;left:0;right:0;top:0}
+  #sky{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+  .hud{
+    position:fixed;left:0;right:0;bottom:14px;text-align:center;z-index:40;
+    font-family:var(--mono);color:#9fe; pointer-events:none;
+    text-shadow:0 0 8px rgba(80,200,255,.7);
+  }
+  .hud .badge{
+    display:inline-block;background:rgba(10,20,40,.6);border:2px solid #2af;
+    border-radius:999px;padding:6px 16px;font-weight:800;pointer-events:auto;
+  }
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⭐ Warp Starfield</span>
+  <span class="spacer"></span>
+  <span class="num">#49</span>
+</div>
+<canvas id="sky"></canvas>
+<div class="hud">
+  <span class="badge">Move mouse to steer · scroll to change warp speed · <b id="spd">1.0×</b></span>
+</div>
+<script>
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+let W, H, cx, cy;
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W/2; cy = H/2;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const NUM = 480;
+const stars = [];
+function spawn(s){
+  s.x = (Math.random()*2-1) * W;
+  s.y = (Math.random()*2-1) * H;
+  s.z = Math.random() * W;
+  s.pz = s.z;
+}
+for(let i=0;i<NUM;i++){ const s={}; spawn(s); stars.push(s); }
+
+let speed = 1.0;
+let targetSpeed = 1.0;
+let warpCx = 0, warpCy = 0; // steering offset
+
+window.addEventListener('mousemove', e=>{
+  warpCx = (e.clientX/W - 0.5) * 0.6;
+  warpCy = (e.clientY/H - 0.5) * 0.6;
+});
+window.addEventListener('wheel', e=>{
+  targetSpeed = Math.max(0.2, Math.min(8, targetSpeed + (e.deltaY>0? -0.4 : 0.4)));
+  document.getElementById('spd').textContent = targetSpeed.toFixed(1)+'×';
+}, {passive:true});
+// touch: drag up/down to change speed
+let lastTouchY=null;
+window.addEventListener('touchmove', e=>{
+  const t = e.touches[0];
+  warpCx = (t.clientX/W - 0.5) * 0.6;
+  warpCy = (t.clientY/H - 0.5) * 0.6;
+  if(lastTouchY!=null){
+    targetSpeed = Math.max(0.2, Math.min(8, targetSpeed + (lastTouchY - t.clientY)*0.01));
+    document.getElementById('spd').textContent = targetSpeed.toFixed(1)+'×';
+  }
+  lastTouchY = t.clientY;
+}, {passive:true});
+window.addEventListener('touchend', ()=> lastTouchY=null);
+
+function frame(){
+  speed += (targetSpeed - speed) * 0.05;
+  // trail fade
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(0,0,W,H);
+
+  const ox = cx + warpCx*W;
+  const oy = cy + warpCy*H;
+  const step = 6 * speed;
+  for(const s of stars){
+    s.pz = s.z;
+    s.z -= step;
+    if(s.z < 1){ spawn(s); s.z = W; s.pz = W; }
+    const k = 128 / s.z;
+    const x = ox + s.x * k;
+    const y = oy + s.y * k;
+    const pk = 128 / s.pz;
+    const px = ox + s.x * pk;
+    const py = oy + s.y * pk;
+    const size = (1 - s.z / W) * 2.4 + 0.3;
+    const bright = Math.min(1, (1 - s.z / W) + 0.2);
+    ctx.strokeStyle = `rgba(${200+Math.floor(55*bright)},${220},255,${bright})`;
+    ctx.lineWidth = size;
+    ctx.beginPath();
+    ctx.moveTo(px,py);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

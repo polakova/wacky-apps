@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ｖａｐｏｒｗａｖｅ · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#1a0033;background-image:none;color:#ff77e9}
+  .vcard{
+    background:linear-gradient(180deg,#2b0a4d 0%,#3a0d5e 100%);
+    border:4px solid #18e0ff;border-radius:18px;
+    box-shadow:0 0 0 4px #ff5da2,0 0 30px #ff5da2;
+    padding:24px;position:relative;overflow:hidden;
+  }
+  .grid-bg{
+    position:fixed;inset:0;z-index:-1;
+    background:
+      linear-gradient(#18e0ff22 1px,transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg,#18e0ff22 1px,transparent 1px) 0 0/40px 40px,
+      radial-gradient(circle at 50% 120%,#ff5da2 0%,#7b2ff7 40%,#1a0033 75%);
+    transform:perspective(300px) rotateX(60deg);
+    transform-origin:bottom;opacity:.7;
+  }
+  .sun{
+    position:fixed;left:50%;top:18%;transform:translateX(-50%);
+    width:160px;height:160px;border-radius:50%;z-index:-1;
+    background:linear-gradient(180deg,#ffd23f,#ff5da2);
+    box-shadow:0 0 60px #ff5da2;opacity:.8;
+  }
+  .neon{
+    font-family:var(--mono);color:#18e0ff;
+    text-shadow:0 0 8px #18e0ff,2px 2px 0 #ff5da2;
+    letter-spacing:3px;
+  }
+  #out{
+    font-size:clamp(22px,5vw,34px);min-height:1.4em;color:#fff;
+    text-shadow:0 0 10px #ff5da2,0 0 20px #18e0ff;word-break:break-word;
+    background:#00000033;padding:16px;border-radius:12px;border:2px dashed #18e0ff;
+  }
+  textarea{background:#12002b;color:#18e0ff;border-color:#ff5da2}
+  .sub{color:#18e0ff;font-family:var(--mono);margin:4px 0 14px}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="sun"></div>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🌴 Ｖａｐｏｒｗａｖｅ</span>
+  <span class="spacer"></span>
+  <span class="num">#36</span>
+</div>
+<div class="wrap">
+  <div class="vcard">
+    <h1 class="neon big">ＡＥＳＴＨＥＴＩＣ</h1>
+    <div class="sub">▸ ｔｙｐｅ ｂｅｌｏｗ ▸ ｇｅｔ ｗｉｄｅ ▸ ｆｅｅｌ ｔｈｉｎｇｓ</div>
+    <textarea id="in" rows="3" placeholder="type something normal here...">aesthetic vibes only</textarea>
+    <div id="out"></div>
+    <div class="row">
+      <button class="btn pink" id="copy">📋 copy the vibe</button>
+      <span class="muted" id="status" style="color:#18e0ff"></span>
+    </div>
+  </div>
+</div>
+<script>
+const inEl=document.getElementById('in'),outEl=document.getElementById('out');
+function fullwidth(s){
+  let r='';
+  for(const ch of s){
+    const c=ch.codePointAt(0);
+    if(ch===' ') r+='　'; // ideographic space
+    else if(c>=0x21&&c<=0x7e) r+=String.fromCodePoint(c+0xFEE0);
+    else r+=ch;
+  }
+  return r;
+}
+function render(){ outEl.textContent=fullwidth(inEl.value)||'　'; }
+inEl.addEventListener('input',render);
+document.getElementById('copy').addEventListener('click',async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='✓ ｃｏｐｉｅｄ';setTimeout(()=>st.textContent='',1500);
+});
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

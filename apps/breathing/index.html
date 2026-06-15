@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Breathing Bubble · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫁</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.scene{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  height:340px;border-radius:24px;overflow:hidden;border:4px solid var(--ink);
+  box-shadow:var(--shadow);
+  background:linear-gradient(160deg,#2b1055,#7597de);
+  transition:background 3s ease;
+}
+.scene.inhale{background:linear-gradient(160deg,#7b2ff7,#16e0bd)}
+.scene.hold{background:linear-gradient(160deg,#3a86ff,#7b2ff7)}
+.scene.exhale{background:linear-gradient(160deg,#2b1055,#3a86ff)}
+.bubble{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffffff,rgba(255,255,255,.35));
+  box-shadow:0 0 40px rgba(255,255,255,.6);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink);font-weight:900;font-family:var(--mono);
+  text-align:center;font-size:18px;line-height:1.2;
+  transition:transform var(--dur,4s) ease-in-out;
+}
+.count{position:absolute;bottom:14px;color:#fff;font-family:var(--mono);
+  font-weight:800;opacity:.85;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🫁 Breathing Bubble</span>
+  <span class="spacer"></span>
+  <span class="num">#79</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">The 4-7-8 method. Inhale 4, hold 7, exhale 8. Repeat &amp; melt.</div>
+    <div class="scene" id="scene" style="margin:18px 0">
+      <div class="bubble" id="bubble">Ready?</div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn purple" id="toggle">▶ Start</button>
+      <span class="pill" id="cycles">0 cycles</span>
+    </div>
+  </div>
+</div>
+<script>
+const scene=document.getElementById('scene');
+const bubble=document.getElementById('bubble');
+const countEl=document.getElementById('count');
+const toggle=document.getElementById('toggle');
+const cyclesEl=document.getElementById('cycles');
+const PHASES=[
+  {name:"inhale",label:"Breathe in",dur:4,scale:1.9},
+  {name:"hold",  label:"Hold",      dur:7,scale:1.9},
+  {name:"exhale",label:"Breathe out",dur:8,scale:1}
+];
+let running=false, pi=0, remaining=0, cycles=0, tick=null;
+
+function startPhase(){
+  const p=PHASES[pi];
+  scene.className="scene "+p.name;
+  bubble.style.setProperty('--dur',p.dur+'s');
+  bubble.style.transform=`scale(${p.scale})`;
+  bubble.textContent=p.label;
+  remaining=p.dur;
+  countEl.textContent=remaining;
+}
+function step(){
+  remaining--;
+  if(remaining<=0){
+    pi++;
+    if(pi>=PHASES.length){ pi=0; cycles++; cyclesEl.textContent=cycles+(cycles===1?" cycle":" cycles"); }
+    startPhase();
+  } else {
+    countEl.textContent=remaining;
+  }
+}
+function start(){
+  running=true; toggle.textContent="⏸ Stop"; toggle.classList.remove('purple'); toggle.classList.add('pink');
+  pi=0; startPhase();
+  tick=setInterval(step,1000);
+}
+function stop(){
+  running=false; toggle.textContent="▶ Start"; toggle.classList.add('purple'); toggle.classList.remove('pink');
+  clearInterval(tick);
+  scene.className="scene";
+  bubble.style.setProperty('--dur','2s');
+  bubble.style.transform="scale(1)";
+  bubble.textContent="Nice."; countEl.textContent="";
+}
+toggle.onclick=()=> running?stop():start();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

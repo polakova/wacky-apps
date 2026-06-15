@@ -1,0 +1,96 @@
+/* ============================================================
+   111 WACKY APPS — shared neo-retro theme
+   Linked from each app as ../_shared/wacky.css
+   Old-internet soul, modern polish. Bold, chunky, playful.
+   ============================================================ */
+:root{
+  --ink:#1a1623;
+  --paper:#fdf6e3;
+  --pink:#ff5da2;
+  --purple:#7b2ff7;
+  --cyan:#16e0bd;
+  --yellow:#ffd23f;
+  --orange:#ff7a45;
+  --blue:#3a86ff;
+  --shadow:6px 6px 0 var(--ink);
+  --shadow-sm:3px 3px 0 var(--ink);
+  --mono:"Courier New",ui-monospace,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:var(--paper);
+  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:22px 22px;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--purple)}
+
+/* ---- top bar present on every app ---- */
+.wacky-bar{
+  display:flex;align-items:center;gap:12px;
+  background:var(--ink);color:var(--paper);
+  padding:10px 16px;position:sticky;top:0;z-index:50;
+  border-bottom:4px solid var(--pink);
+}
+.wacky-bar a.back{
+  color:var(--paper);text-decoration:none;font-weight:800;
+  font-family:var(--mono);background:var(--pink);
+  padding:6px 12px;border-radius:8px;border:2px solid var(--paper);
+  white-space:nowrap;font-size:14px;
+}
+.wacky-bar a.back:hover{background:var(--cyan);color:var(--ink)}
+.wacky-bar .title{font-weight:900;font-size:18px;letter-spacing:.5px}
+.wacky-bar .spacer{flex:1}
+.wacky-bar .num{font-family:var(--mono);opacity:.7;font-size:13px}
+
+/* ---- generic playful building blocks ---- */
+.wrap{max-width:720px;margin:0 auto;padding:28px 18px 80px}
+.card{
+  background:#fff;border:4px solid var(--ink);border-radius:18px;
+  box-shadow:var(--shadow);padding:24px;
+}
+h1,h2,h3{font-family:var(--sans);line-height:1.05}
+.big{font-size:clamp(28px,6vw,52px);font-weight:900}
+
+.btn{
+  font-family:var(--mono);font-weight:800;font-size:17px;cursor:pointer;
+  background:var(--yellow);color:var(--ink);
+  border:3px solid var(--ink);border-radius:12px;
+  padding:12px 22px;box-shadow:var(--shadow-sm);
+  transition:transform .05s ease, box-shadow .05s ease;
+}
+.btn:hover{background:var(--cyan)}
+.btn:active{transform:translate(3px,3px);box-shadow:none}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.purple{background:var(--purple);color:#fff}
+.btn.blue{background:var(--blue);color:#fff}
+
+.output{
+  font-size:clamp(20px,4.5vw,30px);font-weight:800;line-height:1.25;
+  min-height:1.2em;margin:18px 0;
+}
+input,textarea,select{
+  font-family:var(--mono);font-size:16px;padding:10px 12px;
+  border:3px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);
+}
+textarea{width:100%}
+.pill{display:inline-block;background:var(--purple);color:#fff;font-family:var(--mono);
+  font-size:12px;padding:3px 10px;border-radius:999px;margin:2px}
+
+.center{text-align:center}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+canvas{max-width:100%;display:block}
+.muted{opacity:.6;font-size:14px}
+::selection{background:var(--pink);color:#fff}
+.blink{animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pop{animation:pop .3s}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}

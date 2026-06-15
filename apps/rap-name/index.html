@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rap Name Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎤</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .booth{background:radial-gradient(circle at 30% 20%,#2b2b2b,#0d0d0d);
+    border:4px solid var(--ink);border-radius:22px;box-shadow:var(--shadow);
+    padding:26px;text-align:center;color:#ffe9a8}
+  .chain{font-size:34px;letter-spacing:-4px}
+  .name{font-family:var(--mono);font-weight:900;
+    font-size:clamp(30px,8vw,58px);line-height:1.1;
+    background:linear-gradient(180deg,#fff7cf,#ffd23f 40%,#caa11a 70%,#8a6c00);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-stroke:1.5px #2b2200;
+    text-shadow:0 2px 0 rgba(255,255,255,.15);
+    min-height:1.2em;margin:8px 0;word-break:break-word}
+  .tag{color:#ffe9a8;font-weight:800;min-height:1.4em;font-style:italic;opacity:.9}
+  .gold{background:linear-gradient(180deg,#ffe680,#caa11a);color:#2b2200;border-color:#2b2200}
+  .gold:hover{background:linear-gradient(180deg,#fff0a0,#e0b820)}
+  .bling{font-size:24px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎤 Rap Name Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#10</span>
+</div>
+<div class="wrap">
+  <div class="booth">
+    <div class="chain">💰⛓️💎⛓️💰</div>
+    <p style="font-weight:800;margin:4px 0 10px;color:#ffe9a8">Step in the booth. Drop your alias.</p>
+    <div class="name" id="name">Lil Unsigned</div>
+    <div class="tag" id="tag">— certified hypothetical</div>
+    <div class="chain bling" id="bling">⛓️💎⛓️</div>
+    <div class="row center" style="justify-content:center;margin-top:16px">
+      <button class="btn gold" id="gen">🎶 Drop my name</button>
+      <button class="btn purple" id="copy">📋 Copy</button>
+    </div>
+    <p class="muted" style="color:#ffe9a8;margin-top:14px" id="count"></p>
+  </div>
+</div>
+<script>
+const prefix=["Lil","Big","Young","Yung","DJ","MC","Sir","King","Lady","Fat","Slim","Mad","Cool","Fresh","Smooth","Notorious","Captain","Lil Big"];
+const core=["Biscuit","Sprinkle","Waffle","Pickle","Noodle","Cactus","Penguin","Toaster","Bubbles","Wombat","Mango","Glitch","Velvet","Thunder","Nacho","Pixel","Sneaker","Pretzel","Cosmo","Banjo","Marbles","Gravy","Sushi","Quokka","Static","Llama","Mittens","Turbo"];
+const suffix=["","$","-Money","-Z","-aroni","-tron","ski","-ay","-izzle","-matic","-o","-saurus"];
+const tags=[
+ "— certified platinum (in spirit)",
+ "— too smooth for the radio",
+ "— bars colder than your fridge",
+ "— signed to the imagination label",
+ "— freestyle since breakfast",
+ "— mixtape dropping never",
+ "— hotter than reheated leftovers",
+ "— rhymes you can't unhear",
+ "— flow smoother than gravy",
+ "— number one on the kitchen charts",
+ "— autotune optional, swagger mandatory",
+ "— spittin' since the group chat",
+ "— legendary in three time zones",
+ "— the GOAT (lowercase, humble)",
+ "— bringing snacks AND bars"
+];
+const nameEl=document.getElementById('name'),tagEl=document.getElementById('tag'),
+  bling=document.getElementById('bling'),gen=document.getElementById('gen'),
+  copy=document.getElementById('copy'),countEl=document.getElementById('count');
+let cur="Lil Unsigned";
+let made=+(localStorage.getItem('rapNames')||0);
+function showCount(){countEl.textContent="🎤 "+made+" aliases born in this booth";}
+showCount();
+const blingSets=["⛓️💎⛓️","💰🕶️💰","💍✨💍","📀🔥📀","🎧💎🎧","👑⛓️👑"];
+let ac;
+function scratch(){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='sawtooth';const t=ac.currentTime;
+    o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(520,t+0.08);
+    o.frequency.exponentialRampToValueAtTime(140,t+0.18);
+    g.gain.setValueAtTime(0.14,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+    o.start(t);o.stop(t+0.26);
+  }catch(e){}
+}
+function build(){
+  const r=Math.random();
+  let nm;
+  if(r<0.55){
+    nm=prefix[Math.floor(Math.random()*prefix.length)]+" "+core[Math.floor(Math.random()*core.length)];
+  }else{
+    const s=suffix[Math.floor(Math.random()*suffix.length)];
+    nm=core[Math.floor(Math.random()*core.length)]+s;
+    if(Math.random()<0.4) nm=core[Math.floor(Math.random()*core.length)]+" "+core[Math.floor(Math.random()*core.length)]+s;
+  }
+  return nm;
+}
+function gn(){
+  let nm;do{nm=build()}while(nm===cur);
+  cur=nm;
+  nameEl.textContent=nm;
+  nameEl.classList.remove('pop');void nameEl.offsetWidth;nameEl.classList.add('pop');
+  tagEl.textContent=tags[Math.floor(Math.random()*tags.length)];
+  bling.textContent=blingSets[Math.floor(Math.random()*blingSets.length)];
+  scratch();
+  made++;localStorage.setItem('rapNames',made);showCount();
+}
+gen.addEventListener('click',gn);
+copy.addEventListener('click',()=>{
+  const done=()=>{const o=copy.textContent;copy.textContent="✅ Copied!";setTimeout(()=>copy.textContent=o,1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cur).then(done).catch(()=>{});}
+  else{const t=document.createElement('textarea');t.value=cur;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy')}catch(e){}t.remove();done();}
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

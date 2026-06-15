@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Is It Friday Yet? · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎊</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.verdict{font-family:var(--mono);font-weight:900;
+  font-size:clamp(70px,26vw,180px);line-height:.9;letter-spacing:-2px}
+.yes{color:var(--cyan);text-shadow:6px 6px 0 var(--ink)}
+.no{color:var(--pink);text-shadow:6px 6px 0 var(--ink)}
+.meter{height:26px;border:4px solid var(--ink);border-radius:999px;
+  background:#fff;overflow:hidden;margin:14px 0}
+.meterfill{height:100%;width:0%;border-radius:999px;
+  background:linear-gradient(90deg,#3a86ff,#7b2ff7,#ff5da2,#ff7a45,#ffd23f,#16e0bd);
+  transition:width .5s ease}
+.mood{font-size:54px}
+.cd{font-family:var(--mono);font-weight:800;font-size:clamp(18px,5vw,26px)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎊 Is It Friday Yet?</span>
+  <span class="spacer"></span>
+  <span class="num">#84</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="mood" id="mood">⏳</div>
+    <div class="verdict" id="verdict">…</div>
+    <div id="sub" class="output" style="min-height:0"></div>
+    <div id="counting">
+      <div class="cd" id="cd"></div>
+      <div class="meter"><div class="meterfill" id="meter"></div></div>
+      <div class="muted" id="hype"></div>
+    </div>
+  </div>
+</div>
+<script>
+const verdict=document.getElementById('verdict'), sub=document.getElementById('sub');
+const cd=document.getElementById('cd'), meter=document.getElementById('meter');
+const hype=document.getElementById('hype'), mood=document.getElementById('mood');
+const counting=document.getElementById('counting');
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// the goal: Friday 5:00 PM. The "weekend window" = Fri 5pm .. Sun end.
+function nextFriday5pm(now){
+  const d=new Date(now);
+  d.setHours(17,0,0,0);
+  // days until Friday (5)
+  let add=(5 - d.getDay() + 7)%7;
+  if(add===0 && now.getTime()>=d.getTime()) add=7; // already past 5pm Friday
+  d.setDate(d.getDate()+add);
+  return d;
+}
+function update(){
+  const now=new Date();
+  const day=now.getDay(), hr=now.getHours();
+  // It's "Friday time" from Fri 5pm through Sunday 23:59
+  const isWeekendVibe = (day===5 && hr>=17) || day===6 || day===0;
+
+  if(isWeekendVibe){
+    verdict.textContent='YES!';
+    verdict.className='verdict yes';
+    mood.textContent= day===5 ? '🥳' : (day===6?'😎':'🛋️');
+    sub.textContent = day===5 ? "It's Friday evening. GO LIVE YOUR LIFE."
+                   : day===6 ? "Saturday glory. Pure freedom."
+                   : "Sunday — squeeze every last drop.";
+    counting.style.display='none';
+    return;
+  }
+  // Not yet — count down to Friday 5pm
+  verdict.textContent='NOPE';
+  verdict.className='verdict no';
+  sub.textContent="It's "+DAYS[day]+". The weekend awaits…";
+  counting.style.display='block';
+
+  const target=nextFriday5pm(now);
+  const diff=target-now;
+  const s=Math.floor(diff/1000);
+  const dd=Math.floor(s/86400), hh=Math.floor(s%86400/3600),
+        mm=Math.floor(s%3600/60), ss=s%60;
+  cd.textContent=`${dd}d ${String(hh).padStart(2,'0')}h ${String(mm).padStart(2,'0')}m ${String(ss).padStart(2,'0')}s until Friday 5pm`;
+
+  // hype meter: full work-week span is Mon 9am-ish -> we measure across ~ the whole week
+  // map remaining time over a 7-day window so it fills as Friday nears
+  const weekMs=7*86400*1000;
+  const pct=Math.max(0,Math.min(100,(1 - diff/weekMs)*100));
+  meter.style.width=pct+'%';
+  const moods=['😩','😮‍💨','🙂','😏','😀','🤩','🚀'];
+  const hypes=[
+    "So far away. Stay strong.",
+    "Tiny progress. Hydrate.",
+    "We're getting there.",
+    "Over the hump! Momentum building.",
+    "Closer now — you can taste it.",
+    "Almost! Start the playlist.",
+    "ANY MINUTE NOW. Brace for joy!"
+  ];
+  const idx=Math.min(6,Math.floor(pct/100*7));
+  mood.textContent=moods[idx];
+  hype.textContent=hypes[idx];
+}
+update();
+setInterval(update,1000);
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

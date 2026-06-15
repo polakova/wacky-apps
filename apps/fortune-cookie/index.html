@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fortune Cookie · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥠</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.stage{position:relative;height:230px;display:flex;align-items:center;justify-content:center;margin:8px 0}
+.cookie{font-size:120px;cursor:pointer;user-select:none;transition:transform .2s;filter:drop-shadow(4px 6px 0 rgba(0,0,0,.18))}
+.cookie:hover{transform:scale(1.06) rotate(-4deg)}
+.cookie.crack{animation:crack .5s forwards}
+@keyframes crack{0%{transform:scale(1)}30%{transform:scale(1.15) rotate(6deg)}55%{transform:scale(.9) rotate(-8deg)}100%{transform:scale(0) rotate(20deg);opacity:0}}
+.crumb{position:absolute;font-size:20px;opacity:0;pointer-events:none}
+.crumb.go{animation:fly .7s forwards}
+@keyframes fly{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(180deg)}}
+.slip{background:#fffdf5;border:3px dashed #c8a24a;border-radius:6px;padding:18px 20px;max-width:420px;margin:0 auto;box-shadow:var(--shadow-sm);transform:translateY(40px) scale(.9);opacity:0;transition:all .55s cubic-bezier(.2,.9,.3,1.4)}
+.slip.show{transform:translateY(0) scale(1);opacity:1}
+.slip .f{font-size:clamp(18px,4.2vw,24px);font-weight:800;color:#7a5a13;line-height:1.35;font-family:var(--mono)}
+.slip .lucky{margin-top:12px;font-family:var(--mono);font-size:14px;color:#a9802f}
+.slip .lucky b{display:inline-block;background:#c8102e;color:#fff;border-radius:50%;width:30px;height:30px;line-height:30px;text-align:center;margin:2px;font-size:13px}
+.hint{font-family:var(--mono)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--orange);color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🥠 Fortune Cookie</span>
+  <span class="spacer"></span>
+  <span class="num">#17</span>
+</div>
+
+<div class="wrap center">
+  <div class="card">
+    <div class="big">Crack your destiny</div>
+    <p class="muted hint" id="hint">Tap the cookie to crack it open…</p>
+
+    <div class="stage" id="stage">
+      <div class="cookie" id="cookie" role="button" tabindex="0" aria-label="Fortune cookie">🥠</div>
+    </div>
+
+    <div class="slip" id="slip">
+      <div class="f" id="fortune"></div>
+      <div class="lucky" id="lucky"></div>
+    </div>
+
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button class="btn" id="again">🥠 New Cookie</button>
+      <button class="btn purple" id="copy">📋 Copy Fortune</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const F=[
+ "A nap is a small vacation your couch insists on.",
+ "Your future is bright; consider sunglasses, just in case.",
+ "The snack you forgot about is still in your bag. Rejoice.",
+ "You will soon win an argument with an inanimate object.",
+ "Great things come to those who refresh the page.",
+ "A wild compliment will find you when you least expect it.",
+ "Today you are 97% likely to find a good parking spot.",
+ "Trust the slow Wi-Fi; it is teaching you patience.",
+ "Your houseplant believes in you, even the wilty one.",
+ "Adventure awaits, but first, finish your laundry.",
+ "You are the main character. Act accordingly, but humbly.",
+ "A song stuck in your head today will inexplicably slap.",
+ "Tomorrow brings good news wrapped in mild confusion.",
+ "The cookie sees greatness. Also, you have spinach in your teeth.",
+ "Luck favors the well-hydrated. Drink some water, legend.",
+ "An old friend will text you a meme within the week.",
+ "You will remember why you walked into the room. Eventually.",
+ "Fortune smiles upon you, and so does your dog, secretly.",
+ "Say yes to the dessert. The cookie commands it.",
+ "Your next idea is sillier than your last, and far better."];
+let curF="", curN="";
+const cookie=document.getElementById('cookie'),slip=document.getElementById('slip'),stage=document.getElementById('stage');
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function luckyNums(){const s=new Set();while(s.size<6)s.add(1+Math.floor(Math.random()*49));return [...s].sort((a,b)=>a-b);}
+function crumbs(){
+  for(let i=0;i<8;i++){const c=document.createElement('span');c.className='crumb';c.textContent=pick(['🍪','✨','🥠','·']);c.style.setProperty('--dx',(Math.random()*200-100)+'px');c.style.setProperty('--dy',(Math.random()*-120-30)+'px');stage.appendChild(c);requestAnimationFrame(()=>c.classList.add('go'));setTimeout(()=>c.remove(),750);}
+}
+function crack(){
+  if(cookie.classList.contains('crack'))return;
+  cookie.classList.add('crack');crumbs();
+  curF=pick(F);
+  curN=luckyNums();
+  document.getElementById('fortune').textContent='“'+curF+'”';
+  document.getElementById('lucky').innerHTML='Lucky numbers: '+curN.map(n=>'<b>'+n+'</b>').join('');
+  document.getElementById('hint').textContent='The cookie has spoken. 🔮';
+  setTimeout(()=>slip.classList.add('show'),360);
+}
+function reset(){
+  slip.classList.remove('show');
+  document.getElementById('hint').textContent='Tap the cookie to crack it open…';
+  setTimeout(()=>{cookie.classList.remove('crack');cookie.style.opacity='';cookie.style.transform='';},250);
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+async function copy(){
+  if(!curF){toast('Crack a cookie first! 🥠');return;}
+  const txt=curF+'  Lucky: '+curN.join(', ');
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Fortune copied! 🥠');
+}
+cookie.onclick=crack;
+cookie.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();crack();}};
+document.getElementById('again').onclick=reset;
+document.getElementById('copy').onclick=copy;
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

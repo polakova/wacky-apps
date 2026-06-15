@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bouncing DVD · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📀</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#0a0a0a}
+  .wrap{max-width:920px}
+  .screen{position:relative;background:#000;border:4px solid var(--ink);border-radius:18px;
+    box-shadow:var(--shadow);overflow:hidden}
+  .panel{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:4px solid var(--ink);
+    border-radius:18px;box-shadow:var(--shadow);padding:14px 18px;margin-top:16px}
+  .panel label{font-family:var(--mono);font-weight:800}
+  .stat{font-family:var(--mono);font-weight:800}
+  .corner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(34px,9vw,72px);font-weight:900;color:#fff;pointer-events:none;opacity:0;
+    text-shadow:0 0 24px #fff;font-family:var(--mono)}
+  .sub{color:#bbb;text-align:center;font-family:var(--mono);margin:0 0 14px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📀 Bouncing DVD</span>
+  <span class="spacer"></span>
+  <span class="num">#52</span>
+</div>
+<div class="wrap">
+  <p class="sub">the eternal question: will it hit the corner?</p>
+  <div class="screen">
+    <canvas id="c"></canvas>
+    <div class="corner" id="corner">CORNER!! 🎉</div>
+  </div>
+  <div class="panel">
+    <span class="stat">📐 corner hits: <span id="hits">0</span></span>
+    <span class="stat" style="opacity:.6">wall bounces: <span id="walls">0</span></span>
+    <span style="flex:1"></span>
+    <label>speed</label>
+    <input id="speed" type="range" min="1" max="8" value="3">
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;
+const colors=["#ff5da2","#16e0bd","#ffd23f","#3a86ff","#ff7a45","#7b2ff7","#19ff5a","#ff3b5c"];
+let logo={x:60,y:60,vx:1,vy:1,w:120,h:60,ci:0};
+function size(){
+  W=cv.width=Math.min(900,document.querySelector('.wrap').clientWidth);
+  H=cv.height=Math.min(520,window.innerHeight*0.6);
+  logo.w=Math.min(120,W*0.22);logo.h=logo.w*0.5;
+  logo.x=Math.min(logo.x,W-logo.w);logo.y=Math.min(logo.y,H-logo.h);
+}
+addEventListener('resize',size);size();
+let hits=0,walls=0,base=2;
+const sp=document.getElementById('speed');
+function flash(){
+  const el=document.getElementById('corner');
+  el.style.transition='none';el.style.opacity='1';el.style.transform='scale(1.3)';
+  requestAnimationFrame(()=>{el.style.transition='all 1.4s ease';el.style.opacity='0';el.style.transform='scale(1)';});
+  // little chime
+  try{const a=flash.ac||(flash.ac=new(AudioContext||webkitAudioContext)());
+    [660,880,1320].forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();
+      o.frequency.value=f;o.connect(g);g.connect(a.destination);
+      g.gain.setValueAtTime(0.0001,a.currentTime+i*0.09);
+      g.gain.exponentialRampToValueAtTime(0.25,a.currentTime+i*0.09+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+i*0.09+0.3);
+      o.start(a.currentTime+i*0.09);o.stop(a.currentTime+i*0.09+0.32);});}catch(e){}
+}
+function newColor(){logo.ci=(logo.ci+1+Math.floor(Math.random()*(colors.length-1)))%colors.length;}
+function frame(){
+  ctx.fillStyle="#000";ctx.fillRect(0,0,W,H);
+  const v=base*(+sp.value/3);
+  logo.x+=logo.vx*v;logo.y+=logo.vy*v;
+  let hx=false,hy=false;
+  if(logo.x<=0){logo.x=0;logo.vx=Math.abs(logo.vx);hx=true;}
+  else if(logo.x+logo.w>=W){logo.x=W-logo.w;logo.vx=-Math.abs(logo.vx);hx=true;}
+  if(logo.y<=0){logo.y=0;logo.vy=Math.abs(logo.vy);hy=true;}
+  else if(logo.y+logo.h>=H){logo.y=H-logo.h;logo.vy=-Math.abs(logo.vy);hy=true;}
+  if(hx||hy){newColor();walls++;document.getElementById('walls').textContent=walls;}
+  if(hx&&hy){hits++;document.getElementById('hits').textContent=hits;
+    localStorage.setItem('dvdHits',hits);flash();}
+  // draw logo
+  const c=colors[logo.ci];
+  ctx.save();ctx.translate(logo.x+logo.w/2,logo.y+logo.h/2);
+  ctx.fillStyle=c;ctx.strokeStyle=c;ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(0,0,logo.w/2,logo.h*0.34,0,0,7);ctx.stroke();
+  ctx.font="900 "+(logo.h*0.5)+"px var(--mono),monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("DVD",0,-logo.h*0.02);
+  ctx.font="bold "+(logo.h*0.2)+"px var(--mono),monospace";
+  ctx.fillText("video",0,logo.h*0.26);
+  ctx.restore();
+  requestAnimationFrame(frame);
+}
+hits=+(localStorage.getItem('dvdHits')||0);document.getElementById('hits').textContent=hits;
+// random launch direction
+logo.vx=Math.random()<0.5?-1:1;logo.vy=Math.random()<0.5?-1:1;
+frame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

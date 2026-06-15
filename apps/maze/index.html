@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maze Runner · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  canvas{margin:14px auto;border:4px solid var(--ink);border-radius:14px;background:#fff;
+    box-shadow:var(--shadow-sm);touch-action:none;width:min(86vw,360px);height:min(86vw,360px)}
+  .stat{display:flex;gap:10px;justify-content:center;font-family:var(--mono);font-weight:800}
+  .pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);
+    gap:8px;justify-content:center;margin:10px auto}
+  .pad .btn{padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
+  .pad .sp{visibility:hidden}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🧩 Maze Runner</span>
+  <span class="spacer"></span>
+  <span class="num">#110</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="stat">
+      <span class="pill">Time <b id="time">0.0</b>s</span>
+      <span class="pill" style="background:var(--orange)">Best <b id="best">—</b></span>
+    </div>
+    <canvas id="cv" width="360" height="360"></canvas>
+    <div class="output" id="msg" style="min-height:1.2em">Guide 🟣 to the 🚪 exit!</div>
+    <button class="btn purple" id="newBtn">New maze</button>
+    <div class="pad">
+      <span class="sp"></span><button class="btn" data-d="U">↑</button><span class="sp"></span>
+      <button class="btn" data-d="L">←</button><span class="sp"></span><button class="btn" data-d="R">→</button>
+      <span class="sp"></span><button class="btn" data-d="D">↓</button><span class="sp"></span>
+    </div>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const COLS=12,ROWS=12,S=cv.width/COLS;
+const timeEl=document.getElementById('time'),bestEl=document.getElementById('best');
+const msg=document.getElementById('msg');
+let grid,player,start,running,won;
+let bestT=+(localStorage.getItem('maze_best')||0);
+bestEl.textContent=bestT?bestT.toFixed(1)+'s':'—';
+
+// each cell: walls [top,right,bottom,left] true=wall
+function genMaze(){
+  grid=[];
+  for(let y=0;y<ROWS;y++){grid.push([]);for(let x=0;x<COLS;x++)grid[y].push({w:[1,1,1,1],v:false});}
+  const stack=[];let cx=0,cy=0;grid[0][0].v=true;stack.push([0,0]);
+  const dirs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]; // dx,dy,wallIndex
+  while(stack.length){
+    [cx,cy]=stack[stack.length-1];
+    const ns=dirs.filter(([dx,dy])=>{
+      const nx=cx+dx,ny=cy+dy;
+      return nx>=0&&ny>=0&&nx<COLS&&ny<ROWS&&!grid[ny][nx].v;
+    });
+    if(ns.length){
+      const [dx,dy,wi]=ns[Math.random()*ns.length|0];
+      const nx=cx+dx,ny=cy+dy;
+      grid[cy][cx].w[wi]=0;
+      grid[ny][nx].w[(wi+2)%4]=0;
+      grid[ny][nx].v=true;stack.push([nx,ny]);
+    } else stack.pop();
+  }
+}
+function newMaze(){
+  genMaze();player={x:0,y:0};won=false;running=true;start=performance.now();
+  msg.textContent='Go! 🏃';draw();tick();
+}
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // exit cell highlight
+  ctx.fillStyle='rgba(22,224,189,.35)';ctx.fillRect((COLS-1)*S,(ROWS-1)*S,S,S);
+  ctx.strokeStyle='#1a1623';ctx.lineWidth=3;ctx.lineCap='round';
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const c=grid[y][x],px=x*S,py=y*S;
+    ctx.beginPath();
+    if(c.w[0]){ctx.moveTo(px,py);ctx.lineTo(px+S,py);}
+    if(c.w[1]){ctx.moveTo(px+S,py);ctx.lineTo(px+S,py+S);}
+    if(c.w[2]){ctx.moveTo(px,py+S);ctx.lineTo(px+S,py+S);}
+    if(c.w[3]){ctx.moveTo(px,py);ctx.lineTo(px,py+S);}
+    ctx.stroke();
+  }
+  ctx.font=(S*.8)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🚪',(COLS-1)*S+S/2,(ROWS-1)*S+S/2+1);
+  ctx.fillText('🟣',player.x*S+S/2,player.y*S+S/2+1);
+}
+function move(d){
+  if(!running)return;
+  const c=grid[player.y][player.x];
+  if(d==='U'&&!c.w[0])player.y--;
+  else if(d==='R'&&!c.w[1])player.x++;
+  else if(d==='D'&&!c.w[2])player.y++;
+  else if(d==='L'&&!c.w[3])player.x--;
+  draw();
+  if(player.x===COLS-1&&player.y===ROWS-1)win();
+}
+function win(){
+  running=false;won=true;
+  const t=(performance.now()-start)/1000;
+  timeEl.textContent=t.toFixed(1);
+  if(!bestT||t<bestT){bestT=t;localStorage.setItem('maze_best',bestT);bestEl.textContent=bestT.toFixed(1)+'s';msg.innerHTML='🏆 New best! '+t.toFixed(1)+'s';}
+  else msg.innerHTML='🎉 Escaped in '+t.toFixed(1)+'s';
+  beep();
+}
+function tick(){
+  if(!running)return;
+  timeEl.textContent=((performance.now()-start)/1000).toFixed(1);
+  requestAnimationFrame(tick);
+}
+let ac;
+function beep(){
+  if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+  [523,659,784].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.frequency.value=f;
+    const t=ac.currentTime+i*.1;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.0001,t+.18);
+    o.start(t);o.stop(t+.18);});
+}
+document.getElementById('newBtn').addEventListener('click',newMaze);
+document.querySelectorAll('.pad .btn').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
+addEventListener('keydown',e=>{
+  const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R'}[e.key];
+  if(m){e.preventDefault();move(m);}
+});
+let tx,ty;
+cv.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;},{passive:true});
+cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;
+  if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+  if(Math.abs(dx)>Math.abs(dy))move(dx>0?'R':'L');else move(dy>0?'D':'U');});
+newMaze();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

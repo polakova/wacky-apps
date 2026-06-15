@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tic-Tac-Toe · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭕</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.scorebar{display:flex;justify-content:space-around;gap:10px;margin-bottom:14px}
+.scorebar .b{background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:var(--shadow-sm);padding:8px 14px;text-align:center;flex:1}
+.scorebar .l{font-family:var(--mono);font-size:11px;opacity:.7;text-transform:uppercase}
+.scorebar .v{font-size:24px;font-weight:900}
+.status{text-align:center;font-size:clamp(18px,5vw,26px);font-weight:900;margin:6px 0 14px;min-height:1.2em}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;margin:0 auto}
+.cell{
+  aspect-ratio:1/1;background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;justify-content:center;font-size:clamp(40px,16vw,72px);
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .05s;
+}
+.cell:hover:not(.taken){background:#fff7d6}
+.cell.taken{cursor:default}
+.cell.win{background:var(--cyan);animation:pop .4s}
+.cell.x{color:var(--pink)}.cell.o{color:var(--blue)}
+.row.controls{justify-content:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⭕ Tic-Tac-Toe</span>
+  <span class="spacer"></span>
+  <span class="num">#105</span>
+</div>
+<div class="wrap">
+  <p class="center muted">You're ❌. The robot is ⭕ and it does NOT mess around. 🤖</p>
+  <div class="scorebar">
+    <div class="b"><div class="l">You ❌</div><div class="v" id="pw">0</div></div>
+    <div class="b"><div class="l">Draws</div><div class="v" id="dw">0</div></div>
+    <div class="b"><div class="l">CPU ⭕</div><div class="v" id="cw">0</div></div>
+  </div>
+  <div class="status" id="status">Your move!</div>
+  <div class="board" id="board"></div>
+  <div class="row controls">
+    <button class="btn pink" id="reset">🔁 New Round</button>
+    <button class="btn purple" id="clear">🧹 Reset Scores</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const board=$("board");
+const HUMAN="X",CPU="O";
+const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+let cells=[],b=Array(9).fill(""),over=false;
+let sc={p:0,d:0,c:0};
+try{const s=JSON.parse(localStorage.getItem("ttt_score"));if(s){sc=s;}}catch(e){}
+let actx=null;
+function beep(f,d,t){if(!actx)return;const o=actx.createOscillator(),g=actx.createGain();o.type=t||"sine";o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.15,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d);}
+function drawScore(){$("pw").textContent=sc.p;$("dw").textContent=sc.d;$("cw").textContent=sc.c;}
+function build(){
+  board.innerHTML="";cells=[];
+  for(let i=0;i<9;i++){
+    const c=document.createElement("div");c.className="cell";c.dataset.i=i;
+    c.addEventListener("click",()=>play(i));
+    board.appendChild(c);cells.push(c);
+  }
+}
+function winner(bd){
+  for(const [a,b2,c] of WINS){if(bd[a]&&bd[a]===bd[b2]&&bd[a]===bd[c])return{who:bd[a],line:[a,b2,c]};}
+  if(bd.every(x=>x))return{who:"draw",line:[]};
+  return null;
+}
+function minimax(bd,player){
+  const res=winner(bd);
+  if(res){if(res.who===CPU)return{score:10};if(res.who===HUMAN)return{score:-10};return{score:0};}
+  const moves=[];
+  for(let i=0;i<9;i++){
+    if(!bd[i]){
+      bd[i]=player;
+      const r=minimax(bd,player===CPU?HUMAN:CPU);
+      moves.push({i,score:r.score});
+      bd[i]="";
+    }
+  }
+  let bestMove;
+  if(player===CPU){let bs=-Infinity;for(const m of moves)if(m.score>bs){bs=m.score;bestMove=m;}}
+  else{let bs=Infinity;for(const m of moves)if(m.score<bs){bs=m.score;bestMove=m;}}
+  return bestMove;
+}
+function render(){
+  b.forEach((v,i)=>{
+    cells[i].textContent=v==="X"?"❌":v==="O"?"⭕":"";
+    cells[i].classList.toggle("taken",!!v);
+    cells[i].classList.toggle("x",v==="X");
+    cells[i].classList.toggle("o",v==="O");
+  });
+}
+function finish(res){
+  over=true;
+  res.line.forEach(i=>cells[i].classList.add("win"));
+  if(res.who==="draw"){sc.d++;$("status").textContent="🤝 It's a draw! Well matched.";beep(330,.2);}
+  else if(res.who===HUMAN){sc.p++;$("status").textContent="🎉 You win! The robot is impressed.";beep(523,.12);setTimeout(()=>beep(784,.2),120);}
+  else{sc.c++;$("status").textContent="🤖 CPU wins. Beep boop, gg.";beep(220,.25,"sawtooth");}
+  localStorage.setItem("ttt_score",JSON.stringify(sc));drawScore();
+}
+function cpuMove(){
+  // light heuristic flavor + minimax: 1-in-8 chance of a "human" slip for fun, else optimal
+  const empty=b.map((v,i)=>v?-1:i).filter(i=>i>=0);
+  let move;
+  if(Math.random()<0.12){move=empty[Math.floor(Math.random()*empty.length)];}
+  else{move=minimax(b.slice(),CPU).i;}
+  b[move]=CPU;beep(440,.08);render();
+  const res=winner(b);
+  if(res){finish(res);return;}
+  $("status").textContent="Your move!";
+}
+function play(i){
+  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}if(actx&&actx.state==="suspended")actx.resume();}
+  if(over||b[i])return;
+  b[i]=HUMAN;beep(660,.08);render();
+  let res=winner(b);
+  if(res){finish(res);return;}
+  $("status").textContent="🤖 CPU thinking…";
+  setTimeout(cpuMove,420);
+}
+function newRound(){
+  b=Array(9).fill("");over=false;
+  cells.forEach(c=>c.classList.remove("win"));
+  render();$("status").textContent="Your move!";
+}
+$("reset").onclick=newRound;
+$("clear").onclick=()=>{sc={p:0,d:0,c:0};localStorage.setItem("ttt_score",JSON.stringify(sc));drawScore();newRound();};
+build();render();drawScore();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

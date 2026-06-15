@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Band Name Forge · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .poster{background:repeating-linear-gradient(45deg,#161020,#161020 18px,#1c1430 18px,#1c1430 36px);
+    color:#fff;border:6px solid #fff;border-radius:6px;box-shadow:var(--shadow);
+    padding:30px 22px;text-align:center;position:relative}
+  .poster .live{font-family:var(--mono);letter-spacing:6px;color:var(--cyan);font-weight:800;font-size:14px}
+  .bandname{font-family:var(--sans);font-weight:900;font-size:clamp(30px,9vw,64px);line-height:1;
+    margin:14px 0;text-transform:uppercase;color:var(--yellow);text-shadow:4px 4px 0 var(--pink);word-break:break-word}
+  .genre{display:inline-block;background:var(--pink);color:#fff;font-family:var(--mono);font-weight:800;
+    padding:6px 14px;border-radius:999px;transform:rotate(-2deg)}
+  .venue{font-family:var(--mono);font-size:13px;color:#cbb;margin-top:18px;letter-spacing:1px}
+  .stars{font-size:20px;margin:6px 0}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(40px);
+    background:var(--ink);color:var(--cyan);font-family:var(--mono);padding:10px 18px;border-radius:10px;
+    opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎸 Band Name Forge</span>
+  <span class="spacer"></span>
+  <span class="num">#2</span>
+</div>
+<div class="wrap stack">
+  <div class="poster" id="poster">
+    <div class="stars">✦ ✦ ✦</div>
+    <div class="live">★ LIVE TONIGHT ★</div>
+    <div class="bandname" id="band">The Velvet Toasters</div>
+    <span class="genre" id="genre">surf-punk</span>
+    <div class="venue" id="venue">at THE STICKY FLOOR · doors 8pm · $7</div>
+  </div>
+  <div class="row center" style="justify-content:center">
+    <button class="btn purple" id="gen">🎲 Forge a band</button>
+    <button class="btn" id="copy">📋 Copy</button>
+  </div>
+  <div class="muted center">Warning: 60% of these are accidentally great.</div>
+</div>
+<div class="toast" id="toast">Copied to the merch table!</div>
+<script>
+const adjs=["Velvet","Electric","Cosmic","Feral","Midnight","Plastic","Howling","Neon","Crooked","Sleepy",
+  "Radiant","Drunken","Holy","Rusty","Gentle","Screaming","Lonesome","Glittering","Wandering","Salty",
+  "Phantom","Marble","Static","Lucky","Wicked","Soft","Iron","Hollow","Wild","Brilliant"];
+const nouns=["Toasters","Comets","Pigeons","Mountains","Bandits","Ghosts","Lemons","Wolves","Robots","Daisies",
+  "Anchors","Tigers","Hammers","Dreamers","Cowboys","Spiders","Onions","Sailors","Owls","Engines",
+  "Mannequins","Kazoos","Cathedrals","Penguins","Volcanoes","Telescopes","Raccoons","Lanterns","Skeletons","Marshmallows"];
+const genres=["surf-punk","dream-pop","cosmic folk","garage-funk","sad disco","barn-core","synth-doom",
+  "jazz-thrash","swamp-pop","glitter-grunge","math-rock","yacht-metal","lo-fi western","baroque-punk",
+  "noise-jazz","space-country","bubblegum-doom","ghost-wave","kitchen-sink rock","velvet-core"];
+const venues=["THE STICKY FLOOR","UNCLE BARRY'S BASEMENT","THE RUSTY KAZOO","HALL OF MILD FAME",
+  "THE DAMP CELLAR","GRANDMA'S GARAGE","THE LEFT SHOE LOUNGE","CAFÉ MELANCHOLY",
+  "THE BENT NAIL","MOTH ARENA","THE SOGGY BISCUIT","PLANETARIUM #4"];
+const prefix=["The ","",""];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const band=document.getElementById('band'),genreEl=document.getElementById('genre'),venue=document.getElementById('venue'),poster=document.getElementById('poster');
+function gen(){
+  band.textContent=pick(prefix)+pick(adjs)+" "+pick(nouns);
+  genreEl.textContent=pick(genres);
+  const price=2+Math.floor(Math.random()*18);
+  venue.textContent="at "+pick(venues)+" · doors 8pm · $"+price;
+  poster.classList.remove('pop');void poster.offsetWidth;poster.classList.add('pop');
+}
+document.getElementById('gen').onclick=gen;
+const toast=document.getElementById('toast');
+document.getElementById('copy').onclick=async()=>{
+  const t=band.textContent+" ("+genreEl.textContent+")";
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400);
+};
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

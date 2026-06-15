@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Countdown to Anything · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.units{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.unit{background:var(--ink);color:var(--paper);border-radius:14px;
+  padding:12px 6px;min-width:74px;box-shadow:var(--shadow-sm)}
+.unit .n{font-family:var(--mono);font-weight:900;font-size:clamp(26px,7vw,40px);line-height:1}
+.unit .l{font-size:11px;letter-spacing:2px;opacity:.7}
+.label{font-weight:900;font-size:clamp(20px,5vw,32px)}
+canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:60}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">⏰ Countdown to Anything</span>
+  <span class="spacer"></span>
+  <span class="num">#83</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <div class="muted">Name the moment. We'll count every second until it's here.</div>
+    <div class="stack" style="margin:14px 0">
+      <input id="lbl" placeholder="What are we waiting for? (e.g. Pizza night)" maxlength="40">
+      <div class="row" style="justify-content:center">
+        <input type="datetime-local" id="when">
+        <button class="btn pink" id="go">Start</button>
+      </div>
+    </div>
+    <div id="view" style="display:none">
+      <div class="label" id="showLbl"></div>
+      <div class="units">
+        <div class="unit"><div class="n" id="d">0</div><div class="l">DAYS</div></div>
+        <div class="unit"><div class="n" id="h">0</div><div class="l">HOURS</div></div>
+        <div class="unit"><div class="n" id="m">0</div><div class="l">MINS</div></div>
+        <div class="unit"><div class="n" id="s">0</div><div class="l">SECS</div></div>
+      </div>
+      <div class="muted" id="msg"></div>
+    </div>
+  </div>
+</div>
+<canvas id="cf"></canvas>
+<script>
+const lbl=document.getElementById('lbl'), when=document.getElementById('when');
+const view=document.getElementById('view'), showLbl=document.getElementById('showLbl');
+const dE=document.getElementById('d'),hE=document.getElementById('h'),mE=document.getElementById('m'),sE=document.getElementById('s');
+const msg=document.getElementById('msg');
+let target=null, timer=null, fired=false;
+
+// restore last session
+const saved=JSON.parse(localStorage.getItem('cd')||'null');
+if(saved){ lbl.value=saved.label; when.value=saved.when; }
+
+function pad(n){return String(n).padStart(2,'0');}
+function tick(){
+  const diff=target-Date.now();
+  if(diff<=0){
+    dE.textContent=hE.textContent=mE.textContent=sE.textContent='0'.padStart(1,'0');
+    dE.textContent='00';hE.textContent='00';mE.textContent='00';sE.textContent='00';
+    msg.textContent="🎉 The moment is NOW! 🎉";
+    if(!fired){ fired=true; burst(); }
+    return;
+  }
+  const s=Math.floor(diff/1000);
+  dE.textContent=Math.floor(s/86400);
+  hE.textContent=pad(Math.floor(s%86400/3600));
+  mE.textContent=pad(Math.floor(s%3600/60));
+  sE.textContent=pad(s%60);
+  msg.textContent="Hang tight…";
+}
+document.getElementById('go').onclick=()=>{
+  if(!when.value){ when.classList.add('shake'); setTimeout(()=>when.classList.remove('shake'),400); return; }
+  target=new Date(when.value).getTime();
+  showLbl.textContent=lbl.value.trim()||"The Big Moment";
+  view.style.display='block'; view.classList.add('pop'); fired=false;
+  localStorage.setItem('cd',JSON.stringify({label:lbl.value,when:when.value}));
+  clearInterval(timer); tick(); timer=setInterval(tick,1000);
+};
+
+/* confetti */
+const cv=document.getElementById('cf'), cx=cv.getContext('2d');
+let parts=[];
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+resize(); addEventListener('resize',resize);
+const COL=['#ff5da2','#7b2ff7','#16e0bd','#ffd23f','#ff7a45','#3a86ff'];
+function burst(){
+  for(let i=0;i<160;i++){
+    parts.push({x:cv.width/2,y:cv.height/3,
+      vx:(Math.random()-.5)*12, vy:Math.random()*-12-3,
+      g:.3+Math.random()*.2, s:6+Math.random()*8,
+      c:COL[i%COL.length], r:Math.random()*6, vr:(Math.random()-.5)*.4, life:120});
+  }
+  if(parts.length) requestAnimationFrame(anim);
+}
+function anim(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.r+=p.vr; p.life--;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r);
+    cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); cx.restore();
+  });
+  parts=parts.filter(p=>p.life>0 && p.y<cv.height+20);
+  if(parts.length) requestAnimationFrame(anim);
+  else cx.clearRect(0,0,cv.width,cv.height);
+}
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

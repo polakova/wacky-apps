@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corporate BS Generator · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+.office{background:#fff;border:4px solid var(--ink);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.office-head{background:#1f3a5f;color:#fff;padding:10px 16px;font-family:var(--sans);font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:.3px}
+.office-head .dot{width:10px;height:10px;border-radius:50%;background:#5b86b0}
+.office-body{padding:22px}
+.quote{font-size:clamp(19px,4vw,27px);font-weight:700;line-height:1.4;color:#16324f;min-height:2.4em}
+.sig{font-family:var(--mono);font-size:13px;color:#5b86b0;margin-top:10px}
+.meter-wrap{margin:20px 0 6px}
+.meter-label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-weight:800;color:#16324f;margin-bottom:6px}
+.meter{height:18px;background:#e7edf3;border:3px solid var(--ink);border-radius:999px;overflow:hidden}
+.meter > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3a86ff,#16e0bd);transition:width .6s cubic-bezier(.2,.9,.3,1.2)}
+.verdict{font-family:var(--mono);font-size:13px;color:#5b86b0;margin-top:6px;min-height:1.2em}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1f3a5f;color:#fff;font-family:var(--mono);font-weight:800;padding:10px 18px;border-radius:10px;box-shadow:var(--shadow-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">📊 Corporate BS Generator</span>
+  <span class="spacer"></span>
+  <span class="num">#16</span>
+</div>
+
+<div class="wrap">
+  <div class="office">
+    <div class="office-head"><span class="dot"></span> Synergy Quarterly · All-Hands Deck</div>
+    <div class="office-body">
+      <div class="quote" id="quote">…</div>
+      <div class="sig" id="sig"></div>
+
+      <div class="meter-wrap">
+        <div class="meter-label"><span>Sounds-Smart Meter™</span><span id="pct">0%</span></div>
+        <div class="meter"><i id="bar"></i></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn blue" id="gen">↻ Regenerate Synergy</button>
+        <button class="btn" id="copy">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+  <p class="muted center" style="margin-top:14px">Warning: may cause spontaneous nodding in meetings.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const VERB=["leverage","synergize","incentivize","operationalize","disrupt","monetize","streamline","unlock","empower","reimagine","right-size","ideate around","circle back on","double-click into","future-proof","onboard","democratize","supercharge"];
+const ADJ=["scalable","agile","cross-functional","data-driven","customer-centric","best-in-class","frictionless","holistic","robust","next-gen","cloud-native","mission-critical","bleeding-edge","value-added","turnkey","granular","seamless","actionable"];
+const NOUN=["paradigms","deliverables","synergies","bandwidth","ecosystems","verticals","touchpoints","KPIs","workstreams","low-hanging fruit","core competencies","mindshare","value props","north-star metrics","stakeholder buy-in","thought leadership","best practices","north stars"];
+const TAIL=["going forward","at scale","in this fiscal","by EOD","across the org","at the C-suite level","in the cloud","by Q3","with intentionality","to move the needle","holistically","end-to-end","at a high level","in real time","with full transparency"];
+const NAMES=["— Chad, VP of Vibes","— Brenda, Chief Synergy Officer","— Trevor, Director of Doing Stuff","— Priya, Head of Growth Hacking","— Greg from Strategy","— The Innovation Tiger Team","— Dale, Senior Buzzword Architect","— Karen, EVP of Circling Back"];
+const VERDICTS=["Investors are weeping.","Promotion incoming.","No one will admit they're confused.","Add it to a slide immediately.","This belongs on a motivational poster.","HR has no idea what this means. Perfect.","Stakeholders are aligned (terrified).","100% meeting-proof."];
+function cap(s){return s[0].toUpperCase()+s.slice(1)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+let cur="";
+function gen(){
+  const v=pick(VERB), a=pick(ADJ), n=pick(NOUN), t=pick(TAIL);
+  cur=`${cap(v)} our ${a} ${n} ${t}.`;
+  document.getElementById('quote').textContent='“'+cur+'”';
+  const q=document.getElementById('quote');q.classList.remove('pop');void q.offsetWidth;q.classList.add('pop');
+  document.getElementById('sig').textContent=pick(NAMES);
+  const score=72+Math.floor(Math.random()*28); // always impressively meaningless
+  document.getElementById('bar').style.width=score+'%';
+  document.getElementById('pct').textContent=score+'%';
+  document.getElementById('verdict').textContent=pick(VERDICTS);
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);}
+async function copy(){
+  try{await navigator.clipboard.writeText(cur);}
+  catch(e){const ta=document.createElement('textarea');ta.value=cur;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  toast('Copied to clipboard 📋');
+}
+document.getElementById('gen').onclick=gen;
+document.getElementById('copy').onclick=copy;
+gen();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

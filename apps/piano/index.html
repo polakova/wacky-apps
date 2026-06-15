@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Piano · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎹</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .piano{position:relative;display:flex;height:230px;margin:6px auto 0;max-width:680px;
+    border:4px solid var(--ink);border-radius:14px;box-shadow:var(--shadow);
+    background:var(--ink);padding:8px 8px 0;overflow:hidden;user-select:none;touch-action:none}
+  .white{position:relative;flex:1;background:linear-gradient(#fff,#f1ead4);
+    border:2px solid var(--ink);border-radius:0 0 8px 8px;margin:0 1px;cursor:pointer;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;color:#888;font-family:var(--mono);font-weight:800}
+  .white.down{background:linear-gradient(#ffe9a8,#ffd23f);transform:translateY(2px)}
+  .black{position:absolute;top:0;width:8%;height:60%;background:linear-gradient(#333,#000);
+    border:2px solid var(--ink);border-radius:0 0 6px 6px;z-index:2;cursor:pointer;
+    color:#bbb;font-family:var(--mono);font-size:11px;text-align:center;padding-top:4px}
+  .black.down{background:linear-gradient(var(--purple),#4a1c9e)}
+  .keymap{font-size:9px;opacity:.5}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🎹 Mini Piano</span>
+  <span class="spacer"></span>
+  <span class="num">#68</span>
+</div>
+
+<div class="wrap">
+  <div class="card center" style="padding:14px">
+    <div class="piano" id="piano"></div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <label class="muted">Sound</label>
+      <select id="tone"><option value="triangle">soft</option><option value="sine">pure</option><option value="square">8-bit</option><option value="sawtooth">organ</option></select>
+    </div>
+    <p class="muted">Click the keys or use your keyboard: <b>A S D F G H J K</b> (white) + <b>W E T Y U</b> (black).</p>
+  </div>
+</div>
+
+<script>
+// One octave + a bit: C4..E5
+const notes=[
+  {n:"C",o:4,b:false,k:"a"},{n:"C#",o:4,b:true,k:"w"},
+  {n:"D",o:4,b:false,k:"s"},{n:"D#",o:4,b:true,k:"e"},
+  {n:"E",o:4,b:false,k:"d"},
+  {n:"F",o:4,b:false,k:"f"},{n:"F#",o:4,b:true,k:"t"},
+  {n:"G",o:4,b:false,k:"g"},{n:"G#",o:4,b:true,k:"y"},
+  {n:"A",o:4,b:false,k:"h"},{n:"A#",o:4,b:true,k:"u"},
+  {n:"B",o:4,b:false,k:"j"},
+  {n:"C",o:5,b:false,k:"k"},
+  {n:"D",o:5,b:false,k:"l"},{n:"E",o:5,b:false,k:";"}
+];
+const SEMI={C:0,"C#":1,D:2,"D#":3,E:4,F:5,"F#":6,G:7,"G#":8,A:9,"A#":10,B:11};
+function freq(n,o){return 440*Math.pow(2,(SEMI[n]+(o-4)*12-9)/12);}
+
+const piano=document.getElementById("piano"), toneSel=document.getElementById("tone");
+const whites=notes.filter(n=>!n.b);
+const elFor={}; // key -> element
+let widx=0;
+notes.forEach(note=>{
+  if(!note.b){
+    const w=document.createElement("div"); w.className="white";
+    w.innerHTML="<span class='keymap'>"+note.k.toUpperCase()+"</span>";
+    w.dataset.key=note.k; piano.appendChild(w);
+    note._el=w; elFor[note.k]=w; note._wi=widx++;
+  }
+});
+// create black keys, remembering which white they sit after
+let lastWhite=-1;
+notes.forEach(note=>{
+  if(!note.b){ lastWhite=note._wi; }
+  else{
+    const b=document.createElement("div"); b.className="black";
+    b.textContent=note.k.toUpperCase(); b.dataset.key=note.k;
+    piano.appendChild(b); note._el=b; elFor[note.k]=b;
+    note._after=lastWhite; // white index this black follows
+  }
+});
+// position black keys centered on the boundary between two white keys
+function placeBlacks(){
+  const total=whites.length;
+  const wPct=100/total; // each white key ~ this % of the row
+  notes.forEach(note=>{
+    if(note.b){
+      // boundary sits at (after+1) white widths; center the 8%-wide black there
+      const leftPct=(note._after+1)*wPct;
+      note._el.style.left="calc("+leftPct+"% - 4%)";
+    }
+  });
+}
+placeBlacks();
+window.addEventListener("resize",placeBlacks);
+
+let AC;
+function ensure(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();}
+const active={};
+function play(note){
+  ensure();
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type=toneSel.value; o.frequency.value=freq(note.n,note.o);
+  const t=AC.currentTime;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(0.3,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0006,t+1.6);
+  o.connect(g).connect(AC.destination); o.start(); o.stop(t+1.7);
+  note._el.classList.add("down");
+  clearTimeout(note._t);
+  note._t=setTimeout(()=>note._el.classList.remove("down"),160);
+}
+
+notes.forEach(note=>{
+  const dn=e=>{e.preventDefault();play(note);};
+  note._el.addEventListener("mousedown",dn);
+  note._el.addEventListener("touchstart",dn,{passive:false});
+});
+
+const byKey={}; notes.forEach(n=>byKey[n.k]=n);
+window.addEventListener("keydown",e=>{
+  if(e.repeat)return;
+  const k=e.key.toLowerCase();
+  if(byKey[k]) play(byKey[k]);
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

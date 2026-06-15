@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Villain Namer · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😈</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body.dark{background:#0a0712;background-image:radial-gradient(#2a1f3d 1px,transparent 1px)}
+  .lair{background:linear-gradient(160deg,#1a1026,#0d0612);
+    border:4px solid #7b2ff7;border-radius:18px;
+    box-shadow:6px 6px 0 #2a0a3d,0 0 40px rgba(123,47,247,.4);
+    padding:28px;text-align:center;color:#e9defb}
+  .skull{font-size:54px;filter:drop-shadow(0 0 10px #7b2ff7)}
+  .vname{font-family:var(--sans);font-weight:900;
+    font-size:clamp(28px,7vw,50px);line-height:1.05;margin:14px 0 6px;
+    color:#fff;text-shadow:0 0 12px #b07bff,2px 2px 0 #4a1d8f;word-break:break-word}
+  .tagline{font-style:italic;font-weight:700;color:#c9a7ff;min-height:1.4em;font-size:clamp(15px,4vw,20px)}
+  .evil{background:linear-gradient(180deg,#7b2ff7,#4a1d8f);color:#fff;border-color:#2a0a3d}
+  .evil:hover{background:linear-gradient(180deg,#9a5cff,#6a2db0)}
+  .smoke{font-size:22px;letter-spacing:4px;opacity:.7}
+</style>
+</head>
+<body class="dark">
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">😈 Villain Namer</span>
+  <span class="spacer"></span>
+  <span class="num">#12</span>
+</div>
+<div class="wrap">
+  <div class="lair">
+    <div class="skull">💀</div>
+    <p style="font-weight:800;margin:4px 0 8px;color:#c9a7ff">Choose your dark alias. Cackle responsibly.</p>
+    <div class="vname" id="vname">The Yet-Unnamed</div>
+    <div class="tagline" id="tag">"My villainy awaits a button press."</div>
+    <div class="smoke" id="smoke">☁ ☁ ☁</div>
+    <div class="row center" style="justify-content:center;margin-top:14px">
+      <button class="btn evil" id="gen">🌑 Reveal my evil name</button>
+      <button class="btn pink" id="copy">📋 Copy</button>
+    </div>
+    <p class="muted" style="color:#9a7ad0;margin-top:14px" id="count"></p>
+  </div>
+</div>
+<script>
+const title=["Doctor","Baron","Lord","Lady","Madame","Count","Professor","Emperor","Duchess","Overlord","The Dread","Marquis","Sir","Mistress","Chancellor","Warlock","Vizier","Czar"];
+const noun=["Malice","Nightshade","Gloom","Venommore","Cinder","Grimhollow","Frostbane","Dreadmaw","Shadowvex","Ravenscar","Doomquill","Bleakmore","Sablefang","Hexworth","Vexil","Mournglass","Ashveil","Grumbleton","Sorrowgate","Thornblight","Murkwell","Sneerington"];
+const tags=[
+ "\"I alphabetize my enemies. It's just tidier.\"",
+ "\"Tremble, mortals — I have rearranged your bookshelf!\"",
+ "\"World domination, but first, a snack.\"",
+ "\"I will replace all the spoons with slightly smaller spoons.\"",
+ "\"Behold! I have hidden the TV remote forever.\"",
+ "\"Resistance is futile. So is my Wi-Fi password.\"",
+ "\"I shall make every line you stand in the slow one.\"",
+ "\"My lair has terrible parking, on purpose.\"",
+ "\"I lurk. I scheme. I forget what I came in for.\"",
+ "\"Soon, all your socks shall be ever-so-slightly damp.\"",
+ "\"I have cancelled your favorite show. Out of spite.\"",
+ "\"Fear me, for I never refill the ice tray.\"",
+ "\"I shall set every clock eleven minutes fast.\"",
+ "\"Mwahaha! The milk is now suspiciously close to expiring.\"",
+ "\"Bow before me, or at least leave a 1-star review for my rivals.\""
+];
+const skulls=["💀","😈","👹","🦹","🕷️","🔮","🦇","☠️"];
+const vname=document.getElementById('vname'),tag=document.getElementById('tag'),
+  gen=document.getElementById('gen'),copy=document.getElementById('copy'),
+  smoke=document.getElementById('smoke'),skullEl=document.querySelector('.skull'),
+  countEl=document.getElementById('count');
+let cur={n:"The Yet-Unnamed",t:""};
+let made=+(localStorage.getItem('villainNames')||0);
+function showCount(){countEl.textContent="😈 "+made+" villains unleashed upon the realm";}
+showCount();
+let ac;
+function ominous(){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='sawtooth';const t=ac.currentTime;
+    o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(55,t+0.6);
+    g.gain.setValueAtTime(0.14,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.7);
+    o.start(t);o.stop(t+0.72);
+  }catch(e){}
+}
+function gn(){
+  const nm=title[Math.floor(Math.random()*title.length)]+" "+noun[Math.floor(Math.random()*noun.length)];
+  cur={n:nm,t:tags[Math.floor(Math.random()*tags.length)]};
+  vname.textContent=nm;tag.textContent=cur.t;
+  skullEl.textContent=skulls[Math.floor(Math.random()*skulls.length)];
+  [vname,skullEl].forEach(el=>{el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');});
+  smoke.classList.remove('blink');void smoke.offsetWidth;smoke.classList.add('blink');
+  ominous();
+  made++;localStorage.setItem('villainNames',made);showCount();
+}
+gen.addEventListener('click',gn);
+copy.addEventListener('click',()=>{
+  const txt=cur.n+" — "+cur.t;
+  const done=()=>{const o=copy.textContent;copy.textContent="✅ Copied!";setTimeout(()=>copy.textContent=o,1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{});}
+  else{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();
+    try{document.execCommand('copy')}catch(e){}t.remove();done();}
+});
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

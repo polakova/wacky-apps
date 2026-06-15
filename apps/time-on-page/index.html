@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Time Wasted Here · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .clock{font-family:var(--mono);font-weight:900;font-size:clamp(40px,13vw,90px);letter-spacing:2px}
+  .comment{font-size:clamp(18px,4.5vw,26px);font-weight:800;min-height:2.4em;transition:color .3s}
+  .meta{font-family:var(--mono)}
+  .coins{font-size:34px;letter-spacing:4px;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">💸 Time Wasted Here</span>
+  <span class="spacer"></span>
+  <span class="num">#85</span>
+</div>
+<div class="wrap center">
+  <div class="card stack">
+    <div class="muted">You have been on this page for exactly:</div>
+    <div class="clock" id="clock">0:00</div>
+    <div class="coins" id="coins"></div>
+    <div class="comment" id="comment">Welcome! The meter is running. No refunds.</div>
+    <div class="row center" style="justify-content:center">
+      <span class="pill" id="recordPill">Personal record: —</span>
+      <span class="pill" id="totalPill">Lifetime wasted: —</span>
+    </div>
+    <button class="btn pink" id="reset">I value my time (reset)</button>
+  </div>
+  <p class="muted" style="margin-top:18px">Every second spent here is a tiny gift to the void. The void says thanks.</p>
+</div>
+<script>
+(function(){
+  var start = Date.now();
+  var clock = document.getElementById('clock');
+  var comment = document.getElementById('comment');
+  var coins = document.getElementById('coins');
+  var recordPill = document.getElementById('recordPill');
+  var totalPill = document.getElementById('totalPill');
+
+  // milestone seconds -> sarcastic line
+  var milestones = [
+    [5,   "Five seconds. You could've blinked productively by now."],
+    [10,  "Ten seconds gone. The void is filling up nicely."],
+    [20,  "Twenty seconds. A goldfish would've moved on."],
+    [30,  "Half a minute. Somewhere, a kettle just boiled."],
+    [45,  "45 seconds. This is the most committed you've been all day."],
+    [60,  "One whole minute. Frame this moment. It's all you have now."],
+    [90,  "90 seconds. You are basically a professional now."],
+    [120, "Two minutes! That's a full TV ad break of staring."],
+    [180, "Three minutes. A soft-boiled egg would be done. Where is your egg?"],
+    [240, "Four minutes. Scientists are studying your dedication. (No they're not.)"],
+    [300, "FIVE MINUTES. We're worried. We're flattered. Mostly worried."],
+    [420, "Seven minutes. You could've learned the basics of juggling."],
+    [600, "TEN MINUTES on a page that counts seconds. Bravo. Truly."],
+    [900, "Fifteen minutes. Are you okay? Blink twice if you need a snack."],
+    [1200,"Twenty minutes. You and this counter are practically married now."],
+    [1800,"THIRTY MINUTES. The void has prepared you a small certificate. 🏅"],
+    [3600,"ONE HOUR. We have run out of jokes. You win. We're scared."]
+  ];
+  var lastIdx = -1;
+
+  var record = parseInt(localStorage.getItem('twh_record')||'0',10);
+  var total  = parseInt(localStorage.getItem('twh_total')||'0',10);
+
+  function fmt(s){
+    var m = Math.floor(s/60), ss = s%60;
+    return m + ':' + (ss<10?'0':'') + ss;
+  }
+  function fmtLong(s){
+    if(s<60) return s+'s';
+    var m=Math.floor(s/60), ss=s%60;
+    if(m<60) return m+'m '+ss+'s';
+    var h=Math.floor(m/60); m=m%60;
+    return h+'h '+m+'m';
+  }
+
+  function tick(){
+    var s = Math.floor((Date.now()-start)/1000);
+    clock.textContent = fmt(s);
+    coins.textContent = '💸'.repeat(Math.min(12, Math.floor(s/10)));
+
+    // find current milestone
+    var idx=-1;
+    for(var i=0;i<milestones.length;i++){ if(s>=milestones[i][0]) idx=i; }
+    if(idx!==lastIdx && idx>=0){
+      lastIdx=idx;
+      comment.textContent = milestones[idx][1];
+      comment.classList.remove('pop'); void comment.offsetWidth; comment.classList.add('pop');
+      var hue = Math.min(360, idx*22);
+      comment.style.color = 'hsl('+ (200-idx*12) +',80%,40%)';
+    }
+
+    if(s>record){ record=s; localStorage.setItem('twh_record',String(record)); }
+    recordPill.textContent = 'Personal record: ' + fmtLong(record);
+    totalPill.textContent  = 'Lifetime wasted: ' + fmtLong(total + s);
+  }
+
+  setInterval(tick,1000); tick();
+
+  // bank the time on leave
+  window.addEventListener('beforeunload',function(){
+    var s = Math.floor((Date.now()-start)/1000);
+    localStorage.setItem('twh_total', String(total + s));
+  });
+
+  document.getElementById('reset').addEventListener('click',function(){
+    var s = Math.floor((Date.now()-start)/1000);
+    total += s; localStorage.setItem('twh_total', String(total));
+    start = Date.now(); lastIdx=-1;
+    comment.style.color=''; comment.textContent="Reset! A clean slate. Now waste it all over again.";
+    tick();
+  });
+})();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

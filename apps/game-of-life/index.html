@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Game of Life · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦠</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .wrap{max-width:680px}
+  .screen{background:#11131c;border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+    overflow:hidden;touch-action:none}
+  canvas{display:block;cursor:pointer}
+  .panel{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:16px}
+  .panel label{font-family:var(--mono);font-weight:800}
+  .stat{font-family:var(--mono);font-weight:800;text-align:center;margin-top:10px}
+  .sub{text-align:center;font-family:var(--mono);margin:0 0 14px;color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🦠 Game of Life</span>
+  <span class="spacer"></span>
+  <span class="num">#56</span>
+</div>
+<div class="wrap">
+  <p class="sub">Conway's cellular automaton · draw life, watch it evolve</p>
+  <div class="screen"><canvas id="c"></canvas></div>
+  <div class="stat">gen <span id="gen">0</span> · alive <span id="alive">0</span></div>
+  <div class="panel">
+    <button class="btn pink" id="play">▶ play</button>
+    <button class="btn" id="step">⏭ step</button>
+    <button class="btn blue" id="rand">🎲 random</button>
+    <button class="btn purple" id="clear">🧹 clear</button>
+  </div>
+  <div class="panel">
+    <label>speed</label>
+    <input id="speed" type="range" min="1" max="30" value="10">
+    <span class="muted" id="spd" style="font-family:var(--mono)">10 gen/s</span>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let cell=14,cols,rows,grid,W,H,gen=0;
+function size(){
+  W=Math.min(640,document.querySelector('.wrap').clientWidth);
+  cols=Math.floor(W/cell);rows=Math.floor(cols*0.75);
+  W=cv.width=cols*cell;H=cv.height=rows*cell;
+  if(!grid){grid=make();randomize();}
+  draw();
+}
+function make(){return Array.from({length:rows},()=>new Uint8Array(cols));}
+addEventListener('resize',()=>{const old=grid,oc=cols,or=rows;grid=null;size();});
+function randomize(){grid=make();for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)grid[y][x]=Math.random()<0.28?1:0;gen=0;}
+function clear(){grid=make();gen=0;draw();}
+size();
+function neighbors(y,x){let n=0;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(!dx&&!dy)continue;
+    const ny=(y+dy+rows)%rows,nx=(x+dx+cols)%cols; // toroidal wrap
+    n+=grid[ny][nx];}
+  return n;}
+function next(){
+  const g2=make();let live=0;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const n=neighbors(y,x),a=grid[y][x];
+    g2[y][x]=(a&&(n===2||n===3))||(!a&&n===3)?1:0;
+    live+=g2[y][x];
+  }
+  grid=g2;gen++;
+  document.getElementById('gen').textContent=gen;
+  return live;
+}
+function draw(){
+  ctx.fillStyle="#11131c";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="rgba(255,255,255,0.06)";
+  for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(x*cell,0);ctx.lineTo(x*cell,H);ctx.stroke();}
+  for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(0,y*cell);ctx.lineTo(W,y*cell);ctx.stroke();}
+  let live=0;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(grid[y][x]){
+    live++;
+    ctx.fillStyle="hsl("+((x+y+gen)*6%360)+",85%,60%)";
+    ctx.fillRect(x*cell+1,y*cell+1,cell-2,cell-2);
+  }
+  document.getElementById('alive').textContent=live;
+}
+// painting
+let painting=false,paintVal=1;
+function cellAt(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;
+  const x=Math.floor((t.clientX-r.left)*(W/r.width)/cell);
+  const y=Math.floor((t.clientY-r.top)*(H/r.height)/cell);
+  return [x,y];}
+function paint(e){const[x,y]=cellAt(e);if(x>=0&&x<cols&&y>=0&&y<rows){grid[y][x]=paintVal;draw();}}
+cv.addEventListener('mousedown',e=>{const[x,y]=cellAt(e);paintVal=grid[y]&&grid[y][x]?0:1;painting=true;paint(e);});
+addEventListener('mousemove',e=>{if(painting)paint(e);});
+addEventListener('mouseup',()=>painting=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();const[x,y]=cellAt(e);paintVal=grid[y]&&grid[y][x]?0:1;painting=true;paint(e);},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(painting)paint(e);},{passive:false});
+cv.addEventListener('touchend',()=>painting=false);
+// controls
+let playing=false,acc=0,lastT=0;
+const playBtn=document.getElementById('play');
+playBtn.onclick=()=>{playing=!playing;playBtn.textContent=playing?'⏸ pause':'▶ play';
+  playBtn.classList.toggle('pink',!playing);};
+document.getElementById('step').onclick=()=>{next();draw();};
+document.getElementById('rand').onclick=()=>{randomize();draw();};
+document.getElementById('clear').onclick=clear;
+const sp=document.getElementById('speed'),spd=document.getElementById('spd');
+sp.oninput=()=>spd.textContent=sp.value+' gen/s';
+function loop(t){
+  if(playing){
+    const interval=1000/(+sp.value);
+    if(t-lastT>=interval){next();draw();lastT=t;}
+  } else lastT=t;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+draw();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

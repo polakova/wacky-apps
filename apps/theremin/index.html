@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Theremin · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>〰️</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #pad{position:relative;width:100%;height:62vh;min-height:340px;touch-action:none;
+    border:4px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+    background:radial-gradient(circle at 50% 30%,#10243a,#05101c 70%);cursor:crosshair;overflow:hidden}
+  #pad canvas{position:absolute;inset:0;width:100%;height:100%}
+  .read{position:absolute;top:10px;left:12px;font-family:var(--mono);color:#16e0bd;
+    font-weight:800;font-size:14px;text-shadow:0 0 8px rgba(22,224,189,.6)}
+  .read .f{color:#ff5da2;text-shadow:0 0 8px rgba(255,93,162,.6)}
+  .ghint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,.7);font-weight:800;font-size:20px;text-align:center;padding:20px;transition:opacity .3s}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">〰️ Theremin</span>
+  <span class="spacer"></span>
+  <span class="num">#67</span>
+</div>
+
+<div class="wrap">
+  <div id="pad">
+    <canvas id="wave"></canvas>
+    <div class="read"><span class="f" id="hz">— Hz</span> · <span id="vol">vol 0%</span></div>
+    <div class="ghint" id="hint">👻 Hover / drag to play. Left↔right = pitch, up↕down = volume.</div>
+  </div>
+  <div class="row" style="margin-top:14px;justify-content:center">
+    <label class="muted">Wave</label>
+    <select id="wf"><option value="sine">smooth (sine)</option><option value="triangle">triangle</option><option value="sawtooth">spooky saw</option><option value="square">retro square</option></select>
+  </div>
+  <p class="center muted">No touching required — the original "don't touch me" instrument. 👽</p>
+</div>
+
+<script>
+const pad=document.getElementById("pad"), cv=document.getElementById("wave"), ctx2=cv.getContext("2d");
+const hzEl=document.getElementById("hz"), volEl=document.getElementById("vol"), hint=document.getElementById("hint"), wf=document.getElementById("wf");
+let AC, osc, gain, playing=false, curFreq=220, curVol=0, phase=0;
+
+function ensure(){
+  if(AC) return;
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  osc=AC.createOscillator(); gain=AC.createGain();
+  gain.gain.value=0; osc.type=wf.value; osc.frequency.value=220;
+  osc.connect(gain).connect(AC.destination); osc.start();
+}
+wf.onchange=()=>{if(osc)osc.type=wf.value;};
+
+function setFrom(clientX,clientY){
+  const r=pad.getBoundingClientRect();
+  let fx=(clientX-r.left)/r.width, fy=(clientY-r.top)/r.height;
+  fx=Math.max(0,Math.min(1,fx)); fy=Math.max(0,Math.min(1,fy));
+  curFreq=110*Math.pow(2, fx*3); // 110Hz → ~880Hz over 3 octaves
+  curVol=(1-fy)*0.35;
+  if(osc){osc.frequency.setTargetAtTime(curFreq,AC.currentTime,0.02);
+    gain.gain.setTargetAtTime(curVol,AC.currentTime,0.03);}
+  hzEl.textContent=Math.round(curFreq)+" Hz";
+  volEl.textContent="vol "+Math.round(curVol/0.35*100)+"%";
+}
+function on(x,y){ensure();if(AC.state==="suspended")AC.resume();playing=true;hint.style.opacity="0";setFrom(x,y);}
+function off(){playing=false;curVol=0;if(gain)gain.gain.setTargetAtTime(0,AC.currentTime,0.08);volEl.textContent="vol 0%";}
+
+pad.addEventListener("mousedown",e=>on(e.clientX,e.clientY));
+pad.addEventListener("mousemove",e=>{if(playing)setFrom(e.clientX,e.clientY);});
+window.addEventListener("mouseup",off);
+pad.addEventListener("mouseleave",()=>{if(playing)off();});
+pad.addEventListener("touchstart",e=>{const t=e.touches[0];on(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+pad.addEventListener("touchmove",e=>{const t=e.touches[0];setFrom(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+pad.addEventListener("touchend",off);
+
+function fit(){cv.width=pad.clientWidth;cv.height=pad.clientHeight;}
+new ResizeObserver(fit).observe(pad); fit();
+
+function draw(){
+  const w=cv.width,h=cv.height; ctx2.clearRect(0,0,w,h);
+  const amp=(playing?curVol/0.35:0.04)*h*0.4+4;
+  const cycles=2+(curFreq/120);
+  ctx2.lineWidth=3; ctx2.strokeStyle=playing?"#16e0bd":"#1c3a52";
+  ctx2.shadowBlur=playing?16:0; ctx2.shadowColor="#16e0bd";
+  ctx2.beginPath();
+  for(let x=0;x<=w;x++){
+    const y=h/2+Math.sin((x/w)*Math.PI*2*cycles+phase)*amp;
+    x?ctx2.lineTo(x,y):ctx2.moveTo(x,y);
+  }
+  ctx2.stroke(); ctx2.shadowBlur=0;
+  phase+=playing?0.25:0.05;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

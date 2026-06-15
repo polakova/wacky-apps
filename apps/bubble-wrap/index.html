@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bubble Wrap · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫧</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  .sheet{
+    display:grid;gap:8px;background:rgba(120,200,255,.15);
+    padding:14px;border:4px solid var(--ink);border-radius:18px;
+    box-shadow:var(--shadow);margin:8px auto;
+  }
+  .bub{
+    aspect-ratio:1/1;border:none;cursor:pointer;border-radius:50%;
+    background:radial-gradient(circle at 32% 30%, #ffffff, #bfe6ff 45%, #7cc4f0 100%);
+    box-shadow: inset -2px -3px 6px rgba(0,80,150,.35), 2px 3px 5px rgba(0,0,0,.18);
+    transition:transform .08s ease, background .1s ease, box-shadow .1s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bub:hover{transform:scale(1.05)}
+  .bub.popped{
+    cursor:default;
+    background:radial-gradient(circle at 50% 55%, #a9cbe0 0%, #d8eaf6 70%);
+    box-shadow: inset 3px 4px 7px rgba(0,60,110,.4);
+    transform:scale(.86);
+  }
+  .stat{font-family:var(--mono);font-weight:900;font-size:20px}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🫧 Bubble Wrap</span>
+  <span class="spacer"></span>
+  <span class="num">#45</span>
+</div>
+<div class="wrap center">
+  <div class="muted">Infinite stress relief. Pop every last one, then repackage and do it again.</div>
+  <div class="row" style="justify-content:center;margin:12px 0">
+    <span class="pill">POPPED</span> <span class="stat" id="count">0</span>
+    <span class="pill" style="background:var(--pink)">ALL-TIME</span> <span class="stat" id="total">0</span>
+  </div>
+  <div class="sheet" id="sheet"></div>
+  <div class="row" style="justify-content:center;margin-top:14px">
+    <button class="btn pink" id="repackage">📦 Repackage</button>
+    <button class="btn" id="popall">💥 Pop all</button>
+  </div>
+</div>
+<script>
+const COLS = 8, ROWS = 11;
+const sheet = document.getElementById('sheet');
+sheet.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
+sheet.style.maxWidth = (COLS*46)+'px';
+const countEl = document.getElementById('count');
+const totalEl = document.getElementById('total');
+let popped = 0;
+let total = +(localStorage.getItem('bubble_total')||0);
+totalEl.textContent = total;
+
+let ctx;
+function pop(){
+  if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type='sine';
+  const f0 = 700 + Math.random()*500;
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(f0*0.4, t+0.07);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.35, t+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.09);
+  o.connect(g).connect(ctx.destination);
+  o.start(t); o.stop(t+0.1);
+}
+
+function build(){
+  sheet.innerHTML='';
+  popped = 0; countEl.textContent = 0;
+  for(let i=0;i<COLS*ROWS;i++){
+    const b = document.createElement('button');
+    b.className='bub';
+    b.setAttribute('aria-label','bubble');
+    b.addEventListener('click', ()=>doPop(b));
+    sheet.appendChild(b);
+  }
+}
+function doPop(b){
+  if(b.classList.contains('popped')) return;
+  b.classList.add('popped');
+  pop();
+  popped++; countEl.textContent = popped;
+  total++; totalEl.textContent = total;
+  localStorage.setItem('bubble_total', total);
+  if(popped === COLS*ROWS){
+    countEl.classList.add('blink');
+    setTimeout(()=>countEl.classList.remove('blink'),2000);
+  }
+}
+document.getElementById('repackage').onclick = build;
+document.getElementById('popall').onclick = ()=>{
+  const bubs = [...sheet.querySelectorAll('.bub:not(.popped)')];
+  bubs.forEach((b,i)=> setTimeout(()=>doPop(b), i*18));
+};
+build();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

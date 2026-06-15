@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Upside Down · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙃</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  #out{
+    font-size:clamp(22px,5.5vw,34px);font-weight:800;word-break:break-word;
+    background:var(--ink);color:var(--yellow);border-radius:14px;padding:18px;
+    min-height:1.4em;line-height:1.4;
+  }
+  .flip{display:inline-block;animation:tip .6s ease}
+  @keyframes tip{0%{transform:rotate(0)}100%{transform:rotate(180deg)}}
+  h1{transition:transform .4s}
+  h1:hover{transform:rotate(180deg)}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🙃 Upside Down</span>
+  <span class="spacer"></span>
+  <span class="num">#39</span>
+</div>
+<div class="wrap">
+  <div class="card center">
+    <h1 class="big">uʍop ǝpısd∩</h1>
+    <p class="muted">Type right-side-up. Read it standing on your head.</p>
+    <textarea id="in" rows="3" placeholder="Why are you upside down?" style="text-align:left">flip me over please &amp; thanks!</textarea>
+    <div id="out" class="flip" style="margin-top:16px">¡sʞuɐɥʇ ⅋ ǝsɐǝld ɹǝʌo ǝɯ dılⅎ</div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <button class="btn purple" id="copy">📋 Copy the flip</button>
+      <span class="muted" id="status"></span>
+    </div>
+  </div>
+</div>
+<script>
+const map={a:'ɐ',b:'q',c:'ɔ',d:'p',e:'ǝ',f:'ⅎ',g:'ƃ',h:'ɥ',i:'ı',j:'ɾ',k:'ʞ',l:'l',m:'ɯ',n:'u',o:'o',p:'d',q:'b',r:'ɹ',s:'s',t:'ʇ',u:'n',v:'ʌ',w:'ʍ',x:'x',y:'ʎ',z:'z',
+A:'∀',B:'𐐒',C:'Ɔ',D:'p',E:'Ǝ',F:'Ⅎ',G:'⅁',H:'H',I:'I',J:'ſ',K:'ʞ',L:'˥',M:'W',N:'N',O:'O',P:'Ԁ',Q:'Ò',R:'ᴚ',S:'S',T:'⊥',U:'∩',V:'Λ',W:'M',X:'X',Y:'⅄',Z:'Z',
+'1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6','0':'0',
+'.':'˙',',':"'",'?':'¿','!':'¡',"'":',','"':'„','(':')',')':'(','[':']',']':'[','{':'}','}':'{','<':'>','>':'<','&':'⅋','_':'‾','^':'v',';':'؛'};
+const inEl=document.getElementById('in'),outEl=document.getElementById('out');
+function flip(s){
+  let r='';
+  for(const ch of s){ r+=(map[ch]!==undefined?map[ch]:ch); }
+  return [...r].reverse().join('');
+}
+function render(){
+  outEl.textContent=flip(inEl.value)||' ';
+  outEl.classList.remove('flip');void outEl.offsetWidth;outEl.classList.add('flip');
+}
+inEl.addEventListener('input',render);
+document.getElementById('copy').addEventListener('click',async()=>{
+  const t=outEl.textContent;const st=document.getElementById('status');
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  st.textContent='✓ ¡pǝıdoɔ';setTimeout(()=>st.textContent='',1500);
+});
+render();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>

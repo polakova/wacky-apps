@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lava Lamp · 111 Wacky Apps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟠</text></svg>">
+<link rel="stylesheet" href="../_shared/wacky.css">
+<style>
+  body{background:#120a18}
+  .wrap{max-width:520px}
+  .screen{border:4px solid var(--ink);border-radius:140px/40px;box-shadow:var(--shadow);
+    overflow:hidden;cursor:pointer}
+  canvas{display:block}
+  .sub{color:#ffb27a;text-align:center;font-family:var(--mono);margin:0 0 14px}
+  .tip{color:#caa;text-align:center;font-family:var(--mono);margin-top:14px;font-size:14px}
+  .base{height:24px;background:linear-gradient(#555,#222);border:4px solid var(--ink);
+    border-top:none;border-radius:0 0 26px 26px;margin:-4px 30px 0}
+</style>
+</head>
+<body>
+<div class="wacky-bar">
+  <a class="back" href="../../">← all 111</a>
+  <span class="title">🟠 Lava Lamp</span>
+  <span class="spacer"></span>
+  <span class="num">#54</span>
+</div>
+<div class="wrap">
+  <p class="sub">groovy goo, gently glowing</p>
+  <div class="screen" id="screen"><canvas id="c"></canvas></div>
+  <div class="base"></div>
+  <p class="tip">tap the lamp to swap the color scheme 🌈</p>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;
+function size(){
+  W=cv.width=Math.min(360,document.querySelector('.wrap').clientWidth);
+  H=cv.height=Math.min(560,window.innerHeight*0.66);
+  if(!blobs.length)init();
+}
+const schemes=[
+  {name:"classic",bg:["#2a0f00","#120600"],c:[[255,90,20],[255,150,40],[255,60,80]]},
+  {name:"ocean",bg:["#001626","#000810"],c:[[40,200,255],[60,120,255],[20,255,200]]},
+  {name:"toxic",bg:["#0a1500","#020600"],c:[[140,255,30],[60,255,120],[210,255,40]]},
+  {name:"berry",bg:["#1a0020","#0a000c"],c:[[255,60,180],[180,60,255],[255,80,120]]},
+];
+let sIdx=0;
+let blobs=[];
+function init(){
+  blobs=[];const n=6;
+  for(let i=0;i<n;i++)blobs.push({
+    x:W*(0.2+Math.random()*0.6),y:Math.random()*H,
+    r:W*(0.14+Math.random()*0.12),
+    vy:(Math.random()<0.5?-1:1)*(0.2+Math.random()*0.4),
+    vx:(Math.random()-0.5)*0.3,
+    cyc:Math.random()*6
+  });
+}
+addEventListener('resize',size);
+// offscreen for metaball threshold
+let off,offx;
+function ensureOff(){if(!off||off.width!=W||off.height!=H){off=document.createElement('canvas');
+  off.width=W;off.height=H;offx=off.getContext('2d');}}
+size();
+document.getElementById('screen').addEventListener('click',()=>{
+  sIdx=(sIdx+1)%schemes.length;
+});
+function frame(){
+  ensureOff();
+  const sc=schemes[sIdx];
+  // background gradient
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,sc.bg[0]);g.addColorStop(1,sc.bg[1]);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // update + render blobs with radial glow + soft merge
+  offx.clearRect(0,0,W,H);
+  for(const b of blobs){
+    b.cyc+=0.01;
+    b.y+=b.vy*(0.7+0.3*Math.sin(b.cyc));
+    b.x+=b.vx;
+    if(b.y<b.r*0.4){b.vy=Math.abs(b.vy);}
+    if(b.y>H-b.r*0.4){b.vy=-Math.abs(b.vy);}
+    if(b.x<b.r*0.6){b.vx=Math.abs(b.vx);}
+    if(b.x>W-b.r*0.6){b.vx=-Math.abs(b.vx);}
+    const col=sc.c[Math.floor((b.cyc)%sc.c.length+sc.c.length)%sc.c.length];
+    const rg=offx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+    rg.addColorStop(0,"rgba("+col[0]+","+col[1]+","+col[2]+",0.95)");
+    rg.addColorStop(0.6,"rgba("+col[0]+","+col[1]+","+col[2]+",0.5)");
+    rg.addColorStop(1,"rgba("+col[0]+","+col[1]+","+col[2]+",0)");
+    offx.fillStyle=rg;offx.beginPath();offx.arc(b.x,b.y,b.r,0,7);offx.fill();
+  }
+  // gooey contrast pass via blur-ish layering
+  ctx.globalCompositeOperation="lighter";
+  ctx.drawImage(off,0,0);
+  ctx.globalCompositeOperation="source-over";
+  // glass sheen
+  const sh=ctx.createLinearGradient(0,0,W,0);
+  sh.addColorStop(0,"rgba(255,255,255,0.10)");sh.addColorStop(0.2,"rgba(255,255,255,0)");
+  sh.addColorStop(0.85,"rgba(0,0,0,0.18)");
+  ctx.fillStyle=sh;ctx.fillRect(0,0,W,H);
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+<script src="../_shared/wacky-buy.js" defer></script>
+</body>
+</html>
