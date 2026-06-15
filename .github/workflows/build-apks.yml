@@ -1,8 +1,8 @@
 name: Build Wacky App APKs
 
-# Wraps every Wacky App (and one "all 111" collection) in an Android WebView
-# and publishes the APKs to the "apks" Release for download after payment.
-# Builds are SHARDED across parallel jobs so the whole set finishes fast.
+# Wraps every Wacky App (and one "all 111" collection) in an Android WebView.
+# ONE Gradle build with 112 product flavors: configure + compile once, then
+# package each app's APK. Published to the "apks" Release for download.
 
 on:
   workflow_dispatch:
@@ -20,17 +20,13 @@ concurrency:
   group: build-apks
   cancel-in-progress: true
 
-env:
-  NSHARDS: 16
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -64,70 +60,55 @@ jobs:
           python3 build.py
           python3 build_downloads.py
 
-      - name: Build shard ${{ matrix.shard }} APKs
+      - name: Stage per-flavor assets + icons
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, shutil, subprocess
+          apps = json.load(open("apps.json"))
+          base = "android/app/src"
+          def flavor(slug): return slug.replace("-", "")
+          def stage(fn, www_src, emoji, label):
+              d = os.path.join(base, fn)
+              shutil.rmtree(d, ignore_errors=True)
+              os.makedirs(os.path.join(d, "assets", "www"), exist_ok=True)
+              if os.path.isdir(www_src):
+                  shutil.copytree(www_src, os.path.join(d, "assets", "www"), dirs_exist_ok=True)
+              else:
+                  shutil.copy(www_src, os.path.join(d, "assets", "www", "index.html"))
+              subprocess.run(["python3", "android/make_icon.py", fn, emoji, label,
+                              os.path.join(d, "res")], check=True)
+          for a in apps:
+              stage(flavor(a["slug"]), f"download/{a['slug']}.html", a["emoji"], f"{a['id']:03d}")
+          stage("all111wacky", "download/allinone", "🤪", "111")
+          print("staged", len(apps) + 1, "flavors")
+          PY
+
+      - name: Build all APKs (single Gradle invocation)
+        run: |
+          cd android
+          gradle --no-daemon --console=plain assembleDebug
+
+      - name: Collect APKs
         run: |
           set -euo pipefail
           mkdir -p out
-          WWW=android/app/src/main/assets/www
-          SHARD=${{ matrix.shard }}
-
-          # index, id, slug, emoji, sanitized title
-          python3 - > /tmp/manifest.tsv <<'PY'
-          import json
-          for i, a in enumerate(json.load(open("apps.json"))):
-              title = a["title"].replace("'", "").replace("\t", " ")
-              print(f'{i}\t{a["id"]}\t{a["slug"]}\t{a["emoji"]}\t{title}')
+          python3 - <<'PY'
+          import json, os, shutil, glob
+          apps = json.load(open("apps.json"))
+          def flavor(slug): return slug.replace("-", "")
+          base = "android/app/build/outputs/apk"
+          def grab(fn, dest):
+              hits = glob.glob(f"{base}/{fn}/debug/*.apk")
+              assert hits, f"no APK for flavor {fn}"
+              shutil.copy(hits[0], f"out/{dest}.apk")
+          for a in apps:
+              grab(flavor(a["slug"]), a["slug"])
+          grab("all111wacky", "all-111-wacky-apps")
+          print("collected", len(os.listdir("out")), "APKs")
           PY
-
-          built=0
-          while IFS=$'\t' read -r idx id slug emoji title; do
-            if [ $(( idx % NSHARDS )) -ne "$SHARD" ]; then continue; fi
-            appid="com.wackyapps.$(printf '%s' "$slug" | tr -cd 'a-z0-9')"
-            echo "shard $SHARD -> $slug ($appid)"
-            rm -rf "$WWW"; mkdir -p "$WWW"
-            cp "download/${slug}.html" "$WWW/index.html"
-            python3 android/make_icon.py "$slug" "$emoji" "$(printf '%03d' "$id")" android/app/src/main/res
-            ( cd android && gradle --no-daemon --console=plain assembleDebug -PappId="$appid" -PappName="$title" )
-            cp android/app/build/outputs/apk/debug/app-debug.apk "out/${slug}.apk"
-            built=$((built+1))
-          done < /tmp/manifest.tsv
-
-          # the all-in-one collection rides on shard 0
-          if [ "$SHARD" = "0" ]; then
-            echo "shard 0 -> all-in-one collection"
-            rm -rf "$WWW"; mkdir -p "$WWW"
-            cp -r download/allinone/. "$WWW/"
-            python3 android/make_icon.py "__all__" "🤪" "111" android/app/src/main/res
-            ( cd android && gradle --no-daemon --console=plain assembleDebug -PappId="com.wackyapps.all111" -PappName="111 Wacky Apps" )
-            cp android/app/build/outputs/apk/debug/app-debug.apk "out/all-111-wacky-apps.apk"
-            built=$((built+1))
-          fi
-          echo "shard $SHARD built $built APKs"
-
-      - name: Upload shard artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: apks-${{ matrix.shard }}
-          path: out/*.apk
-          retention-days: 1
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Collect all shard APKs
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          pattern: apks-*
-          merge-multiple: true
-
-      - name: List
-        run: |
-          ls -lh dist | tail -n +2 | awk '{print $5, $9}'
-          echo "total APKs: $(ls dist/*.apk | wc -l)"
+          ls -lh out | tail -n +2 | awk '{print $5, $9}' | head
+          echo "total: $(ls out/*.apk | wc -l)"
 
       - name: Publish APKs to the "apks" Release
         uses: softprops/action-gh-release@v2
@@ -135,5 +116,5 @@ jobs:
           tag_name: apks
           name: "📱 Wacky Apps — installable APKs"
           body: "Auto-built Android APKs for all 111 Wacky Apps + the all-in-one collection. Sideload-friendly (debug-signed)."
-          files: dist/*.apk
+          files: out/*.apk
           fail_on_unmatched_files: true

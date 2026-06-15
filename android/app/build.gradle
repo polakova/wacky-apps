@@ -1,41 +1,53 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id 'com.android.application'
 }
 
-// Each app is the SAME wrapper; only these change per build (passed via -P...):
-//   -PappId=com.wackyapps.<slug>     unique package so apps coexist on one phone
-//   -PappName="App Title"            launcher label
-def appId   = project.findProperty('appId')   ?: 'com.wackyapps.all111'
-def appName = project.findProperty('appName') ?: '111 Wacky Apps'
+// One product flavor per Wacky App, generated from ../../apps.json. A single
+// `gradle assembleDebug` then configures + compiles ONCE and packages every
+// app's APK as its own flavor variant. Assets/icon for each flavor live in
+// src/<flavor>/ (filled in by the CI prep step before the build).
+def apps = new JsonSlurper().parse(file("${rootDir}/../apps.json"))
+def flavorOf = { slug -> slug.replaceAll("-", "") }
 
 android {
     namespace 'com.wackyapps.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId appId
         minSdk 23
         targetSdk 34
         versionCode 1
         versionName '1.0'
-        resValue 'string', 'app_name', appName
+    }
+
+    flavorDimensions += "app"
+    productFlavors {
+        apps.each { a ->
+            def fn = flavorOf(a.slug)
+            create(fn) {
+                dimension "app"
+                applicationId "com.wackyapps.${fn}"
+                resValue "string", "app_name", a.title.replaceAll("'", "")
+            }
+        }
+        // the whole-collection app
+        create("all111wacky") {
+            dimension "app"
+            applicationId "com.wackyapps.all111"
+            resValue "string", "app_name", "111 Wacky Apps"
+        }
     }
 
     buildTypes {
         debug {
-            // debug-signed = installable by sideloading (Settings will ask to allow it)
+            // debug-signed = installable by sideloading
         }
     }
 
     lint {
         abortOnError false
         checkReleaseBuilds false
-    }
-
-    // assets/www is filled in per build (one app, or the whole collection)
-    sourceSets {
-        main {
-            assets.srcDirs = ['src/main/assets']
-        }
     }
 }
