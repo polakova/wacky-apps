@@ -2,6 +2,7 @@ name: Build Wacky App APKs
 
 # Wraps every Wacky App (and one "all 111" collection) in an Android WebView
 # and publishes the APKs to the "apks" Release for download after payment.
+# Builds are SHARDED across parallel jobs so the whole set finishes fast.
 
 on:
   workflow_dispatch:
@@ -19,13 +20,17 @@ concurrency:
   group: build-apks
   cancel-in-progress: true
 
-permissions:
-  contents: write   # needed to create/update the Release
+env:
+  NSHARDS: 8
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v4
 
@@ -57,43 +62,70 @@ jobs:
           python3 build.py
           python3 build_downloads.py
 
-      - name: Build all APKs
+      - name: Build shard ${{ matrix.shard }} APKs
         run: |
           set -euo pipefail
           mkdir -p out
           WWW=android/app/src/main/assets/www
+          SHARD=${{ matrix.shard }}
 
-          # tab-separated manifest: id, slug, emoji, sanitized title
+          # index, id, slug, emoji, sanitized title
           python3 - > /tmp/manifest.tsv <<'PY'
           import json
-          for a in json.load(open("apps.json")):
+          for i, a in enumerate(json.load(open("apps.json"))):
               title = a["title"].replace("'", "").replace("\t", " ")
-              print(f'{a["id"]}\t{a["slug"]}\t{a["emoji"]}\t{title}')
+              print(f'{i}\t{a["id"]}\t{a["slug"]}\t{a["emoji"]}\t{title}')
           PY
 
-          total=$(wc -l < /tmp/manifest.tsv)
-          n=0
-          while IFS=$'\t' read -r id slug emoji title; do
-            n=$((n+1))
+          built=0
+          while IFS=$'\t' read -r idx id slug emoji title; do
+            if [ $(( idx % NSHARDS )) -ne "$SHARD" ]; then continue; fi
             appid="com.wackyapps.$(printf '%s' "$slug" | tr -cd 'a-z0-9')"
-            printf '[%d/%d] %s -> %s\n' "$n" "$total" "$slug" "$appid"
+            echo "shard $SHARD -> $slug ($appid)"
             rm -rf "$WWW"; mkdir -p "$WWW"
             cp "download/${slug}.html" "$WWW/index.html"
             python3 android/make_icon.py "$slug" "$emoji" "$(printf '%03d' "$id")" android/app/src/main/res
             ( cd android && gradle -q --console=plain assembleDebug -PappId="$appid" -PappName="$title" )
             cp android/app/build/outputs/apk/debug/app-debug.apk "out/${slug}.apk"
+            built=$((built+1))
           done < /tmp/manifest.tsv
 
-          # all-in-one collection
-          echo "Building all-in-one collection APK..."
-          rm -rf "$WWW"; mkdir -p "$WWW"
-          cp -r download/allinone/. "$WWW/"
-          python3 android/make_icon.py "__all__" "🤪" "111" android/app/src/main/res
-          ( cd android && gradle -q --console=plain assembleDebug -PappId="com.wackyapps.all111" -PappName="111 Wacky Apps" )
-          cp android/app/build/outputs/apk/debug/app-debug.apk "out/all-111-wacky-apps.apk"
+          # the all-in-one collection rides on shard 0
+          if [ "$SHARD" = "0" ]; then
+            echo "shard 0 -> all-in-one collection"
+            rm -rf "$WWW"; mkdir -p "$WWW"
+            cp -r download/allinone/. "$WWW/"
+            python3 android/make_icon.py "__all__" "🤪" "111" android/app/src/main/res
+            ( cd android && gradle -q --console=plain assembleDebug -PappId="com.wackyapps.all111" -PappName="111 Wacky Apps" )
+            cp android/app/build/outputs/apk/debug/app-debug.apk "out/all-111-wacky-apps.apk"
+            built=$((built+1))
+          fi
+          echo "shard $SHARD built $built APKs"
 
-          echo "Built $(ls out/*.apk | wc -l) APKs:"
-          ls -lh out | tail -n +2 | awk '{print $5, $9}' | head
+      - name: Upload shard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ matrix.shard }}
+          path: out/*.apk
+          retention-days: 1
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Collect all shard APKs
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: apks-*
+          merge-multiple: true
+
+      - name: List
+        run: |
+          ls -lh dist | tail -n +2 | awk '{print $5, $9}'
+          echo "total APKs: $(ls dist/*.apk | wc -l)"
 
       - name: Publish APKs to the "apks" Release
         uses: softprops/action-gh-release@v2
@@ -101,5 +133,5 @@ jobs:
           tag_name: apks
           name: "📱 Wacky Apps — installable APKs"
           body: "Auto-built Android APKs for all 111 Wacky Apps + the all-in-one collection. Sideload-friendly (debug-signed)."
-          files: out/*.apk
+          files: dist/*.apk
           fail_on_unmatched_files: true
